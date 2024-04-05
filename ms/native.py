@@ -1,5 +1,5 @@
 from typing import List, Any
-from scripting.interpreter import Interpreter, Callable, NativeCallable, UserCallable, UserType
+from ms.interpreter import Interpreter, Callable, NativeCallable, UserCallable, UserType
 
 
 # Native functions.

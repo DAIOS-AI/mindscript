@@ -1,8 +1,8 @@
 from typing import Optional, Any, List
 from abc import abstractmethod
-import scripting.ast as ast
-from scripting.printer import Printer
-from scripting.parser import Parser
+import ms.ast as ast
+from ms.printer import Printer
+from ms.parser import Parser
 
 
 class Environment():

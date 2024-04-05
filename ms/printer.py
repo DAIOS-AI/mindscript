@@ -1,5 +1,5 @@
 import re 
-from scripting.ast import TokenType, Token, Expr, List, Dict
+from ms.ast import TokenType, Token, Expr, List, Dict
 
 TABLEN = 4
 MAXDEPTH = 5

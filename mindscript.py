@@ -1,8 +1,8 @@
 import re
 import sys
-import scripting
+import ms
 import readline
-from scripting.ast import IncompleteExpression
+from ms.ast import IncompleteExpression
 
 
 BLUE = "\033[94m"
@@ -10,12 +10,12 @@ RESET = "\033[0m"
 WELCOME = """
 MindScript Version 0.1
 (C) 2024 DAIOS Technologies Limited
-Use Control-D to exit. Enter ';' to finish expression.
+Use Control-D to exit.
 """
 
 
 def execute_file(filename: str):
-    ip = scripting.interpreter()
+    ip = ms.interpreter()
     code = ""
 
     try:
@@ -30,7 +30,7 @@ def execute_file(filename: str):
 
 def repl():
     print(WELCOME)
-    ip = scripting.interpreter(interactive=True)
+    ip = ms.interpreter(interactive=True)
 
     prompt = "> "
     lines = ""

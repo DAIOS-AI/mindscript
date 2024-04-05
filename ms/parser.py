@@ -1,8 +1,8 @@
 import copy
 from typing import List
-import scripting.ast as ast
-from scripting.ast import TokenType, Token
-from scripting.lexer import Lexer
+import ms.ast as ast
+from ms.ast import TokenType, Token
+from ms.lexer import Lexer
 
 ###
 # BNF of grammar:

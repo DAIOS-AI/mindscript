@@ -1,5 +1,5 @@
 from typing import Tuple, Callable, Any
-from scripting.ast import TokenType, Token, LexicalError
+from ms.ast import TokenType, Token, LexicalError
 
 
 Keywords = {
