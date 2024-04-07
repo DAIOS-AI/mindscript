@@ -31,10 +31,7 @@ class Environment():
         raise KeyError()
 
 
-class Return(Exception):
-    def __init__(self, operator: ast.Token, expr: ast.Expr):
-        self.operator = operator
-        self.expr = expr
+
 
 
 
@@ -52,16 +49,21 @@ class Interpreter:
 
     def eval(self, instr: str):
         val = None
-        ast = self.parser.parse(instr)
-        if ast is None:
+        tree = self.parser.parse(instr)
+        if tree is None:
             return val
         try:
-            val = ast.accept(self)
-        except Return as e:
+            val = tree.accept(self)
+        except ast.Return as e:
+            print(f"I'm here! {e}")
             if e.operator.ttype in [ast.TokenType.BREAK, ast.TokenType.CONTINUE]:
-                self.print_error(
-                    e.operator, "Unexpected control flow expression.")
-            return e.expr
+                self.parser.lexer.report_error(
+                    e.operator.line, 
+                    e.operator.col,
+                    "RUNTIME ERROR",
+                    f"Unexpected control flow expression '{e.operator.literal}'.")
+            else:
+                return e.expr
         except Exception as e:
             # print("RUNTIME ERROR (!): " + str(e))
             # raise e
@@ -199,7 +201,7 @@ class Interpreter:
                 return -expr
             self.error(operator, "Expected a number.")
         elif operator.ttype in [ast.TokenType.RETURN, ast.TokenType.BREAK, ast.TokenType.CONTINUE]:
-            raise Return(operator, expr)
+            raise ast.Return(operator, expr)
         elif operator.ttype == ast.TokenType.QUESTION:
             if type(expr) == UserType:
                 value = UserType(self, ast.Unary(
@@ -365,11 +367,12 @@ class Interpreter:
         while cond:
             try:
                 value = node.expr.accept(self)
-            except Return as e:
+            except ast.Return as e:
                 if e.operator.ttype == ast.TokenType.BREAK:
                     value = e.expr
                     break
                 elif e.operator.ttype == ast.TokenType.CONTINUE:
+                    value = e.expr
                     pass
                 elif e.operator.ttype == ast.TokenType.RETURN:
                     raise e
@@ -378,6 +381,51 @@ class Interpreter:
                 self.error(node.operator,
                            "Condition must evaluate to a boolean value.")
         return value
+
+    def forloop(self, node):
+        value = None
+        target = node.target
+        iterator = node.iterator.accept(self)
+        if type(iterator) == list:
+            print("Iterate over array.")
+            env = Environment(enclosing=self.env)
+            for iter in iterator:
+                try:
+                    self.assign_search(env, target, node.operator, iter)
+                    value = self.execute_block(node.expr, env)
+                except ast.Return as e:
+                    if e.operator.ttype == ast.TokenType.BREAK:
+                        value = e.expr
+                        break
+                    elif e.operator.ttype == ast.TokenType.CONTINUE:
+                        pass
+                    elif e.operator.ttype == ast.TokenType.RETURN:
+                        raise e
+        elif type(iterator) == dict:
+            print("Iterate over object.")
+            env = Environment(enclosing=self.env)
+            for iter in iterator.items():
+                self.assign_search(env, target, node.operator, iter)
+                value = self.execute_block(node.expr, env)
+        elif isinstance(iterator, Callable):
+            print("Iterate over callable.")
+            env = Environment(enclosing=self.env)
+            iter = iterator.call([])
+            while iter is not None:
+                print(f"iter = {iter}")
+                try:
+                    self.assign_search(env, target, node.operator, iter)
+                except Exception as e:
+                    print("captured!")
+                    print(e)
+                print(f"after assign search...")
+                value = self.execute_block(node.expr, env)
+                print(f"value = {value}")
+                iter = iterator.call([])
+        else:
+            self.error(node.operator, "Can only iterate over array, object, or callable.")
+        return value
+        
 
     def call(self, node):
         callee = node.expr.accept(self)
@@ -389,7 +437,7 @@ class Interpreter:
             try:
                 callee
                 return callee.call(args)
-            except Return as e:
+            except ast.Return as e:
                 if e.operator.ttype == ast.TokenType.RETURN:
                     return e.expr
                 raise e

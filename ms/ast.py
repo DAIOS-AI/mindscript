@@ -19,10 +19,12 @@ TokenType = Enum(
         "ARRAY",
         "DATA_END",
         "LROUND",
+        "CLROUND",
         "RROUND",
         "LCURLY",
         "RCURLY",
         "LSQUARE",
+        "CLSQUARE",
         "RSQUARE",
         "EQ",
         "NEQ",
@@ -39,7 +41,6 @@ TokenType = Enum(
         "PERIOD",
         "COMMA",
         "COLON",
-        "SEMICOLON",
         "QUESTION",
         "ARROW",
         "WORD_LIKE",
@@ -51,7 +52,9 @@ TokenType = Enum(
         "OR",
         "LET",
         "DO",
+        "END",
         "IF",
+        "THEN",
         "ELIF",
         "ELSE",
         "WHILE",
@@ -82,17 +85,21 @@ class Token(BaseModel):
 
 # Exceptions
 
+   
 class IncompleteExpression(Exception):
     def __init__(self):
         pass
+
 
 class LexicalError(Exception):
     def __init__(self, message):
         super().__init__(message)
 
+
 class SyntaxError(Exception):
     def __init__(self, message):
         super().__init__(message)
+
 
 class RuntimeError(Exception):
     def __init__(self, message):
@@ -193,13 +200,14 @@ class Conditional(Expr):
         return visitor.conditional(self)
 
 
-class While(Expr):
+class For(Expr):
     operator: Token
-    cond: Expr
+    target: Expr
+    iterator: Expr
     expr: Expr
 
     def accept(self, visitor):
-        return visitor.whileloop(self)
+        return visitor.forloop(self)
 
 
 class Call(Expr):
@@ -245,3 +253,11 @@ class Program(BaseModel):
 
     def accept(self, visitor):
         return visitor.program(self)
+
+# Return
+
+class Return(Exception):
+    def __init__(self, operator: Token, expr: Expr):
+        self.operator = operator
+        self.expr = expr
+

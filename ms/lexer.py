@@ -11,10 +11,12 @@ Keywords = {
     "not": TokenType.NOT,
     "let": TokenType.LET,
     "do": TokenType.DO,
+    "end": TokenType.END,
     "return": TokenType.RETURN,
     "break": TokenType.BREAK,
     "continue": TokenType.CONTINUE,
     "if": TokenType.IF,
+    "then": TokenType.THEN,
     "elif": TokenType.ELIF,
     "else": TokenType.ELSE,
     "function": TokenType.FUNCTION,
@@ -41,6 +43,7 @@ class Lexer:
         self.line = 0         # Line of testing lexeme.
         self.col = 0          # Column of testing lexeme.
         self.stream = ""
+        self.whitespace = True
         self.tokens = []
 
     def peek(self):
@@ -69,14 +72,14 @@ class Lexer:
         return self.current >= len(self.stream)
 
     def add_token(self, ttype: TokenType, literal: Any = None):
-        if ttype != TokenType.SPACE:
-            token = Token(
-                ttype=ttype,
-                literal=literal,
-                col=self.col,
-                line=self.line
-            )
-            self.tokens.append(token)
+        self.whitespace = False
+        token = Token(
+            ttype=ttype,
+            literal=literal,
+            col=self.col,
+            line=self.line
+        )
+        self.tokens.append(token)
         self.forward()
         return token
 
@@ -86,7 +89,9 @@ class Lexer:
         return self.tokens[-1]
 
     def skip_whitespace(self):
+        self.whitespace = False
         while not self.is_at_end() and self.peek() in " \r\n":
+            self.whitespace = True
             self.advance()
         self.forward()
 
@@ -182,13 +187,17 @@ class Lexer:
 
         # Single character.
         if c == "(":
-            return self.add_token(TokenType.LROUND, "(")
+            if self.whitespace:
+                return self.add_token(TokenType.LROUND, "(")
+            return self.add_token(TokenType.CLROUND, "(")
 
         if c == ")":
             return self.add_token(TokenType.RROUND, ")")
 
         if c == "[":
-            return self.add_token(TokenType.LSQUARE, "[")
+            if self.whitespace:
+                return self.add_token(TokenType.LSQUARE, "[")
+            return self.add_token(TokenType.CLSQUARE, "[")
 
         if c == "]":
             return self.add_token(TokenType.RSQUARE, "]")
@@ -214,9 +223,6 @@ class Lexer:
         if c == ":":
             return self.add_token(TokenType.COLON, ":")
 
-        if c == ";":
-            return self.add_token(TokenType.SEMICOLON, ";")
-
         if c == ",":
             return self.add_token(TokenType.COMMA, ",")
 
@@ -240,7 +246,7 @@ class Lexer:
         if c == "=":
             if not self.is_at_end() and self.peek() == "=":
                 self.advance()
-                return self.add_token(TokenType.EQ, "=")
+                return self.add_token(TokenType.EQ, "==")
             return self.add_token(TokenType.ASSIGN, "=")
 
         if c == "!":

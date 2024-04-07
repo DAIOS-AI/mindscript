@@ -7,8 +7,11 @@ from ms.lexer import Lexer
 ###
 # BNF of grammar:
 # ```
-#     program     -> (control ";")* EOF
-#     control     -> "return" expression | "break" expression | "continue" expression | expression
+#     program     -> chunk EOF
+#     control     -> | "return" "~(" expression ")" 
+#                    | "break" "~(" expression ")" 
+#                    | "continue" "~(" expression ")" 
+#                    | expression
 #     expression  -> "#" STRING assignment | assignment
 #     assignment  -> mapping "=" expression | mapping
 #     mapping     -> disjunction "->" mapping | disjunction
@@ -19,24 +22,26 @@ from ms.lexer import Lexer
 #     term        -> factor (("+"|"-") factor)*
 #     factor      -> unary (("*"|"/"|"%") unary)*
 #     unary       -> ("not"|"-") call | call "?" | call
-#     call        -> primary ( "(" arguments ")" | "." IDENTIFIER | "[" expression "]" )*
+#     call        -> primary ( "~(" arguments ")" | "." IDENTIFIER | "~[" expression "]" )*
 #     arguments   -> expression ("," expression)*
 #
 #     primary     -> INTEGER | NUMBER | STRING | BOOLEAN | NULL | TYPE | array | map
-#                    | function | target | "(" expression ")"
+#                    | function | target | ( "~(" | "(" ) expression ")"
 #                    | block | conditional | while | for
 #     array       -> "[" (expression ",")* "]"
 #     map         -> "{" STRING ":" expression ",")* "}"
-#     block       -> "do" "{" (control ";")* "}"
-#     conditional -> "if" expression control
-#                     ("elif" expression control )*
-#                     ("else" control)?
+#     chunk       -> control*
+#     block       -> "do" chunk "end"
+#     conditional -> "if" expression "then" chunk
+#                     ("elif" expression "then" chunk)*
+#                     ("else" chunk)? "end"
 #     while       -> "while" expression control
-#     for         -> "for" expression "in" expression control
+#     for         -> "for" expression "in" expression block
 #     target      -> ID | declaration
 #     declaration -> "let" ID
-#     function    -> "function" "(" parameters? ")" ("->" expression)? control
+#     function    -> "function" "~(" parameters? ")" ("->" expression)? block
 #     parameters  -> ID (":" expression)? ("," ID (":" expression)?)*
+#
 # ```
 ###
 
@@ -131,7 +136,7 @@ class Parser:
         while not self.is_at_end():
             try:
                 expression = self.parse_control()
-                self.consume(TokenType.SEMICOLON, "Expected ';' after expression.")
+                # self.consume(TokenType.SEMICOLON, "Expected ';' after expression.")
                 program.append(expression)
             except ast.SyntaxError as e:
                 self.synchronize()
@@ -144,7 +149,9 @@ class Parser:
     def parse_control(self):
         if self.match([TokenType.RETURN, TokenType.BREAK, TokenType.CONTINUE]):
             operator = self.previous()
+            self.consume(TokenType.CLROUND, f"Expected '(' after '{operator.literal}'.")
             expr = self.parse_expression()
+            self.consume(TokenType.RROUND, f"Expected closing ')' after expression.")
             return ast.Unary(operator=operator, expr=expr)
         return self.parse_expression()
 
@@ -172,6 +179,7 @@ class Parser:
                                  index=mapping.index)
                 return ast.Assign(target=setter, operator=operator, expr=expr)
             elif isinstance(mapping, ast.Array):
+                print("here!")
                 return ast.Assign(target=mapping, operator=operator, expr=expr)
             elif isinstance(mapping, ast.Map):
                 return ast.Assign(target=mapping, operator=operator, expr=expr)
@@ -250,15 +258,15 @@ class Parser:
 
     def parse_call(self):
         primary = self.parse_primary()
-        while self.match([TokenType.LROUND, TokenType.PERIOD, TokenType.LSQUARE]):
+        while self.match([TokenType.CLROUND, TokenType.PERIOD, TokenType.CLSQUARE]):
             operator = self.previous()
-            if operator.ttype == TokenType.LROUND:
+            if operator.ttype == TokenType.CLROUND:
                 arguments = self.parse_arguments()
                 self.consume(TokenType.RROUND,
                              "Expected ')' to close argument list.")
                 primary = ast.Call(expr=primary, operator=operator,
                                    arguments=arguments)
-            elif operator.ttype == TokenType.LSQUARE:
+            elif operator.ttype == TokenType.CLSQUARE:
                 index = self.parse_expression()
                 primary = ast.Get(operator=operator, expr=primary, index=index)
                 self.consume(TokenType.RSQUARE, "Expected closing ']'.")
@@ -286,11 +294,11 @@ class Parser:
             return self.parse_block()
         if self.check(TokenType.IF):
             return self.parse_conditional()
-        if self.check(TokenType.WHILE):
-            return self.parse_while()#
+        if self.check(TokenType.FOR):
+            return self.parse_for()
         if self.check(TokenType.FUNCTION):
             return self.parse_function()
-        if self.match([TokenType.LROUND]):
+        if self.match([TokenType.LROUND, TokenType.CLROUND]):
             expr = self.parse_expression()
             self.consume(TokenType.RROUND, "Expected ')' after expression.")
             return ast.Grouping(expr=expr)
@@ -337,17 +345,20 @@ class Parser:
                      "Expected closing '}' after list of members.")
         return ast.Map(map=dictionary)
 
-    def parse_block(self):
+
+    def parse_chunk_until(self, ends: List[Token]):
         exprs = []
-        self.consume(TokenType.DO, "Expected 'do' keyword.")
-        self.consume(TokenType.LCURLY, "Expected opening '{' after 'do'.")
-        while not self.check(TokenType.RCURLY):
+        while self.peek().ttype not in ends:
             expr = self.parse_control()
-            self.consume(TokenType.SEMICOLON, "Expected ';' after expression.")
             exprs.append(expr)
-        self.consume(TokenType.RCURLY,
-                     "Expected closing '}' after list of expressions.")
         return ast.Block(exprs=exprs)
+
+
+    def parse_block(self):
+        self.consume(TokenType.DO, "Expected 'do' keyword.")
+        block = self.parse_chunk_until([TokenType.END])
+        self.consume(TokenType.END, "Expected 'end' keyword.")
+        return block
 
     def parse_conditional(self):
         operators = []
@@ -356,37 +367,31 @@ class Parser:
         default = None
         if self.match([TokenType.IF]):
             operators.append(self.previous())
-            # self.consume(TokenType.LROUND, "Expected '(' after 'if' keyword.")
             cond = self.parse_expression()
             conds.append(cond)
-            # self.consume(TokenType.RROUND, "Expected ')' after condition.")
-            expr = self.parse_control()
-            exprs.append(expr)
+            self.consume(TokenType.THEN, "Expected 'then' after condition.")
+            chunk = self.parse_chunk_until([TokenType.END, TokenType.ELIF, TokenType.ELSE])
+            exprs.append(chunk)
             while self.match([TokenType.ELIF]):
                 operators.append(self.previous())
-                # self.consume(TokenType.LROUND,
-                #              "Expected '(' after 'elif' keyword.")
                 cond = self.parse_expression()
                 conds.append(cond)
-                # self.consume(TokenType.RROUND, "Expected ')' after condition.")
-                expr = self.parse_control()
-                exprs.append(expr)
+                self.consume(TokenType.THEN, "Expected 'then' after condition.")
+                chunk = self.parse_chunk_until([TokenType.END, TokenType.ELIF, TokenType.ELSE])
+                exprs.append(chunk)
             if self.match([TokenType.ELSE]):
-                default = self.parse_control()
+                default = self.parse_chunk_until([TokenType.END])
+            self.consume(TokenType.END, "Expected closing 'end' after conditional expression.")
             return ast.Conditional(operators=operators, conds=conds, exprs=exprs, default=default)
 
-    def parse_while(self):
-        if self.match([TokenType.WHILE]):
+    def parse_for(self):
+        if self.match([TokenType.FOR]):
             operator = self.previous()
-            # self.consume(TokenType.LROUND,
-            #              "Expected '(' after 'while' keyword.")
-            condition = self.parse_expression()
-            # self.consume(TokenType.RROUND,
-            #              "Expected closing ')' after condition.")
-            expr = self.parse_control()
-            if not isinstance(expr, ast.Block):
-                expr = ast.Block(exprs=[expr])
-            return ast.While(operator=operator, cond=condition, expr=expr)
+            target = self.parse_expression()
+            self.consume(TokenType.IN, "Expected 'in' keyword.")
+            iterator = self.parse_expression()
+            expr = self.parse_block()
+            return ast.For(operator=operator, target=target, iterator=iterator, expr=expr)
 
     def parse_arguments(self):
         if self.check(TokenType.RROUND):
@@ -401,16 +406,14 @@ class Parser:
     def parse_function(self):
         if self.match([TokenType.FUNCTION]):
             operator = self.previous()
-            self.consume(TokenType.LROUND, "Expected '(' after 'function' keyword.")
+            self.consume(TokenType.CLROUND, "Expected '(' after 'function' keyword.")
             parameters, param_types = self.parse_parameters()
             self.consume(
                 TokenType.RROUND, "Expected closing ')' after list of function parameters.")
             out_type = self.parse_expression() if self.match(
                 [TokenType.ARROW]) else self.any_type_terminal(operator.line, operator.col)
             # print(f"parse_function: out_type = {out_type}")
-            expr = self.parse_control()
-            if not isinstance(expr, ast.Block):
-                expr = ast.Block(exprs=[expr])
+            expr = self.parse_block()
             return ast.Function(operator=operator, parameters=parameters, param_types=param_types, expr=expr, out_type=out_type)
 
     def parse_parameters(self):

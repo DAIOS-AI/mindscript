@@ -53,7 +53,7 @@ class Printer():
         comment = node.comment.literal
         expr = node.expr.accept(self)
         content = "\n" + self.prefix + f'{op} "{comment}"\n' + self.prefix + expr
-        return self.shorten_if_possible(content) 
+        return content 
 
     def binary(self, node):
         left = node.left.accept(self)
@@ -111,7 +111,7 @@ class Printer():
     def declaration(self, node):
         # operator, identifier
         identifier = node.token.literal
-        return f"def {identifier}"
+        return f"let {identifier}"
 
     def array(self, node):
         self.indent_incr()
@@ -121,7 +121,7 @@ class Printer():
             items.append(txt)
         self.indent_decr()
         content = "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
-        return self.shorten_if_possible(content)
+        return content
 
     def map(self, node):
         self.indent_incr()
@@ -130,35 +130,39 @@ class Printer():
             content += self.prefix + key + ": " + expr.accept(self) + ",\n"
         self.indent_decr()
         content += self.prefix + "}"
-        return self.shorten_if_possible(content)
+        return content
 
-    def block(self, node):
+    def print_chunk(self, node):
         self.indent_incr()
-        content = "do {\n"
+        content = ""
         for expr in node.exprs:
             content += self.prefix + expr.accept(self) + "\n"
         self.indent_decr()
-        content += self.prefix + "}"
-        return self.shorten_if_possible(content)
+        return content
+
+    def block(self, node):
+        content = "do\n" + self.print_chunk(node) + self.prefix + "end"
+        return content
 
     def conditional(self, node):
         cond = node.conds[0].accept(self)
-        expr = node.exprs[0].accept(self)
-        content = "if " + cond + " " + expr
+        expr = node.exprs[0]
+        content = "if " + cond + " then\n" + self.print_chunk(expr)
         for n in range(1, len(node.conds)):
             cond = node.conds[n].accept(self)
-            expr = node.exprs[n].accept(self)
-            content += "\n" + self.prefix + "elif " + cond + " " + expr
+            expr = node.exprs[n]
+            content += self.prefix + "elif " + cond + " then\n" + self.print_chunk(expr)
         if node.default is not None:
-            expr = node.default.accept(self)
-            content += "\n" + self.prefix + "else " + expr
-        return self.shorten_if_possible(content)
+            expr = node.default
+            content += self.prefix + "else\n" + self.print_chunk(expr)
+        content += self.prefix + "end"
+        return content
 
     def whileloop(self, node):
         cond = node.cond.accept(self)
         expr = node.expr.accept(self)
         content = f"while {cond} {expr}"
-        return self.shorten_if_possible(content)
+        return content
 
     def call(self, node):
         callee = node.expr.accept(self)
@@ -215,9 +219,12 @@ class Printer():
             repr = "{\n" + ",\n".join(items) + "\n" + self.prefix + "}"
         else:
             repr = str(value)
-        return self.shorten_if_possible(repr)
+        return repr
 
     def print(self, value):
+        repr = ""
         if isinstance(value, Expr):
-            return value.accept(self)
-        return self.print_value(value)            
+            repr = value.accept(self)
+        else:
+            repr = self.print_value(value)
+        return self.shorten_if_possible(repr)         

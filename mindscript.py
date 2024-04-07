@@ -2,7 +2,7 @@ import re
 import sys
 import ms
 import readline
-from ms.ast import IncompleteExpression
+from ms.ast import IncompleteExpression, Return
 
 
 BLUE = "\033[94m"
@@ -37,7 +37,7 @@ def repl():
     while True:
         try:
             line = input(prompt)
-            lines += line + "\n"
+            lines += "\n" + line
             res = ip.eval(lines)
             repr = ip.printer.print(res)
             print(f"{BLUE}{repr}{RESET}")
@@ -45,7 +45,7 @@ def repl():
             lines = ""
         except IncompleteExpression:
             prompt = "| "
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, Return):
             print("\nExiting...")
             exit(0)
         except EOFError:
