@@ -20,9 +20,9 @@ Keywords = {
     "elif": TokenType.ELIF,
     "else": TokenType.ELSE,
     "function": TokenType.FUNCTION,
-    "while": TokenType.WHILE,
     "for": TokenType.FOR,
     "in": TokenType.IN,
+    "type": TokenType.TYPECONS,
     "Null": TokenType.TYPE,
     "Str": TokenType.TYPE,
     "Int": TokenType.TYPE,
@@ -95,18 +95,6 @@ class Lexer:
             self.advance()
         self.forward()
 
-    # def skip_comment(self):
-    #     if self.peek() == "#":
-    #         self.advance()
-    #         while not self.is_at_end() and self.peek() != "\n":
-    #             self.advance()
-
-    # def skip_whitespace_and_comment(self):
-    #     self.skip_whitespace()
-    #     if not self.is_at_end():
-    #         self.skip_comment()
-    #     self.skip_whitespace()
-
     def is_digit(self, c: chr) -> bool:
         return "0" <= c and c <= "9"
 
@@ -125,13 +113,15 @@ class Lexer:
     def scan_string(self):
         lexeme = ""
         delimiter = self.advance()
-        while not self.is_at_end() and self.peek() != delimiter:
+        escaping = False
+        while not self.is_at_end() and (self.peek() != delimiter or escaping):
             c = self.advance()
             lexeme += c
+            escaping = True if c == "\\" else False
         if self.is_at_end():
             self.error("String was not terminated.")
         self.advance()
-        return bytes(lexeme, "utf-8").decode("unicode_escape")
+        return bytes(lexeme, "utf-8").decode("unicode_escape", errors="ignore")
 
     def scan_integer(self):
         lexeme = ""

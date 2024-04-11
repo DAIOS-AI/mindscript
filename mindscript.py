@@ -4,7 +4,7 @@ import ms
 import readline
 from ms.ast import IncompleteExpression, Return
 
-
+GREEN = "\033[32m"
 BLUE = "\033[94m"
 RESET = "\033[0m"
 WELCOME = """
@@ -40,6 +40,8 @@ def repl():
             lines += "\n" + line
             res = ip.eval(lines)
             repr = ip.printer.print(res)
+            if res.comment is not None:
+                print(f"{GREEN}{res.comment}")
             print(f"{BLUE}{repr}{RESET}")
             prompt = "> "
             lines = ""

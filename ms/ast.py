@@ -1,4 +1,6 @@
+from collections import namedtuple
 from enum import Enum
+from abc import abstractmethod
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
@@ -8,16 +10,17 @@ TokenType = Enum(
     "TokenType",
     [
         "EOF",
-        "SPACE",
-        "UNDERSCORE",
         "HASH",
         "NULL",
+        "STRING",
         "INTEGER",
         "NUMBER",
         "BOOLEAN",
         "OBJECT",
         "ARRAY",
-        "DATA_END",
+        "FUNCTION",
+        "TYPECONS",
+        "TYPE",
         "LROUND",
         "CLROUND",
         "RROUND",
@@ -43,8 +46,6 @@ TokenType = Enum(
         "COLON",
         "QUESTION",
         "ARROW",
-        "WORD_LIKE",
-        "STRING",
         "ID",
         "ADDRESS",
         "NOT",
@@ -57,14 +58,11 @@ TokenType = Enum(
         "THEN",
         "ELIF",
         "ELSE",
-        "WHILE",
         "FOR",
         "IN",
         "RETURN",
         "BREAK",
         "CONTINUE",
-        "TYPE",
-        "FUNCTION",
     ]
 )
 
@@ -85,7 +83,7 @@ class Token(BaseModel):
 
 # Exceptions
 
-   
+
 class IncompleteExpression(Exception):
     def __init__(self):
         pass
@@ -219,22 +217,40 @@ class Call(Expr):
         return visitor.call(self)
 
 
-class Get(Expr):
+class ObjectGet(Expr):
     operator: Token
     expr: Expr
     index: Expr
 
     def accept(self, visitor):
-        return visitor.get(self)
+        return visitor.object_get(self)
 
 
-class Set(Expr):
+class ArrayGet(Expr):
     operator: Token
     expr: Expr
     index: Expr
 
     def accept(self, visitor):
-        return visitor.get(self)
+        return visitor.array_get(self)
+
+
+class ObjectSet(Expr):
+    operator: Token
+    expr: Expr
+    index: Expr
+
+    def accept(self, visitor):
+        return visitor.object_get(self)
+
+
+class ArraySet(Expr):
+    operator: Token
+    expr: Expr
+    index: Expr
+
+    def accept(self, visitor):
+        return visitor.array_get(self)
 
 
 class Function(Expr):
@@ -254,10 +270,158 @@ class Program(BaseModel):
     def accept(self, visitor):
         return visitor.program(self)
 
+
+class TypeExpr(Expr):
+    pass
+
+
+class TypeDefinition(TypeExpr):
+    operator: Token
+    expr: TypeExpr
+
+    def accept(self, visitor):
+        return visitor.type_definition(self)
+
+
+class TypeAnnotation(TypeExpr):
+    operator: Token
+    comment: Token
+    expr: Expr
+
+    def accept(self, visitor):
+        return visitor.type_annotation(self)
+
+
+class TypeTerminal(TypeExpr):
+    token: Token
+
+    def accept(self, visitor):
+        return visitor.type_terminal(self)
+
+
+class TypeUnary(TypeExpr):
+    operator: Token
+    expr: TypeExpr
+
+    def accept(self, visitor):
+        return visitor.type_unary(self)
+
+
+class TypeBinary(TypeExpr):
+    left: TypeExpr
+    operator: Token
+    right: TypeExpr
+
+    def accept(self, visitor):
+        return visitor.type_binary(self)
+
+
+class TypeArray(TypeExpr):
+    array: List[TypeExpr]
+
+    def accept(self, visitor):
+        return visitor.type_array(self)
+
+
+class TypeMap(TypeExpr):
+    map: Dict[str, TypeExpr]
+
+    def accept(self, visitor):
+        return visitor.type_map(self)
+
+
+class TypeGrouping(TypeExpr):
+    expr: TypeExpr
+
+    def accept(self, visitor):
+        return visitor.type_grouping(self)
+
 # Return
 
-class Return(Exception):
+class Control(Exception):
+    pass
+
+
+class Return(Control):
     def __init__(self, operator: Token, expr: Expr):
         self.operator = operator
         self.expr = expr
 
+
+class Break(Control):
+    def __init__(self, operator: Token, expr: Expr):
+        self.operator = operator
+        self.expr = expr
+
+
+class Continue(Control):
+    def __init__(self, operator: Token, expr: Expr):
+        self.operator = operator
+        self.expr = expr
+
+
+# Value types
+
+# Primitive value.
+class Value():
+    value: any
+    comment: str
+
+    def __init__(self, value, comment=None):
+        self.value = value
+        self.comment = comment
+
+
+# Types.
+
+
+class UserType():
+    definition: Expr
+
+    def __init__(self, ip: 'Interpreter', definition: TypeExpr):  # type: ignore
+        self.ip = ip
+        self.env = ip.env
+        self.definition = definition
+
+    def __expr__(self):
+        text = self.ip.printer.print(self.definition)
+        return text
+
+    def __str__(self):
+        text = self.ip.printer.print(self.definition)
+        return text
+
+
+# Callables.
+
+
+class Callable():
+    definition: Expr
+
+    @abstractmethod
+    def call(self, ip: 'Interpreter', args: List[Any]) -> Any:  # type: ignore
+        pass
+
+
+# Native functions.
+
+class NativeCallable(Callable):
+    def __init__(self, ip: 'Interpreter'):  # type: ignore
+        self.ip = ip
+        self.env = ip.env
+        self.definition = Terminal(
+            token=Token(
+                ttype=TokenType.STRING,
+                literal="<native function>"
+            )
+        )
+
+    @abstractmethod
+    def call(self, args: List[Any]) -> Any:
+        pass
+
+    def __repr__(self):
+        return "<native function>"
+
+    def __str__(self):
+        return "<native function>"
