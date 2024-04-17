@@ -221,7 +221,7 @@ class Lexer:
 
         if c == "." and not self.is_digit(self.peek()):
             return self.add_token(TokenType.PERIOD, ".")
-        
+
         if c == "#":
             return self.add_token(TokenType.HASH, "#")
 

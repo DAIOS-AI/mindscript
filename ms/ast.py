@@ -71,8 +71,8 @@ Literal = Any
 
 class Token(BaseModel):
     ttype: TokenType
-    col: int = 0
-    line: int = 0
+    col: Optional[int] = 0
+    line: Optional[int] = 0
     literal: Literal = None
 
     def __repr__(self):
@@ -115,8 +115,8 @@ class Assign(Expr):
     operator: Token
     expr: Expr
 
-    def accept(self, visitor):
-        return visitor.assign(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.assign(self, **kwargs)
 
 
 class Annotation(Expr):
@@ -124,16 +124,16 @@ class Annotation(Expr):
     comment: Token
     expr: Expr
 
-    def accept(self, visitor):
-        return visitor.annotation(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.annotation(self, **kwargs)
 
 
 class Declaration(Expr):
     operator: Token
     token: Token
 
-    def accept(self, visitor):
-        return visitor.declaration(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.declaration(self, **kwargs)
 
 
 class Binary(Expr):
@@ -141,51 +141,51 @@ class Binary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor):
-        return visitor.binary(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.binary(self, **kwargs)
 
 
 class Unary(Expr):
     operator: Token
     expr: Expr
 
-    def accept(self, visitor):
-        return visitor.unary(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.unary(self, **kwargs)
 
 
 class Grouping(Expr):
     expr: Expr
 
-    def accept(self, visitor):
-        return visitor.grouping(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.grouping(self, **kwargs)
 
 
 class Terminal(Expr):
     token: Token
 
-    def accept(self, visitor):
-        return visitor.terminal(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.terminal(self, **kwargs)
 
 
 class Array(Expr):
     array: List[Expr]
 
-    def accept(self, visitor):
-        return visitor.array(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.array(self, **kwargs)
 
 
 class Map(Expr):
     map: Dict[str, Expr]
 
-    def accept(self, visitor):
-        return visitor.map(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.map(self, **kwargs)
 
 
 class Block(Expr):
     exprs: List[Expr]
 
-    def accept(self, visitor):
-        return visitor.block(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.block(self, **kwargs)
 
 
 class Conditional(Expr):
@@ -194,8 +194,8 @@ class Conditional(Expr):
     exprs: List[Expr]
     default: Optional[Expr]
 
-    def accept(self, visitor):
-        return visitor.conditional(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.conditional(self, **kwargs)
 
 
 class For(Expr):
@@ -204,8 +204,8 @@ class For(Expr):
     iterator: Expr
     expr: Expr
 
-    def accept(self, visitor):
-        return visitor.forloop(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.forloop(self, **kwargs)
 
 
 class Call(Expr):
@@ -213,8 +213,8 @@ class Call(Expr):
     operator: Token
     arguments: List[Expr]
 
-    def accept(self, visitor):
-        return visitor.call(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.call(self, **kwargs)
 
 
 class ObjectGet(Expr):
@@ -222,8 +222,8 @@ class ObjectGet(Expr):
     expr: Expr
     index: Expr
 
-    def accept(self, visitor):
-        return visitor.object_get(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.object_get(self, **kwargs)
 
 
 class ArrayGet(Expr):
@@ -231,8 +231,8 @@ class ArrayGet(Expr):
     expr: Expr
     index: Expr
 
-    def accept(self, visitor):
-        return visitor.array_get(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.array_get(self, **kwargs)
 
 
 class ObjectSet(Expr):
@@ -240,8 +240,8 @@ class ObjectSet(Expr):
     expr: Expr
     index: Expr
 
-    def accept(self, visitor):
-        return visitor.object_get(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.object_get(self, **kwargs)
 
 
 class ArraySet(Expr):
@@ -249,26 +249,15 @@ class ArraySet(Expr):
     expr: Expr
     index: Expr
 
-    def accept(self, visitor):
-        return visitor.array_get(self)
-
-
-class Function(Expr):
-    operator: Token
-    out_type: Expr
-    parameters: List[Token]
-    param_types: List[Expr]
-    expr: Expr
-
-    def accept(self, visitor):
-        return visitor.function(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.array_get(self, **kwargs)
 
 
 class Program(BaseModel):
     program: List[Expr]
 
-    def accept(self, visitor):
-        return visitor.program(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.program(self, **kwargs)
 
 
 class TypeExpr(Expr):
@@ -276,11 +265,11 @@ class TypeExpr(Expr):
 
 
 class TypeDefinition(TypeExpr):
-    operator: Token
+    operator: Optional[Token] = None
     expr: TypeExpr
 
-    def accept(self, visitor):
-        return visitor.type_definition(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.type_definition(self, **kwargs)
 
 
 class TypeAnnotation(TypeExpr):
@@ -288,23 +277,23 @@ class TypeAnnotation(TypeExpr):
     comment: Token
     expr: Expr
 
-    def accept(self, visitor):
-        return visitor.type_annotation(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.type_annotation(self, **kwargs)
 
 
 class TypeTerminal(TypeExpr):
     token: Token
 
-    def accept(self, visitor):
-        return visitor.type_terminal(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.type_terminal(self, **kwargs)
 
 
 class TypeUnary(TypeExpr):
     operator: Token
     expr: TypeExpr
 
-    def accept(self, visitor):
-        return visitor.type_unary(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.type_unary(self, **kwargs)
 
 
 class TypeBinary(TypeExpr):
@@ -312,29 +301,40 @@ class TypeBinary(TypeExpr):
     operator: Token
     right: TypeExpr
 
-    def accept(self, visitor):
-        return visitor.type_binary(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.type_binary(self, **kwargs)
 
 
 class TypeArray(TypeExpr):
     array: List[TypeExpr]
 
-    def accept(self, visitor):
-        return visitor.type_array(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.type_array(self, **kwargs)
 
 
 class TypeMap(TypeExpr):
     map: Dict[str, TypeExpr]
 
-    def accept(self, visitor):
-        return visitor.type_map(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.type_map(self, **kwargs)
 
 
 class TypeGrouping(TypeExpr):
     expr: TypeExpr
 
-    def accept(self, visitor):
-        return visitor.type_grouping(self)
+    def accept(self, visitor, **kwargs):
+        return visitor.type_grouping(self, **kwargs)
+
+
+class Function(Expr):
+    operator: Token
+    parameters: List[Token]
+    types: TypeBinary
+    expr: Expr
+
+    def accept(self, visitor, **kwargs):
+        return visitor.function(self, **kwargs)
+
 
 # Return
 

@@ -112,7 +112,7 @@ class Parser:
                 return
 
     def any_type_terminal(self, line: int, col: int):
-        return ast.Terminal(
+        return ast.TypeTerminal(
             token=Token(
                 ttype=TokenType.TYPE,
                 literal="Any",
@@ -294,7 +294,7 @@ class Parser:
             return ast.Terminal(token=token)
         if self.match([TokenType.TYPE]):
             self.error(self.previous(),
-                       "Expected an expression, got a type expression.")
+                       "Type atom without type constructor.")
         if self.check(TokenType.LSQUARE) or self.check(TokenType.CLSQUARE):
             return self.parse_array()
         if self.check(TokenType.LCURLY):
@@ -423,33 +423,35 @@ class Parser:
             operator = self.previous()
             self.consume(TokenType.CLROUND,
                          "Expected '(' after 'function' keyword.")
-            parameters, param_types = self.parse_parameters()
+            params, types = self.parse_parameters()
             self.consume(
                 TokenType.RROUND, "Expected closing ')' after list of function parameters.")
             out_type = self.parse_type_expr() if self.match(
                 [TokenType.ARROW]) else self.any_type_terminal(operator.line, operator.col)
-            # print(f"parse_function: out_type = {out_type}")
             expr = self.parse_block()
-            return ast.Function(operator=operator, parameters=parameters, param_types=param_types, expr=expr, out_type=out_type)
+            in_type = ast.TypeArray(array=types)
+            # TODO: Operator here is the function, not the arrow, since arrow is optional.
+            functype = ast.TypeBinary(operator=operator, left=in_type, right=out_type)
+            return ast.Function(operator=operator, parameters=params, types=functype, expr=expr)
 
     def parse_parameters(self):
-        parameters = []
-        param_types = []
+        params = []
+        types = []
         if self.match([TokenType.ID]):
             param = self.previous()
             param_type = self.parse_type_expr() if self.match(
                 [TokenType.COLON]) else self.any_type_terminal(param.line, param.col)
-            parameters.append(param)
-            param_types.append(param_type)
+            params.append(param)
+            types.append(param_type)
             while self.match([TokenType.COMMA]):
                 param = self.advance()
                 if param.ttype != TokenType.ID:
                     self.error(param, "Expected an identifier.")
                 param_type = self.parse_type_expr() if self.match(
                     [TokenType.COLON]) else self.any_type_terminal(param.line, param.col)
-                parameters.append(param)
-                param_types.append(param_type)
-        return parameters, param_types
+                params.append(param)
+                types.append(param_type)
+        return params, types
 
     def parse_target(self):
         if self.match([TokenType.ID]):
@@ -487,6 +489,8 @@ class Parser:
         if self.match([TokenType.ARROW]):
             operator = self.previous()
             expr = self.parse_type_expr()
+            while isinstance(expr, ast.TypeGrouping):
+                expr = expr.expr
             return ast.TypeBinary(left=left, operator=operator, right=expr)
         return left
 
@@ -501,7 +505,7 @@ class Parser:
         if self.match([TokenType.ID, TokenType.TYPE]):
             token = self.previous()
             return ast.TypeTerminal(token=token)
-        if self.check(TokenType.LSQUARE):
+        if self.check(TokenType.LSQUARE) or self.check(TokenType.CLSQUARE):
             return self.parse_type_arr()
         if self.check(TokenType.LCURLY):
             return self.parse_type_map()
@@ -517,7 +521,7 @@ class Parser:
 
     def parse_type_arr(self):
         array = []
-        if self.match([TokenType.LSQUARE]):
+        if self.match([TokenType.LSQUARE, TokenType.CLSQUARE]):
             if self.match([TokenType.RSQUARE]):
                 return ast.TypeArray(array=[])
             expr = self.parse_type_expr()

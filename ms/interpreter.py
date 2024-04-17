@@ -68,20 +68,20 @@ class Interpreter:
             token.line, token.col, "RUNTIME ERROR", msg)
         raise RuntimeError(msg)
 
-    def program(self, node):
+    def program(self, node: ast.Expr):
         value = None
         exprs = node.program
         for expr in exprs:
             value = expr.accept(self)
         return value
 
-    def annotation(self, node):
+    def annotation(self, node: ast.Expr):
         comment = node.comment.literal
         value = node.expr.accept(self)
         value.comment = comment
         return value
 
-    def binary(self, node):
+    def binary(self, node: ast.Expr):
 
         operator = node.operator
 
@@ -166,7 +166,7 @@ class Interpreter:
 
         self.error(operator, "Inconsistent operands.")
 
-    def unary(self, node):
+    def unary(self, node: ast.Expr):
         operator = node.operator
         expr = node.expr.accept(self)
         value = expr.value
@@ -192,11 +192,11 @@ class Interpreter:
             self.error(operator, "Expected a preceding type.")
         self.error(operator, "Wrong unary operation.")
 
-    def grouping(self, node):
+    def grouping(self, node: ast.Expr):
         expr = node.expr.accept(self)
         return expr
 
-    def terminal(self, node):
+    def terminal(self, node: ast.Expr):
         if node.token.ttype == ast.TokenType.ID:
             identifier = node.token.literal
             try:
@@ -206,7 +206,7 @@ class Interpreter:
         value = node.token.literal
         return ast.Value(value, None)
 
-    def array_get(self, node):
+    def array_get(self, node: ast.Expr):
         # expr, index
         operator = node.operator
         getter = node.expr.accept(self).value
@@ -220,7 +220,7 @@ class Interpreter:
             self.error(operator, "Array index must be an integer.")
         self.error(operator, "Attempted to access a member on a non-array.")
 
-    def object_get(self, node):
+    def object_get(self, node: ast.Expr):
         # expr, index
         operator = node.operator
         getter = node.expr.accept(self).value
@@ -231,7 +231,7 @@ class Interpreter:
             self.error(operator, f"Unknown property '{index}'.")
         self.error(operator, "Attempted to access a property on a non-object.")
 
-    def set(self, node):
+    def set(self, node: ast.Expr):
         # This should never be called directly.
         self.error(node.index, "Set should not be interpreted directly.")
 
@@ -292,26 +292,26 @@ class Interpreter:
             return res
         self.error(operator, "Attempted to assign to a wrong target.")
 
-    def assign(self, node):
+    def assign(self, node: ast.Expr):
         # Capture environment, because expression might change it.
         previous = self.env
         value = node.expr.accept(self)
         return self.assign_search(previous, node.target, node.operator, value)
 
-    def declaration(self, node):
+    def declaration(self, node: ast.Expr):
         # operator, identifier
         identifier = node.token.literal
         self.env.define(identifier)
         return ast.Value(None, None)
 
-    def array(self, node):
+    def array(self, node: ast.Expr):
         values = []
         for expr in node.array:
             value = expr.accept(self)
             values.append(value)
         return ast.Value(values, None)
 
-    def map(self, node):
+    def map(self, node: ast.Expr):
         previous = self.env
         values = {}
         try:
@@ -325,7 +325,7 @@ class Interpreter:
 
         return ast.Value(values, None)
 
-    def block(self, node):
+    def block(self, node: ast.Expr):
         env = Environment(enclosing=self.env)
         return self.execute_block(node, env)
 
@@ -342,7 +342,7 @@ class Interpreter:
             self.env = previous
         return value
 
-    def conditional(self, node):
+    def conditional(self, node: ast.Expr):
         for n in range(len(node.conds)):
             condition = node.conds[n].accept(self).value
             if type(condition) != bool:
@@ -354,7 +354,7 @@ class Interpreter:
             return node.default.accept(self)
         return ast.Value(None, None)
 
-    def forloop(self, node):
+    def forloop(self, node: ast.Expr):
         value = None
         target = node.target
         iterator = node.iterator.accept(self).value
@@ -372,6 +372,7 @@ class Interpreter:
         elif type(iterator) == dict:
             env = Environment(enclosing=self.env)
             for iter in iterator.items():
+                iter = ast.Value([ast.Value(iter[0],None), iter[1]], None)
                 try:
                     self.assign_search(env, target, node.operator, iter)
                     value = self.execute_block(node.expr, env)
@@ -383,7 +384,7 @@ class Interpreter:
         elif isinstance(iterator, ast.Callable):
             env = Environment(enclosing=self.env)
             iter = iterator.call([])
-            while iter is not None:
+            while iter.value is not None:
                 try:
                     self.assign_search(env, target, node.operator, iter)
                     value = self.execute_block(node.expr, env)
@@ -398,24 +399,22 @@ class Interpreter:
                        "Can only iterate over array, object, or callable.")
         return value
 
-    def call(self, node):
+    def call(self, node: ast.Expr):
         callee = node.expr.accept(self).value
         args = []
         for argument in node.arguments:
             arg = argument.accept(self)
             args.append(arg)
         if isinstance(callee, ast.Callable):
-            try:
-                return callee.call(args)
-            except ast.Return as e:
-                return e.expr
+            return callee.call(args)
+
         # Calling a function on a constant value.
         if len(args) > 0:
             self.error(
                 node.operator, "Attempted to call a constant function with one or more arguments.")
         return callee
 
-    def function(self, node):
+    def function(self, node: ast.Expr):
         try:
             user_callable = UserCallable(ip=self, definition=node)
             # Create a new environment to protect the closure environment.
@@ -424,7 +423,7 @@ class Interpreter:
             print(e)
         return ast.Value(user_callable, None)
 
-    def type_definition(self, node):
+    def type_definition(self, node: ast.Expr):
         operator = node.operator
         new_node = node.expr.accept(self)
         definition = ast.TypeDefinition(operator=operator, expr=new_node)
@@ -433,105 +432,52 @@ class Interpreter:
         usertype = ast.UserType(ip=self, definition=definition)
         return ast.Value(usertype, None)
 
-    def type_annotation(self, node):
+    def type_annotation(self, node: ast.Expr):
         operator = node.operator
         comment = node.comment
         expr = node.expr.accept(self)
         return ast.TypeAnnotation(operator=operator, comment=comment, expr=expr)
 
-    def type_grouping(self, node):
+    def type_grouping(self, node: ast.Expr):
         expr = node.expr.accept(self)
         return ast.TypeGrouping(expr=expr)
 
-    def type_unary(self, node):
+    def type_unary(self, node: ast.Expr):
         expr = node.expr.accept(self)
         operator = node.operator
         return ast.TypeUnary(operator=operator, expr=expr)
 
-    def type_binary(self, node):
+    def type_binary(self, node: ast.Expr):
         left = node.left.accept(self)
         right = node.right.accept(self)
         operator = node.operator
         return ast.TypeBinary(left=left, operator=operator, right=right)
 
-    def type_terminal(self, node):
+    def type_terminal(self, node: ast.Expr):
         if node.token.ttype == ast.TokenType.ID:
             identifier = node.token.literal
             try:
                 value = self.env.get(identifier)
             except KeyError:
                 self.error(node.token, "Undefined variable.")
-            if isinstance(value, ast.UserType):
+            if isinstance(value.value, ast.UserType):
                 return node
             self.error(node.token, "Variable must be a type.")
         return node
 
-    def type_array(self, node):
+    def type_array(self, node: ast.Expr):
         array = []
         for expr in node.array:
             new_node = expr.accept(self)
             array.append(new_node)
         return ast.TypeArray(array=array)
 
-    def type_map(self, node):
+    def type_map(self, node: ast.Expr):
         dictionary = {}
         for key, expr in node.map.items():
             new_node = expr.accept(self)
             dictionary[key] = new_node
         return ast.TypeMap(map=dictionary)
-
-    # def type_check_recursion(self, value, node):
-    #     valid = True
-
-    #     if isinstance(node, ast.TypeTerminal) and node.ttype == ast.TokenType.TYPE:
-    #         if node.literal == "Any":
-    #             return True
-    #         elif node.literal == "Str" and type(value) == str:
-    #             return True
-    #         elif node.literal == "Int" and type(value) == int:
-    #             return True
-    #         elif node.literal == "Num" and type(value) == float:
-    #             return True
-    #         elif node.literal == "Bool" and type(value) == bool:
-    #             return True
-    #         elif node.literal == "Null" and value == None:
-    #             return True
-    #         return False
-
-    #     elif isinstance(node, ast.TypeTerminal) and node.ttype == ast.TokenType.ID:
-    #         usertype = self.env.get(node.literal)
-    #         return self.type_check(value, node)
-
-    #     elif isinstance(node, ast.TypeBinary):
-    #         pass
-
-    #     if value is None:
-    #         repr = "null"
-    #     elif type(value) == str:
-    #         repr = f'"{value}"'
-    #     elif type(value) == float or type(value) == int:
-    #         repr = str(value)
-    #     elif type(value) == bool:
-    #         repr = "true" if value else "false"
-    #     elif type(value) == list:
-    #         items = []
-    #         self.indent_incr()
-    #         for item in value:
-    #             txt = self.prefix + self.print_value(item)
-    #             items.append(txt)
-    #         self.indent_decr()
-    #         repr = "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
-    #     elif type(value) == dict:
-    #         items = []
-    #         self.indent_incr()
-    #         for key, item in value.items():
-    #             txt = self.prefix + f'"{key}"' + ": " + self.print_value(item)
-    #             items.append(txt)
-    #         self.indent_decr()
-    #         repr = "{\n" + ",\n".join(items) + "\n" + self.prefix + "}"
-    #     else:
-    #         repr = str(value)
-    #     return repr
 
 
 class UserCallable(ast.Callable):
@@ -546,7 +492,10 @@ class UserCallable(ast.Callable):
         env = Environment(enclosing=self.env)
         for parameter, arg in zip(self.definition.parameters, args):
             env.define(parameter.literal, arg)
-        value = self.ip.execute_block(self.definition.expr, env)
+        try:
+            value = self.ip.execute_block(self.definition.expr, env)
+        except ast.Return as e:
+            value = e.expr
         return value
 
     def __repr__(self):

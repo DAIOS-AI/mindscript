@@ -1,8 +1,8 @@
 import re 
 from ms.ast import TokenType, Token, Expr, List, Dict, Terminal, Callable, UserType, Value
 
-TABLEN = 4
-MAXDEPTH = 5
+TABLEN = 2
+MAXDEPTH = 4
 LINELEN = 80
 
 class Printer():
@@ -49,10 +49,7 @@ class Printer():
         return content
 
     def annotation(self, node):
-        comment = node.comment.literal
-        expr = node.expr.accept(self)
-        content = f"\n{self.prefix}# \"{comment}\"\n{self.prefix}{expr}\n"
-        return content
+        return node.expr.accept(self)
 
     def binary(self, node):
         left = node.left.accept(self)
@@ -72,6 +69,7 @@ class Printer():
         return f"{op}({expr})" # Should be "return", "break", "continue"
 
     def grouping(self, node):
+        if self.is_max_depth(): return "(...)"
         expr = node.expr.accept(self)
         return f"({expr})"
 
@@ -119,6 +117,7 @@ class Printer():
             txt = self.prefix + expr.accept(self)
             items.append(txt)
         self.indent_decr()
+        if self.is_max_depth(): return "[...]"
         return "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
 
     def map(self, node):
@@ -128,9 +127,11 @@ class Printer():
             txt = self.prefix + key + ": " + expr.accept(self)
             items.append(txt)
         self.indent_decr()
+        if self.is_max_depth(): return "{...}"
         return "{\n" + ",\n".join(items) + "\n" + self.prefix + "}"
 
     def print_chunk(self, node):
+        if self.is_max_depth(): return "..."
         self.indent_incr()
         content = ""
         for expr in node.exprs:
@@ -139,12 +140,14 @@ class Printer():
         return f"{content}"
 
     def block(self, node):
+        if self.is_max_depth(): return "do ... end"
         content = "do\n"
         content += self.print_chunk(node) 
         content += self.prefix + "end"
         return content
 
     def conditional(self, node):
+        if self.is_max_depth(): return "if ... end"
         cond = node.conds[0].accept(self)
         expr = node.exprs[0]
         content = "if " + cond + " then\n" + self.print_chunk(expr)
@@ -156,12 +159,6 @@ class Printer():
             expr = node.default
             content += self.prefix + "else\n" + self.print_chunk(expr)
         content += self.prefix + "end"
-        return content
-
-    def whileloop(self, node):
-        cond = node.cond.accept(self)
-        expr = node.expr.accept(self)
-        content = f"while {cond} {expr}"
         return content
 
     def call(self, node):
@@ -176,12 +173,14 @@ class Printer():
 
     def function(self, node):
         pairs = []
-        for param, param_type in zip(node.parameters, node.param_types):
+        in_types = node.types.left
+        out_type = node.types.right
+        for param, param_type in zip(node.parameters, in_types.array):
             name = param.literal
             type_spec = param_type.accept(self)
             pairs.append(f"{name}: {type_spec}")
         parameters = ", ".join(pairs)
-        out_spec = node.out_type.accept(self)
+        out_spec = out_type.accept(self)
         expr = node.expr.accept(self)
         return f"function({parameters}) -> {out_spec} {expr}"
 
@@ -192,12 +191,15 @@ class Printer():
 
     def type_annotation(self, node):
         comment = node.comment.literal
-        expr = node.expr.accept(self)
-        content = f"\n{self.prefix}# \"{comment}\"\n{self.prefix}{expr}\n"
-        return content
+        return node.expr.accept(self)
 
     def type_terminal(self, node):
         return node.token.literal
+
+    def type_grouping(self, node):
+        if self.is_max_depth(): return "(...)"
+        expr = node.expr.accept(self)
+        return f"({expr})"
 
     def type_unary(self, node):
         expr = node.expr.accept(self)
@@ -213,6 +215,7 @@ class Printer():
         return self.shorten_if_possible(content)
     
     def type_array(self, node):
+        if self.is_max_depth(): return "[...]"
         self.indent_incr()
         items = []
         for expr in node.array:
@@ -222,6 +225,7 @@ class Printer():
         return "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
 
     def type_map(self, node):
+        if self.is_max_depth(): return "{...}"
         self.indent_incr()
         items = []
         for key, expr in node.map.items():
@@ -242,8 +246,9 @@ class Printer():
         elif type(v) == float or type(v) == int:
             repr = str(v)
         elif type(v) == bool:
-            repr = "true" if value else "false"
+            repr = "true" if v else "false"
         elif type(v) == list:
+            if self.is_max_depth(): return "[...]"
             items = []
             self.indent_incr()
             for item in v:
@@ -252,6 +257,7 @@ class Printer():
             self.indent_decr()
             repr = "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
         elif type(v) == dict:
+            if self.is_max_depth(): return "{...}"
             items = []
             self.indent_incr()
             for key, item in v.items():

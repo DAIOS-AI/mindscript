@@ -75,10 +75,32 @@ print("\nTesting annotations.")
 let speed = 300000000
 print(speed)
 
-# "\ncomputes the factorial of a given integer."
+# "computes the factorial of a given integer."
 let factorial = function(n: Int) -> Int do
   if n==0 or n==1 then 1
   else n*factorial(n-1)
   end
 end
 print(factorial)
+
+print("\nTesting for loops.")
+let range = function(s: Int, e: Int) -> (Null -> Int?) do
+  function() -> Int? do
+    if s<e then
+      let value = s
+      s = s + 1
+      return(value)
+    else
+      return(null)
+    end
+  end
+end
+
+print("\nLoops over arrays.")
+for let x in ["1", "2", "3"] do print(x) end
+
+print("\nLoops over objects.")
+for let x in {"x": 1, "y": 2, "z": 3} do print(x) end
+
+print("\nLoops over iterators.")
+for let x in range(1, 4) do print(x) end
