@@ -39,6 +39,8 @@ def repl():
             line = input(prompt)
             lines += "\n" + line
             res = ip.eval(lines)
+            if res is None:
+                continue
             repr = ip.printer.print(res)
             if res.comment is not None:
                 print(f"{GREEN}{res.comment}")

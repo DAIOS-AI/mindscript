@@ -429,7 +429,7 @@ class Parser:
             out_type = self.parse_type_expr() if self.match(
                 [TokenType.ARROW]) else self.any_type_terminal(operator.line, operator.col)
             expr = self.parse_block()
-            in_type = ast.TypeArray(array=types)
+            in_type = types[0] if len(types) == 1 else ast.TypeArray(array=types)
             # TODO: Operator here is the function, not the arrow, since arrow is optional.
             functype = ast.TypeBinary(operator=operator, left=in_type, right=out_type)
             return ast.Function(operator=operator, parameters=params, types=functype, expr=expr)

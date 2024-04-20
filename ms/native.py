@@ -1,28 +1,28 @@
 from typing import List, Any
-from ms.ast import NativeCallable, Value
-from ms.interpreter import Interpreter, Environment
+from ms.ast import NativeFunction, Value, Environment
+from ms.interpreter import Interpreter
 from ms.types import TypeChecker
 
 # Native functions.
 
-# class IsType(NativeCallable):
+# class IsType(NativeFunction):
 #     def __init__(self, ip: Interpreter):
 #         super(IsType, self).__init__(ip)
 #         self.ip = ip
 #         self.checker = ValueAsType()
-    
+
 #     def call(self, args: List[Any]):
 #         data = args[0]
 #         typedata = args[1]
 #         return self.checker.check(typedata, data)
 
 
-class Import(NativeCallable):
+class Import(NativeFunction):
     def __init__(self, ip: Interpreter):
-        super(Import, self).__init__(ip)
+        super().__init__(ip, "function(filename: Str) -> {}")
         self.ip = ip
-    
-    def call(self, args: List[Any]):
+
+    def func(self, args: List[Any]):
         try:
             with open(args[0].value, "r") as fh:
                 code = fh.read()
@@ -45,21 +45,24 @@ class Import(NativeCallable):
             return None
         return Value(module, None)
 
-class Str(NativeCallable):
+
+class Str(NativeFunction):
     def __init__(self, ip: Interpreter):
-        super(Str, self).__init__(ip)
+        super().__init__(ip, "function(value: Any) -> Str")
         self.ip = ip
-    
-    def call(self, args: List[Any]):
+
+    def func(self, args: List[Any]):
         repr = self.ip.printer.print(args[0])
         return Value(repr, None)
 
-class Print(NativeCallable):
+
+class Print(NativeFunction):
     def __init__(self, ip: Interpreter):
-        super(Print, self).__init__(ip)
+        definition = "function(value: Any) -> Any"
+        super().__init__(ip, definition)
         self.ip = ip
 
-    def call(self, args: List[Any]):
+    def func(self, args: List[Value]):
         if type(args[0].value) == str:
             print(args[0].value)
         else:
@@ -67,12 +70,14 @@ class Print(NativeCallable):
             print(repr)
         return args[0]
 
-class Dump(NativeCallable):
+
+class Dump(NativeFunction):
     def __init__(self, ip: Interpreter):
-        super(Dump, self).__init__(ip)
+        definition = "function() -> Null"
+        super().__init__(ip, definition)
         self.ip = ip
 
-    def call(self, args: List[Any]):
+    def func(self, args: List[Value]):
         if len(args) == 0:
             tag = ""
         else:
@@ -89,32 +94,33 @@ class Dump(NativeCallable):
         print("=== STATE DUMP END")
         return Value(None, None)
 
-class GetEnv(NativeCallable):
+
+class GetEnv(NativeFunction):
     def __init__(self, ip: Interpreter):
-        super(GetEnv, self).__init__(ip)
+        super().__init__(ip, "function() -> {}")
         self.ip = ip
 
-    def call(self, args: List[Any]):
+    def func(self, args: List[Any]):
         return Value(self.ip.env.vars, None)
 
-class TypeOf(NativeCallable):
+
+class TypeOf(NativeFunction):
     def __init__(self, ip: Interpreter):
-        super(TypeOf, self).__init__(ip)
+        super().__init__(ip, "function(value: Any) -> Type")
         self.ip = ip
-        self.checker = TypeChecker(ip)
 
-    def call(self, args: List[Any]):
-        valtype = self.checker.typeof(self.ip, args[0])
-        return Value(valtype, None)
+    def func(self, args: List[Any]):
+        usertype = self.ip.typeof(args[0])
+        return Value(usertype, None)
 
-class IsSubtype(NativeCallable):
+
+class IsSubtype(NativeFunction):
     def __init__(self, ip: Interpreter):
-        super(IsSubtype, self).__init__(ip)
+        super().__init__(ip, "function(sub: Type, super: Type) -> Bool")
         self.ip = ip
-        self.checker = TypeChecker(ip)
 
-    def call(self, args: List[Any]):
-        valtype = self.checker.issubtype(args[0], args[1])
+    def func(self, args: List[Any]):
+        valtype = self.ip.issubtype(args[0], args[1])
         return Value(valtype, None)
 
 
@@ -125,7 +131,9 @@ def interpreter(interactive=False):
     ip.define("print", Value(Print(ip=ip)))
     ip.define("dump", Value(Dump(ip=ip)))
     ip.define("get_env", Value(GetEnv(ip=ip)))
-    # ip.define("is_instance", Value(IsType(ip=ip)))
     ip.define("typeof", Value(TypeOf(ip=ip)))
     ip.define("issubtype", Value(IsSubtype(ip=ip)))
+
+    # Clean the lexer's code buffer.
+    ip.parser.lexer.reset()
     return ip

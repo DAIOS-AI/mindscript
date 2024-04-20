@@ -1,12 +1,7 @@
 from typing import Optional, Any, List
 import ms.ast as ast
-from ms.printer import Printer
-from ms.parser import Parser
 
 class TypeChecker():
-
-    def __init__(self, ip):
-        self.ip = ip
 
     def _resolve_type(self, t, env):
         resolving = True
@@ -86,7 +81,7 @@ class TypeChecker():
 
         return False
 
-    def _typeof_recursion(self, value):
+    def _typeof_recursion(self, value) -> ast.TypeExpr:
         valtype = None
         v = value.value
         if v is None:
@@ -116,27 +111,23 @@ class TypeChecker():
                 subtype = self._typeof_recursion(item)
                 items[key] = subtype
             valtype = ast.TypeMap(map=items)
-        elif isinstance(v, ast.Callable):
-            valtype = v.definition
+        elif isinstance(v, ast.FunctionObject):
+            # print(f"typechecker._typeof_recursion: v.definition.types = {v.definition.types}")
+            valtype = v.definition.types
         elif isinstance(v, ast.UserType):
-            valtype = v.definition
+            valtype = ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Type"))
         else:
             "print_value: Unknown value type!"
         return valtype
 
-    def typeof(self, value):
-        if type(value.value) == ast.UserType:
-            # ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Type"))
-            return None
-        valtype = self._get_type_recursion(value)
-        definition = ast.TypeDefinition(token=None, expr=valtype)
-        return ast.UserType(self.ip, definition)
+    def typeof(self, value: ast.Value) -> ast.TypeExpr:
+        return self._typeof_recursion(value)
 
-    def issubtype(self, subtype: ast.Value, supertype: ast.Value):
-        if type(subtype.value) != ast.UserType or type(subtype.value) != ast.UserType:
-            return ast.Value(None, None)
+    def issubtype(self, subtype: ast.Value, supertype: ast.Value) -> bool:
+        if type(subtype.value) != ast.UserType or type(supertype.value) != ast.UserType:
+            return False
         t1 = subtype.value.definition
-        env1 = subtype.value.env
+        env1 = subtype.value.interpreter.env
         t2 = supertype.value.definition
-        env2 = supertype.value.env
+        env2 = supertype.value.interpreter.env
         return self._subtype_recursion(t1=t1, t2=t2, env1=env1, env2=env2)

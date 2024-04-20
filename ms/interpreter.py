@@ -1,33 +1,9 @@
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Callable
 import ms.ast as ast
 from ms.printer import Printer
 from ms.parser import Parser
+from ms.types import TypeChecker
 
-
-class Environment():
-
-    def __init__(self, enclosing=None):
-        self.enclosing: Optional['Environment'] = enclosing
-        self.vars = {}
-
-    def define(self, key: str, value: Any = None) -> bool:
-        self.vars[key] = value
-        return True
-
-    def set(self, key: str, value: Any) -> bool:
-        if key in self.vars:
-            self.vars[key] = value
-            return True
-        if self.enclosing is not None:
-            return self.enclosing.set(key, value)
-        raise KeyError()
-
-    def get(self, key: str) -> Any:
-        if key in self.vars:
-            return self.vars[key]
-        if self.enclosing is not None:
-            return self.enclosing.get(key)
-        raise KeyError()
 
 
 class Interpreter:
@@ -35,11 +11,12 @@ class Interpreter:
     def __init__(self, interactive=False):
         self.printer = Printer()
         self.parser = Parser(interactive=interactive)
+        self.checker = TypeChecker()
         self.reset()
 
     def reset(self):
         self.parser.reset()
-        self.env = Environment()
+        self.env = ast.Environment()
 
     def eval(self, instr: str):
         val = ast.Value(None, None)
@@ -60,7 +37,18 @@ class Interpreter:
             pass
         return val
 
-    def define(self, name: str, value: Any):
+    def typeof(self, value: ast.Value) -> ast.UserType:
+        definition = ast.TypeDefinition(expr=self.checker.typeof(value))
+        return ast.UserType(self, definition)
+    
+    def issubtype(self, subtype: ast.Value, supertype: ast.Value) -> bool:
+        return self.checker.issubtype(subtype, supertype)
+
+    def checktype(self, value: ast.Value, required: ast.Value) -> bool:
+        value_type = ast.Value(self.typeof(value), None)
+        return self.issubtype(value_type, required)
+
+    def define(self, name: str, value: ast.Value):
         self.env.define(name, value)
 
     def error(self, token: ast.Token, msg):
@@ -305,31 +293,37 @@ class Interpreter:
         return ast.Value(None, None)
 
     def array(self, node: ast.Expr):
+        previous = self.env
         values = []
-        for expr in node.array:
-            value = expr.accept(self)
-            values.append(value)
+        try:
+            self.env = ast.Environment(enclosing=self.env)
+            self.env.define("this", ast.Value(values, None))
+            for expr in node.array:
+                value = expr.accept(self)
+                values.append(value)
+        finally:
+            self.env = previous
+        
         return ast.Value(values, None)
 
     def map(self, node: ast.Expr):
         previous = self.env
         values = {}
         try:
-            self.env = Environment(enclosing=self.env)
-            self.env.define("this", values)
+            self.env = ast.Environment(enclosing=self.env)
+            self.env.define("this", ast.Value(values, None))
             for key, expr in node.map.items():
                 value = expr.accept(self)
                 values[key] = value
         finally:
             self.env = previous
-
         return ast.Value(values, None)
 
     def block(self, node: ast.Expr):
-        env = Environment(enclosing=self.env)
+        env = ast.Environment(enclosing=self.env)
         return self.execute_block(node, env)
 
-    def execute_block(self, block: ast.Block, env: Environment):
+    def execute_block(self, block: ast.Block, env: ast.Environment):
         # Save enclosing environment.
         previous = self.env
         value = None
@@ -359,7 +353,7 @@ class Interpreter:
         target = node.target
         iterator = node.iterator.accept(self).value
         if type(iterator) == list:
-            env = Environment(enclosing=self.env)
+            env = ast.Environment(enclosing=self.env)
             for iter in iterator:
                 try:
                     self.assign_search(env, target, node.operator, iter)
@@ -370,7 +364,7 @@ class Interpreter:
                 except ast.Continue as e:
                     pass
         elif type(iterator) == dict:
-            env = Environment(enclosing=self.env)
+            env = ast.Environment(enclosing=self.env)
             for iter in iterator.items():
                 iter = ast.Value([ast.Value(iter[0],None), iter[1]], None)
                 try:
@@ -382,7 +376,7 @@ class Interpreter:
                 except ast.Continue as e:
                     pass
         elif isinstance(iterator, ast.Callable):
-            env = Environment(enclosing=self.env)
+            env = ast.Environment(enclosing=self.env)
             iter = iterator.call([])
             while iter.value is not None:
                 try:
@@ -405,8 +399,12 @@ class Interpreter:
         for argument in node.arguments:
             arg = argument.accept(self)
             args.append(arg)
-        if isinstance(callee, ast.Callable):
-            return callee.call(args)
+        if isinstance(callee, ast.FunctionObject):
+            try:
+                return callee.call(args)
+            except ast.TypeError as e:
+                self.error(node.operator, str(e))
+                return ast.Value(None, None)
 
         # Calling a function on a constant value.
         if len(args) > 0:
@@ -416,9 +414,9 @@ class Interpreter:
 
     def function(self, node: ast.Expr):
         try:
-            user_callable = UserCallable(ip=self, definition=node)
+            user_callable = ast.UserFunction(ip=self, definition=node)
             # Create a new environment to protect the closure environment.
-            self.env = Environment(enclosing=self.env)
+            self.env = ast.Environment(enclosing=self.env)
         except Exception as e:
             print(e)
         return ast.Value(user_callable, None)
@@ -428,7 +426,7 @@ class Interpreter:
         new_node = node.expr.accept(self)
         definition = ast.TypeDefinition(operator=operator, expr=new_node)
         # Create a new environment to protect the closure environment.
-        self.env = Environment(enclosing=self.env)
+        self.env = ast.Environment(enclosing=self.env)
         usertype = ast.UserType(ip=self, definition=definition)
         return ast.Value(usertype, None)
 
@@ -480,26 +478,3 @@ class Interpreter:
         return ast.TypeMap(map=dictionary)
 
 
-class UserCallable(ast.Callable):
-
-    def __init__(self, ip: 'Interpreter', definition: ast.Function = None):
-        self.ip = ip
-        self.env = ip.env
-        self.definition = definition
-
-    def call(self, args: List[Any]) -> Any:
-        # Call function with new environment containing arguments.
-        env = Environment(enclosing=self.env)
-        for parameter, arg in zip(self.definition.parameters, args):
-            env.define(parameter.literal, arg)
-        try:
-            value = self.ip.execute_block(self.definition.expr, env)
-        except ast.Return as e:
-            value = e.expr
-        return value
-
-    def __repr__(self):
-        return self.ip.printer.print(self.definition)
-
-    def __str__(self):
-        return self.ip.printer.print(self.definition)

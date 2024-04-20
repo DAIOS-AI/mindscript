@@ -1,10 +1,10 @@
 from collections import namedtuple
 from enum import Enum
 from abc import abstractmethod
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel
 
-# Tokens
+# Optional[Token]s
 
 TokenType = Enum(
     "TokenType",
@@ -20,6 +20,7 @@ TokenType = Enum(
         "ARRAY",
         "FUNCTION",
         "TYPECONS",
+        "TYPETYPE",
         "TYPE",
         "LROUND",
         "CLROUND",
@@ -103,6 +104,11 @@ class RuntimeError(Exception):
     def __init__(self, message):
         super().__init__(message)
 
+class TypeError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 # AST Nodes
 
 
@@ -112,7 +118,7 @@ class Expr(BaseModel):
 
 class Assign(Expr):
     target: Expr
-    operator: Token
+    operator: Optional[Token]
     expr: Expr
 
     def accept(self, visitor, **kwargs):
@@ -120,8 +126,8 @@ class Assign(Expr):
 
 
 class Annotation(Expr):
-    operator: Token
-    comment: Token
+    operator: Optional[Token]
+    comment: Optional[Token]
     expr: Expr
 
     def accept(self, visitor, **kwargs):
@@ -129,8 +135,8 @@ class Annotation(Expr):
 
 
 class Declaration(Expr):
-    operator: Token
-    token: Token
+    operator: Optional[Token]
+    token: Optional[Token]
 
     def accept(self, visitor, **kwargs):
         return visitor.declaration(self, **kwargs)
@@ -138,7 +144,7 @@ class Declaration(Expr):
 
 class Binary(Expr):
     left: Expr
-    operator: Token
+    operator: Optional[Token]
     right: Expr
 
     def accept(self, visitor, **kwargs):
@@ -146,7 +152,7 @@ class Binary(Expr):
 
 
 class Unary(Expr):
-    operator: Token
+    operator: Optional[Token]
     expr: Expr
 
     def accept(self, visitor, **kwargs):
@@ -161,7 +167,7 @@ class Grouping(Expr):
 
 
 class Terminal(Expr):
-    token: Token
+    token: Optional[Token]
 
     def accept(self, visitor, **kwargs):
         return visitor.terminal(self, **kwargs)
@@ -199,7 +205,7 @@ class Conditional(Expr):
 
 
 class For(Expr):
-    operator: Token
+    operator: Optional[Token]
     target: Expr
     iterator: Expr
     expr: Expr
@@ -210,7 +216,7 @@ class For(Expr):
 
 class Call(Expr):
     expr: Expr
-    operator: Token
+    operator: Optional[Token]
     arguments: List[Expr]
 
     def accept(self, visitor, **kwargs):
@@ -218,7 +224,7 @@ class Call(Expr):
 
 
 class ObjectGet(Expr):
-    operator: Token
+    operator: Optional[Token]
     expr: Expr
     index: Expr
 
@@ -227,7 +233,7 @@ class ObjectGet(Expr):
 
 
 class ArrayGet(Expr):
-    operator: Token
+    operator: Optional[Token]
     expr: Expr
     index: Expr
 
@@ -236,7 +242,7 @@ class ArrayGet(Expr):
 
 
 class ObjectSet(Expr):
-    operator: Token
+    operator: Optional[Token]
     expr: Expr
     index: Expr
 
@@ -245,7 +251,7 @@ class ObjectSet(Expr):
 
 
 class ArraySet(Expr):
-    operator: Token
+    operator: Optional[Token]
     expr: Expr
     index: Expr
 
@@ -273,8 +279,8 @@ class TypeDefinition(TypeExpr):
 
 
 class TypeAnnotation(TypeExpr):
-    operator: Token
-    comment: Token
+    operator: Optional[Token]
+    comment: Optional[Token]
     expr: Expr
 
     def accept(self, visitor, **kwargs):
@@ -282,14 +288,14 @@ class TypeAnnotation(TypeExpr):
 
 
 class TypeTerminal(TypeExpr):
-    token: Token
+    token: Optional[Token]
 
     def accept(self, visitor, **kwargs):
         return visitor.type_terminal(self, **kwargs)
 
 
 class TypeUnary(TypeExpr):
-    operator: Token
+    operator: Optional[Token]
     expr: TypeExpr
 
     def accept(self, visitor, **kwargs):
@@ -298,7 +304,7 @@ class TypeUnary(TypeExpr):
 
 class TypeBinary(TypeExpr):
     left: TypeExpr
-    operator: Token
+    operator: Optional[Token]
     right: TypeExpr
 
     def accept(self, visitor, **kwargs):
@@ -327,7 +333,7 @@ class TypeGrouping(TypeExpr):
 
 
 class Function(Expr):
-    operator: Token
+    operator: Optional[Token]
     parameters: List[Token]
     types: TypeBinary
     expr: Expr
@@ -343,19 +349,19 @@ class Control(Exception):
 
 
 class Return(Control):
-    def __init__(self, operator: Token, expr: Expr):
+    def __init__(self, operator: Optional[Token], expr: Expr):
         self.operator = operator
         self.expr = expr
 
 
 class Break(Control):
-    def __init__(self, operator: Token, expr: Expr):
+    def __init__(self, operator: Optional[Token], expr: Expr):
         self.operator = operator
         self.expr = expr
 
 
 class Continue(Control):
-    def __init__(self, operator: Token, expr: Expr):
+    def __init__(self, operator: Optional[Token], expr: Expr):
         self.operator = operator
         self.expr = expr
 
@@ -379,49 +385,175 @@ class UserType():
     definition: Expr
 
     def __init__(self, ip: 'Interpreter', definition: TypeExpr):  # type: ignore
-        self.ip = ip
-        self.env = ip.env
-        self.definition = definition
+        self._ip = ip
+        self._definition = definition
 
     def __expr__(self):
-        text = self.ip.printer.print(self.definition)
+        text = self.interpreter.printer.print(self.definition)
         return text
 
     def __str__(self):
-        text = self.ip.printer.print(self.definition)
+        text = self.interpreter.printer.print(self.definition)
         return text
+
+    @property
+    def interpreter(self):
+        return self._ip
+    
+    @property
+    def definition(self):
+        return self._definition
+
+
+# Environment.
+
+class Environment():
+
+    def __init__(self, enclosing=None):
+        self.enclosing: Optional['Environment'] = enclosing
+        self.vars = {}
+
+    def define(self, key: str, value: Value = None) -> bool:
+        if value is None:
+            value = Value(None, None)
+        self.vars[key] = value
+        return True
+
+    def set(self, key: str, value: Value) -> bool:
+        if key in self.vars:
+            self.vars[key] = value
+            return True
+        if self.enclosing is not None:
+            return self.enclosing.set(key, value)
+        raise KeyError()
+
+    def get(self, key: str) -> Value:
+        if key in self.vars:
+            return self.vars[key]
+        if self.enclosing is not None:
+            return self.enclosing.get(key)
+        raise KeyError()
 
 
 # Callables.
 
 
-class Callable():
-    definition: Expr
+class FunctionObject():
+
+    def __init__(self, ip: 'Interpreter', definition: Function): # type: ignore
+        self._ip = ip
+        self._definition = definition
+        self._params = definition.parameters
+        
+        types = []
+
+        # Create input types.
+        if type(definition.types.left) == TypeArray:
+            ptypes = definition.types.left.array
+            assert(len(self.params) == len(ptypes))
+            for ptype in ptypes:
+                typedef = TypeDefinition(expr=ptype)
+                usertype = Value(UserType(ip, typedef), None)
+                types.append(usertype)
+        else:
+            assert(len(self.params) == 1)
+            ptype = definition.types.left
+            typedef = TypeDefinition(expr=ptype)
+            usertype = Value(UserType(ip, typedef), None)
+            types.append(usertype)
+
+        # Create output type.
+        ptype = definition.types.right
+        typedef = TypeDefinition(expr=ptype)
+        usertype = Value(UserType(ip, typedef), None)
+        types.append(usertype)
+
+        self._types = types
+
+        # print(f"function initialization: types = {self.types}")
+
+    @property
+    def interpreter(self) -> 'Interpreter': # type: ignore
+        return self._ip
+    
+    @property
+    def params(self) -> List[str]:
+        return self._params
+    
+    @property
+    def types(self) -> List[Value]:
+        return self._types
+    
+    @property
+    def definition(self) -> Function:
+        return self._definition
 
     @abstractmethod
-    def call(self, ip: 'Interpreter', args: List[Any]) -> Any:  # type: ignore
+    def call(self, args: List[Value]) -> Value:  # type: ignore
         pass
 
+    def __repr__(self):
+        # print(f"UserFunction.repr: definition = {self.definition}")
+        return self.interpreter.printer.print(self.definition)
 
-# Native functions.
+    def __str__(self):
+        # print(f"UserFunction.str: definition = {self.definition}")
+        return self.interpreter.printer.print(self.definition)
 
-class NativeCallable(Callable):
-    def __init__(self, ip: 'Interpreter'):  # type: ignore
-        self.ip = ip
-        self.env = ip.env
-        self.definition = Terminal(
+
+class NativeFunction(FunctionObject):
+
+    def __init__(self, ip: 'Interpreter', definition: Union[Function,str]): # type: ignore
+        if type(definition) == str:
+            definition = ip.parser.parse(definition + " do null end").program[0]
+        super().__init__(ip, definition)
+        self._definition.expr = Terminal(
             token=Token(
-                ttype=TokenType.STRING,
+                ttype=TokenType.TYPE,
                 literal="<native function>"
             )
         )
 
+    def call(self, args: List[Value]) -> Value:
+        # Call function with new environment containing arguments.
+        if len(self.params) != len(args):
+            raise TypeError("Wrong number of parameters")
+        # Call function with new environment containing arguments.
+        env = Environment(enclosing=self.interpreter.env)
+        for index in range(len(self.params)):
+            if not self.interpreter.checktype(args[index], self.types[index]):
+                raise TypeError(f"Wrong type of function argument.")
+        value = self.func(args)
+        if not self.interpreter.checktype(value, self.types[-1]):
+            raise TypeError(f"Wrong type of function output.")
+        return value
+
     @abstractmethod
-    def call(self, args: List[Any]) -> Any:
+    def func(self, args: List[Value]) -> Value:
         pass
 
-    def __repr__(self):
-        return "<native function>"
 
-    def __str__(self):
-        return "<native function>"
+
+class UserFunction(FunctionObject):
+
+    def __init__(self, ip: 'Interpreter', definition: Function): # type: ignore
+        super().__init__(ip, definition)
+
+    def call(self, args: List[Value]) -> Value:
+        if len(self.params) != len(args):
+            raise TypeError("Wrong number of parameters")
+        # Call function with new environment containing arguments.
+        env = Environment(enclosing=self.interpreter.env)
+        for index in range(len(self.params)):
+            if not self.interpreter.checktype(args[index], self.types[index]):
+                raise TypeError(f"Wrong type of function argument.")
+            self.interpreter.define(self.params[index].literal, args[index])
+        try:
+            value = self.interpreter.execute_block(self.definition.expr, env)
+        except Return as e:
+            value = e.expr
+        if not self.interpreter.checktype(value, self.types[-1]):
+            raise TypeError(f"Wrong type of function output.")
+        return value
+
+

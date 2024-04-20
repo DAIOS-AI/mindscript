@@ -1,5 +1,5 @@
 import re 
-from ms.ast import TokenType, Token, Expr, List, Dict, Terminal, Callable, UserType, Value
+from ms.ast import TokenType, Expr, List, Dict, FunctionObject, UserType, Value, TypeArray
 
 TABLEN = 2
 MAXDEPTH = 4
@@ -175,9 +175,14 @@ class Printer():
         pairs = []
         in_types = node.types.left
         out_type = node.types.right
-        for param, param_type in zip(node.parameters, in_types.array):
-            name = param.literal
-            type_spec = param_type.accept(self)
+        if type(in_types) == TypeArray:
+            for param, param_type in zip(node.parameters, in_types.array):
+                name = param.literal
+                type_spec = param_type.accept(self)
+                pairs.append(f"{name}: {type_spec}")
+        else:
+            name = node.parameters[0].literal
+            type_spec = in_types.accept(self)
             pairs.append(f"{name}: {type_spec}")
         parameters = ", ".join(pairs)
         out_spec = out_type.accept(self)
@@ -265,7 +270,7 @@ class Printer():
                 items.append(txt)
             self.indent_decr()
             repr = "{\n" + ",\n".join(items) + "\n" + self.prefix + "}"
-        elif isinstance(v, Callable):
+        elif isinstance(v, FunctionObject):
             repr = v.definition.accept(self)
         elif isinstance(v, UserType):
             repr = v.definition.accept(self)

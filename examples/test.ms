@@ -70,7 +70,7 @@ print(r)
 
 print("Should be [0, 0]")
 
-print("\nTesting annotations.")
+print("\n# Testing annotations.")
 # "The speed of light in m/s"
 let speed = 300000000
 print(speed)
@@ -83,7 +83,7 @@ let factorial = function(n: Int) -> Int do
 end
 print(factorial)
 
-print("\nTesting for loops.")
+print("\n# Testing for loops.")
 let range = function(s: Int, e: Int) -> (Null -> Int?) do
   function() -> Int? do
     if s<e then
@@ -104,3 +104,19 @@ for let x in {"x": 1, "y": 2, "z": 3} do print(x) end
 
 print("\nLoops over iterators.")
 for let x in range(1, 4) do print(x) end
+
+print("\n# Type checking.")
+let obj = {
+  "name": "Pedro", 
+  "sayname": function() do
+      print(this.name)
+    end
+}
+
+print("Should print the object.")
+print(obj)
+
+print("Should print the type of the object.")
+let ObjType = typeof(obj)
+print(ObjType)
+

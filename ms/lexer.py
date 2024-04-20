@@ -23,6 +23,7 @@ Keywords = {
     "for": TokenType.FOR,
     "in": TokenType.IN,
     "type": TokenType.TYPECONS,
+    "Type": TokenType.TYPE,
     "Null": TokenType.TYPE,
     "Str": TokenType.TYPE,
     "Int": TokenType.TYPE,
