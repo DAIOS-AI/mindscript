@@ -20,6 +20,7 @@ Keywords = {
     "elif": TokenType.ELIF,
     "else": TokenType.ELSE,
     "function": TokenType.FUNCTION,
+    "magic": TokenType.MAGIC,
     "for": TokenType.FOR,
     "in": TokenType.IN,
     "type": TokenType.TYPECONS,

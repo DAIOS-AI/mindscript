@@ -40,8 +40,9 @@ from ms.lexer import Lexer
 #     for         -> "for" expression "in" expression block
 #     target      -> ID | declaration
 #     declaration -> "let" ID
-#     function    -> "function" "~(" parameters? ")" ("->" type_expr)? block
-#     parameters  -> ID (":" type_expr)? ("," ID (":" type_expr)?)*
+#     function    -> "function" "~(" (parameter ("," parameter)*)? ")" 
+#                       ("->" type_expr)? ("magic" | block)
+#     parameter   -> "#" STRING ID (":" type_expr)? | ID (":" type_expr)?
 #
 #     type_def    -> "type" type_expr
 #     type_expr   -> "#" STRING type_expr | type_binary
@@ -49,7 +50,8 @@ from ms.lexer import Lexer
 #     type_unary  -> type_prim "?" | type_prim
 #     type_prim   -> ID | TYPE | type_arr | type_map | "(" type_expr ")"
 #     type_arr    -> "[" ((type_expr ",")* "]"
-#     type_map    -> "{" (STRING ":" type_expr ("," STRING ":" type_expr)) "}"
+#     type_map    -> "{" (type_item ("," type_item)*)? "}"
+#     type_item   -> "#" STRING STRING ":" type_expr | STRING ":" type_expr
 # ```
 ###
 
@@ -163,9 +165,9 @@ class Parser:
             operator = self.previous()
             self.consume(TokenType.STRING,
                          "Expected a string annotation after '#'.")
-            comment = self.previous()
+            annotation = self.previous()
             expr = self.parse_expression()
-            return ast.Annotation(operator=operator, comment=comment, expr=expr)
+            return ast.Annotation(operator=operator, annotation=annotation, expr=expr)
         return self.parse_assignment()
 
     def parse_assignment(self):
@@ -356,12 +358,12 @@ class Parser:
             operator = self.previous()
             self.consume(TokenType.STRING,
                          "Expected a string annotation after '#'.")
-            comment = self.previous()
+            annotation = self.previous()
             self.consume(TokenType.STRING, "Expected a member key.")
             key = self.previous()
             self.consume(TokenType.COLON, "Expected ':' after member key.")
             expr = self.parse_expression()
-            return [key, ast.Annotation(operator=operator, comment=comment, expr=expr)]
+            return [key, ast.Annotation(operator=operator, annotation=annotation, expr=expr)]
         self.consume(TokenType.STRING, "Expected a member key.")
         key = self.previous()
         self.consume(TokenType.COLON, "Expected ':' after member key.")
@@ -428,30 +430,58 @@ class Parser:
                 TokenType.RROUND, "Expected closing ')' after list of function parameters.")
             out_type = self.parse_type_expr() if self.match(
                 [TokenType.ARROW]) else self.any_type_terminal(operator.line, operator.col)
-            expr = self.parse_block()
             in_type = types[0] if len(types) == 1 else ast.TypeArray(array=types)
             # TODO: Operator here is the function, not the arrow, since arrow is optional.
             functype = ast.TypeBinary(operator=operator, left=in_type, right=out_type)
-            return ast.Function(operator=operator, parameters=params, types=functype, expr=expr)
+
+            if self.match([TokenType.MAGIC]):
+                magictoken = self.previous()
+                return ast.Function(
+                    operator=operator, parameters=params, 
+                    types=functype, expr=ast.Terminal(token=magictoken)
+                )
+            else:
+                expr = self.parse_block()
+                return ast.Function(
+                    operator=operator, parameters=params, 
+                    types=functype, expr=expr
+                )
 
     def parse_parameters(self):
         params = []
         types = []
-        if self.match([TokenType.ID]):
-            param = self.previous()
-            param_type = self.parse_type_expr() if self.match(
-                [TokenType.COLON]) else self.any_type_terminal(param.line, param.col)
+        if self.check(TokenType.RROUND):
+            return [params, types]        
+        param, ptype = self.parse_parameter()
+        params.append(param)
+        types.append(ptype)
+        while self.match([TokenType.COMMA]):
+            param, ptype = self.parse_parameter()
             params.append(param)
-            types.append(param_type)
-            while self.match([TokenType.COMMA]):
-                param = self.advance()
-                if param.ttype != TokenType.ID:
-                    self.error(param, "Expected an identifier.")
-                param_type = self.parse_type_expr() if self.match(
-                    [TokenType.COLON]) else self.any_type_terminal(param.line, param.col)
-                params.append(param)
-                types.append(param_type)
-        return params, types
+            types.append(ptype)
+        return [params, types]
+
+    def parse_parameter(self):
+        annotation = None
+        if self.match([TokenType.HASH]):
+            operator = self.previous()
+            self.consume(TokenType.STRING, "Expected a string annotation after '#'.")
+            annotation = self.previous()
+        
+        self.consume(TokenType.ID, "Expected a parameter name.")
+        param = self.previous()
+
+        if self.match([TokenType.COLON]):
+            ptype = self.parse_type_expr()
+        else:
+            last_token = self.previous()
+            ptype = self.any_type_terminal(last_token.line, last_token.col)
+        
+        if annotation is not None:
+            ptype = ast.TypeAnnotation(operator=operator, annotation=annotation, expr=ptype)
+
+        return [param, ptype]   
+
 
     def parse_target(self):
         if self.match([TokenType.ID]):
@@ -478,9 +508,9 @@ class Parser:
             operator = self.previous()
             self.consume(TokenType.STRING,
                          "Expected a string annotation after '#'.")
-            comment = self.previous()
+            annotation = self.previous()
             expr = self.parse_type_expr()
-            return ast.TypeAnnotation(operator=operator, comment=comment, expr=expr)
+            return ast.TypeAnnotation(operator=operator, annotation=annotation, expr=expr)
         expr = self.parse_type_binary()
         return expr
 
@@ -552,12 +582,12 @@ class Parser:
             operator = self.previous()
             self.consume(TokenType.STRING,
                          "Expected a string annotation after '#'.")
-            comment = self.previous()
+            annotation = self.previous()
             self.consume(TokenType.STRING, "Expected a member key.")
             key = self.previous()
             self.consume(TokenType.COLON, "Expected ':' after member key.")
             expr = self.parse_type_expr()
-            return [key, ast.TypeAnnotation(operator=operator, comment=comment, expr=expr)]
+            return [key, ast.TypeAnnotation(operator=operator, annotation=annotation, expr=expr)]
         self.consume(TokenType.STRING, "Expected a member key.")
         key = self.previous()
         self.consume(TokenType.COLON, "Expected ':' after member key.")

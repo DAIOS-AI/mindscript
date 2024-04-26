@@ -3,7 +3,8 @@ import ms.ast as ast
 from ms.printer import Printer
 from ms.parser import Parser
 from ms.types import TypeChecker
-
+from ms.objects import MObject, MValue, MType, MFunction, MUserFunction, Environment
+from ms.magic import MMagicFunction
 
 
 class Interpreter:
@@ -16,10 +17,10 @@ class Interpreter:
 
     def reset(self):
         self.parser.reset()
-        self.env = ast.Environment()
+        self.env = Environment()
 
     def eval(self, instr: str):
-        val = ast.Value(None, None)
+        val = MValue(None, None)
         tree = self.parser.parse(instr)
         if tree is None:
             return val
@@ -37,18 +38,19 @@ class Interpreter:
             pass
         return val
 
-    def typeof(self, value: ast.Value) -> ast.UserType:
-        definition = ast.TypeDefinition(expr=self.checker.typeof(value))
-        return ast.UserType(self, definition)
+    def typeof(self, value: MObject) -> MType:
+        definition = self.checker.typeof(value)
+        return MType(self, definition)
     
-    def issubtype(self, subtype: ast.Value, supertype: ast.Value) -> bool:
-        return self.checker.issubtype(subtype, supertype)
+    def issubtype(self, subtype: MObject, supertype: MObject) -> bool:
+        res = self.checker.issubtype(subtype, supertype)
+        return res
 
-    def checktype(self, value: ast.Value, required: ast.Value) -> bool:
-        value_type = ast.Value(self.typeof(value), None)
+    def checktype(self, value: MObject, required: MType) -> bool:
+        value_type = self.typeof(value)
         return self.issubtype(value_type, required)
 
-    def define(self, name: str, value: ast.Value):
+    def define(self, name: str, value: MValue):
         self.env.define(name, value)
 
     def error(self, token: ast.Token, msg):
@@ -64,9 +66,9 @@ class Interpreter:
         return value
 
     def annotation(self, node: ast.Expr):
-        comment = node.comment.literal
+        annotation = node.annotation.literal
         value = node.expr.accept(self)
-        value.comment = comment
+        value.annotation = annotation
         return value
 
     def binary(self, node: ast.Expr):
@@ -79,10 +81,10 @@ class Interpreter:
             if type(lvalue) != bool:
                 self.error(operator, "Operands must be boolean.")
             if lvalue:
-                return ast.Value(True, None)
+                return MValue(True, None)
             rvalue = node.right.accept(self).value
             if type(rvalue) == bool:
-                return ast.Value(rvalue, None)
+                return MValue(rvalue, None)
             self.error(operator, "Operands must be boolean.")
 
         if operator.ttype == ast.TokenType.AND:
@@ -90,10 +92,10 @@ class Interpreter:
             if type(lvalue) != bool:
                 self.error(operator, "Operands must be boolean.")
             if not lvalue:
-                return ast.Value(False, None)
+                return MValue(False, None)
             rvalue = node.right.accept(self).value
             if type(rvalue) == bool:
-                return ast.Value(rvalue, None)
+                return MValue(rvalue, None)
             self.error(operator, "Operands must be boolean.")
 
         # Standard operators.
@@ -104,52 +106,52 @@ class Interpreter:
                 and (type(rvalue) == int or type(rvalue) == float)):
 
             if operator.ttype == ast.TokenType.PLUS:
-                return ast.Value(lvalue + rvalue, None)
+                return MValue(lvalue + rvalue, None)
             elif operator.ttype == ast.TokenType.MINUS:
-                return ast.Value(lvalue - rvalue, None)
+                return MValue(lvalue - rvalue, None)
             elif operator.ttype == ast.TokenType.MULT:
-                return ast.Value(lvalue * rvalue, None)
+                return MValue(lvalue * rvalue, None)
             elif operator.ttype == ast.TokenType.DIV:
-                return ast.Value(lvalue / rvalue, None)
+                return MValue(lvalue / rvalue, None)
             elif operator.ttype == ast.TokenType.MOD:
-                return ast.Value(lvalue % rvalue, None)
+                return MValue(lvalue % rvalue, None)
             elif operator.ttype == ast.TokenType.GREATER:
-                return ast.Value(lvalue < rvalue, None)
+                return MValue(lvalue < rvalue, None)
             elif operator.ttype == ast.TokenType.GREATER_EQ:
-                return ast.Value(lvalue <= rvalue, None)
+                return MValue(lvalue <= rvalue, None)
             elif operator.ttype == ast.TokenType.LESS:
-                return ast.Value(lvalue < rvalue, None)
+                return MValue(lvalue < rvalue, None)
             elif operator.ttype == ast.TokenType.LESS_EQ:
-                return ast.Value(lvalue <= rvalue, None)
+                return MValue(lvalue <= rvalue, None)
             elif operator.ttype == ast.TokenType.EQ:
-                return ast.Value(lvalue == rvalue, None)
+                return MValue(lvalue == rvalue, None)
             elif operator.ttype == ast.TokenType.NEQ:
-                return ast.Value(lvalue != rvalue, None)
+                return MValue(lvalue != rvalue, None)
             self.error(
                 operator, "Unexpected operator for integer/number operands.")
 
         elif type(lvalue) == bool and type(rvalue) == bool:
             if operator.ttype == ast.TokenType.EQ:
-                return ast.Value(lvalue == rvalue, None)
+                return MValue(lvalue == rvalue, None)
             elif operator.ttype == ast.TokenType.NEQ:
-                return ast.Value(lvalue != rvalue, None)
+                return MValue(lvalue != rvalue, None)
             self.error(operator, "Unexpected operator for boolean operands.")
 
         elif type(rvalue) == str and type(lvalue) == str:
             if operator.ttype == ast.TokenType.PLUS:
-                return ast.Value(lvalue + rvalue, None)
+                return MValue(lvalue + rvalue, None)
             elif operator.ttype == ast.TokenType.GREATER:
-                return ast.Value(lvalue > rvalue, None)
+                return MValue(lvalue > rvalue, None)
             elif operator.ttype == ast.TokenType.GREATER_EQ:
-                return ast.Value(lvalue >= rvalue, None)
+                return MValue(lvalue >= rvalue, None)
             elif operator.ttype == ast.TokenType.LESS:
-                return ast.Value(lvalue < rvalue, None)
+                return MValue(lvalue < rvalue, None)
             elif operator.ttype == ast.TokenType.LESS_EQ:
-                return ast.Value(lvalue <= rvalue, None)
+                return MValue(lvalue <= rvalue, None)
             elif operator.ttype == ast.TokenType.EQ:
-                return ast.Value(lvalue == rvalue, None)
+                return MValue(lvalue == rvalue, None)
             elif operator.ttype == ast.TokenType.NEQ:
-                return ast.Value(lvalue != rvalue, None)
+                return MValue(lvalue != rvalue, None)
             self.error(operator, "Unexpected operator for string operands.")
 
         self.error(operator, "Inconsistent operands.")
@@ -160,11 +162,11 @@ class Interpreter:
         value = expr.value
         if operator.ttype == ast.TokenType.NOT:
             if type(value) == bool:
-                return ast.Value(not value, None)
+                return MValue(not value, None)
             self.error(operator, "Expected a boolean.")
         elif operator.ttype == ast.TokenType.MINUS:
             if type(value) == int or type(value) == float:
-                return ast.Value(-value, None)
+                return MValue(-value, None)
             self.error(operator, "Expected a number.")
         elif operator.ttype == ast.TokenType.RETURN:
             raise ast.Return(operator, expr)
@@ -173,10 +175,10 @@ class Interpreter:
         elif operator.ttype == ast.TokenType.CONTINUE:
             raise ast.Continue(operator, expr)
         elif operator.ttype == ast.TokenType.QUESTION:
-            if type(expr) == ast.UserType:
-                usertype = ast.UserType(self, ast.Unary(
+            if type(expr) == MType:
+                usertype = MType(self, ast.Unary(
                     operator=operator, expr=expr.definition))
-                return ast.Value(usertype, None)
+                return MValue(usertype, None)
             self.error(operator, "Expected a preceding type.")
         self.error(operator, "Wrong unary operation.")
 
@@ -192,7 +194,7 @@ class Interpreter:
             except KeyError:
                 self.error(node.token, "Undefined variable.")
         value = node.token.literal
-        return ast.Value(value, None)
+        return MValue(value, None)
 
     def array_get(self, node: ast.Expr):
         # expr, index
@@ -234,8 +236,8 @@ class Interpreter:
             return value
         elif isinstance(target, ast.Annotation):
             # Push the annotation into the value!
-            comment = target.comment.literal
-            value.comment = comment
+            annotation = target.annotation.literal
+            value.annotation = annotation
             return self.assign_search(env, target.expr, operator, value)
         elif isinstance(target, ast.Declaration):
             # Capture inner declaration!
@@ -290,40 +292,40 @@ class Interpreter:
         # operator, identifier
         identifier = node.token.literal
         self.env.define(identifier)
-        return ast.Value(None, None)
+        return MValue(None, None)
 
     def array(self, node: ast.Expr):
         previous = self.env
         values = []
         try:
-            self.env = ast.Environment(enclosing=self.env)
-            self.env.define("this", ast.Value(values, None))
+            self.env = Environment(enclosing=self.env)
+            self.env.define("this", MValue(values, None))
             for expr in node.array:
                 value = expr.accept(self)
                 values.append(value)
         finally:
             self.env = previous
         
-        return ast.Value(values, None)
+        return MValue(values, None)
 
     def map(self, node: ast.Expr):
         previous = self.env
         values = {}
         try:
-            self.env = ast.Environment(enclosing=self.env)
-            self.env.define("this", ast.Value(values, None))
+            self.env = Environment(enclosing=self.env)
+            self.env.define("this", MValue(values, None))
             for key, expr in node.map.items():
                 value = expr.accept(self)
                 values[key] = value
         finally:
             self.env = previous
-        return ast.Value(values, None)
+        return MValue(values, None)
 
     def block(self, node: ast.Expr):
-        env = ast.Environment(enclosing=self.env)
+        env = Environment(enclosing=self.env)
         return self.execute_block(node, env)
 
-    def execute_block(self, block: ast.Block, env: ast.Environment):
+    def execute_block(self, block: ast.Block, env: Environment):
         # Save enclosing environment.
         previous = self.env
         value = None
@@ -346,14 +348,14 @@ class Interpreter:
                 return node.exprs[n].accept(self)
         if node.default is not None:
             return node.default.accept(self)
-        return ast.Value(None, None)
+        return MValue(None, None)
 
     def forloop(self, node: ast.Expr):
         value = None
         target = node.target
         iterator = node.iterator.accept(self).value
         if type(iterator) == list:
-            env = ast.Environment(enclosing=self.env)
+            env = Environment(enclosing=self.env)
             for iter in iterator:
                 try:
                     self.assign_search(env, target, node.operator, iter)
@@ -364,9 +366,9 @@ class Interpreter:
                 except ast.Continue as e:
                     pass
         elif type(iterator) == dict:
-            env = ast.Environment(enclosing=self.env)
+            env = Environment(enclosing=self.env)
             for iter in iterator.items():
-                iter = ast.Value([ast.Value(iter[0],None), iter[1]], None)
+                iter = MValue([MValue(iter[0],None), iter[1]], None)
                 try:
                     self.assign_search(env, target, node.operator, iter)
                     value = self.execute_block(node.expr, env)
@@ -376,7 +378,7 @@ class Interpreter:
                 except ast.Continue as e:
                     pass
         elif isinstance(iterator, ast.Callable):
-            env = ast.Environment(enclosing=self.env)
+            env = Environment(enclosing=self.env)
             iter = iterator.call([])
             while iter.value is not None:
                 try:
@@ -394,17 +396,17 @@ class Interpreter:
         return value
 
     def call(self, node: ast.Expr):
-        callee = node.expr.accept(self).value
+        callee = node.expr.accept(self)
         args = []
         for argument in node.arguments:
             arg = argument.accept(self)
             args.append(arg)
-        if isinstance(callee, ast.FunctionObject):
+        if isinstance(callee, MFunction):
             try:
                 return callee.call(args)
             except ast.TypeError as e:
                 self.error(node.operator, str(e))
-                return ast.Value(None, None)
+                return MValue(None, None)
 
         # Calling a function on a constant value.
         if len(args) > 0:
@@ -413,28 +415,31 @@ class Interpreter:
         return callee
 
     def function(self, node: ast.Expr):
+        node.types = node.types.accept(self)
+        if type(node.expr) == ast.Terminal and node.expr.token.ttype == ast.TokenType.MAGIC:
+            magic_callable = MMagicFunction(ip=self, definition=node)
+            return magic_callable
         try:
-            user_callable = ast.UserFunction(ip=self, definition=node)
+            user_callable = MUserFunction(ip=self, definition=node)
             # Create a new environment to protect the closure environment.
-            self.env = ast.Environment(enclosing=self.env)
+            self.env = Environment(enclosing=self.env)
         except Exception as e:
             print(e)
-        return ast.Value(user_callable, None)
+        return user_callable
 
     def type_definition(self, node: ast.Expr):
         operator = node.operator
-        new_node = node.expr.accept(self)
-        definition = ast.TypeDefinition(operator=operator, expr=new_node)
+        definition = node.expr.accept(self)
         # Create a new environment to protect the closure environment.
-        self.env = ast.Environment(enclosing=self.env)
-        usertype = ast.UserType(ip=self, definition=definition)
-        return ast.Value(usertype, None)
+        self.env = Environment(enclosing=self.env)
+        usertype = MType(ip=self, definition=definition)
+        return usertype
 
     def type_annotation(self, node: ast.Expr):
-        operator = node.operator
-        comment = node.comment
+        annotation = node.annotation.literal
         expr = node.expr.accept(self)
-        return ast.TypeAnnotation(operator=operator, comment=comment, expr=expr)
+        expr.annotation = annotation
+        return expr
 
     def type_grouping(self, node: ast.Expr):
         expr = node.expr.accept(self)
@@ -452,14 +457,7 @@ class Interpreter:
         return ast.TypeBinary(left=left, operator=operator, right=right)
 
     def type_terminal(self, node: ast.Expr):
-        if node.token.ttype == ast.TokenType.ID:
-            identifier = node.token.literal
-            try:
-                value = self.env.get(identifier)
-            except KeyError:
-                self.error(node.token, "Undefined variable.")
-            if isinstance(value.value, ast.UserType):
-                return node
+        if node.token.ttype not in [ast.TokenType.ID, ast.TokenType.TYPE]:
             self.error(node.token, "Variable must be a type.")
         return node
 

@@ -1,7 +1,8 @@
 from typing import List, Any
-from ms.ast import NativeFunction, Value, Environment
+from ms.objects import MNativeFunction, MValue, MObject, Environment
 from ms.interpreter import Interpreter
 from ms.types import TypeChecker
+from ms.schema import JSONSchema
 
 # Native functions.
 
@@ -17,12 +18,12 @@ from ms.types import TypeChecker
 #         return self.checker.check(typedata, data)
 
 
-class Import(NativeFunction):
+class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(filename: Str) -> {}")
         self.ip = ip
 
-    def func(self, args: List[Any]):
+    def func(self, args: List[MObject]):
         try:
             with open(args[0].value, "r") as fh:
                 code = fh.read()
@@ -43,26 +44,26 @@ class Import(NativeFunction):
         except Exception as e:
             print(e)
             return None
-        return Value(module, None)
+        return MValue(module, None)
 
 
-class Str(NativeFunction):
+class Str(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(value: Any) -> Str")
         self.ip = ip
 
-    def func(self, args: List[Any]):
+    def func(self, args: List[MObject]):
         repr = self.ip.printer.print(args[0])
-        return Value(repr, None)
+        return MValue(repr, None)
 
 
-class Print(NativeFunction):
+class Print(MNativeFunction):
     def __init__(self, ip: Interpreter):
         definition = "function(value: Any) -> Any"
         super().__init__(ip, definition)
         self.ip = ip
 
-    def func(self, args: List[Value]):
+    def func(self, args: List[MObject]):
         if type(args[0].value) == str:
             print(args[0].value)
         else:
@@ -71,13 +72,13 @@ class Print(NativeFunction):
         return args[0]
 
 
-class Dump(NativeFunction):
+class Dump(MNativeFunction):
     def __init__(self, ip: Interpreter):
         definition = "function() -> Null"
         super().__init__(ip, definition)
         self.ip = ip
 
-    def func(self, args: List[Value]):
+    def func(self, args: List[MObject]):
         if len(args) == 0:
             tag = ""
         else:
@@ -87,52 +88,62 @@ class Dump(NativeFunction):
         print("=== STATE DUMP START")
         while env is not None:
             print(pre)
-            txt = self.ip.printer.print(Value(env.vars, None))
+            txt = self.ip.printer.print(MValue(env.vars, None))
             print(txt)
             pre = "==" + pre
             env = env.enclosing
         print("=== STATE DUMP END")
-        return Value(None, None)
+        return MValue(None, None)
 
 
-class GetEnv(NativeFunction):
+class GetEnv(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function() -> {}")
         self.ip = ip
 
-    def func(self, args: List[Any]):
-        return Value(self.ip.env.vars, None)
+    def func(self, args: List[MObject]):
+        return MValue(self.ip.env.vars, None)
 
 
-class TypeOf(NativeFunction):
+class TypeOf(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(value: Any) -> Type")
         self.ip = ip
 
     def func(self, args: List[Any]):
-        usertype = self.ip.typeof(args[0])
-        return Value(usertype, None)
+        return self.ip.typeof(args[0])
 
 
-class IsSubtype(NativeFunction):
+class IsSubtype(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(sub: Type, super: Type) -> Bool")
         self.ip = ip
 
     def func(self, args: List[Any]):
-        valtype = self.ip.issubtype(args[0], args[1])
-        return Value(valtype, None)
+        confirmed = self.ip.issubtype(args[0], args[1])
+        return MValue(confirmed, None)
+
+class Schema(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "function(value: Type) -> Str")
+        self.ip = ip
+        self.printer = JSONSchema()
+
+    def func(self, args: List[Any]):
+        valtype = self.printer.print_schema(args[0])
+        return MValue(valtype, None)
 
 
 def interpreter(interactive=False):
     ip = Interpreter(interactive=interactive)
-    ip.define("import", Value(Import(ip=ip)))
-    ip.define("str", Value(Str(ip=ip)))
-    ip.define("print", Value(Print(ip=ip)))
-    ip.define("dump", Value(Dump(ip=ip)))
-    ip.define("get_env", Value(GetEnv(ip=ip)))
-    ip.define("typeof", Value(TypeOf(ip=ip)))
-    ip.define("issubtype", Value(IsSubtype(ip=ip)))
+    ip.define("import", Import(ip=ip))
+    ip.define("str", Str(ip=ip))
+    ip.define("print", Print(ip=ip))
+    ip.define("dump", Dump(ip=ip))
+    ip.define("get_env", GetEnv(ip=ip))
+    ip.define("typeof", TypeOf(ip=ip))
+    ip.define("issubtype", IsSubtype(ip=ip))
+    ip.define("schema", Schema(ip=ip))
 
     # Clean the lexer's code buffer.
     ip.parser.lexer.reset()

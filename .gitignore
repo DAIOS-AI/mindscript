@@ -1,5 +1,6 @@
 # Exclude all folders that start with "."
 .*/
+.env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

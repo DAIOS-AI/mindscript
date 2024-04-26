@@ -42,8 +42,8 @@ def repl():
             if res is None:
                 continue
             repr = ip.printer.print(res)
-            if res.comment is not None:
-                print(f"{GREEN}{res.comment}")
+            if res.annotation is not None:
+                print(f"{GREEN}{res.annotation}")
             print(f"{BLUE}{repr}{RESET}")
             prompt = "> "
             lines = ""

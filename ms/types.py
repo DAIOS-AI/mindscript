@@ -1,5 +1,6 @@
 from typing import Optional, Any, List
 import ms.ast as ast
+from ms.objects import MObject, MValue, MFunction, MType
 
 class TypeChecker():
 
@@ -9,8 +10,6 @@ class TypeChecker():
             if isinstance(t, ast.TypeAnnotation):
                 t = t.expr
             elif isinstance(t, ast.TypeGrouping):
-                t = t.expr
-            elif isinstance(t, ast.TypeDefinition):
                 t = t.expr
             elif isinstance(t, ast.TypeTerminal) and t.token.ttype == ast.TokenType.ID:
                 key = t.token.literal
@@ -83,51 +82,53 @@ class TypeChecker():
 
     def _typeof_recursion(self, value) -> ast.TypeExpr:
         valtype = None
-        v = value.value
-        if v is None:
-            valtype = ast.TypeTerminal(token=ast.Token(
-                ttype=ast.TokenType.TYPE, literal="Null"))
-        elif type(v) == str:
-            valtype = ast.TypeTerminal(token=ast.Token(
-                ttype=ast.TokenType.TYPE, literal="Str"))
-        elif type(v) == int:
-            valtype = ast.TypeTerminal(token=ast.Token(
-                ttype=ast.TokenType.TYPE, literal="Int"))
-        elif type(v) == float:
-            valtype = ast.TypeTerminal(token=ast.Token(
-                ttype=ast.TokenType.TYPE, literal="Num"))
-        elif type(v) == bool:
-            valtype = ast.TypeTerminal(token=ast.Token(
-                ttype=ast.TokenType.TYPE, literal="Bool"))
-        elif type(v) == list:
-            items = []
-            for item in v:
-                subtype = self._typeof_recursion(item)
-                items.append(subtype)
-            valtype = ast.TypeArray(array=items)
-        elif type(v) == dict:
-            items = {}
-            for key, item in v.items():
-                subtype = self._typeof_recursion(item)
-                items[key] = subtype
-            valtype = ast.TypeMap(map=items)
-        elif isinstance(v, ast.FunctionObject):
+        if isinstance(value, MValue):
+            v = value.value
+            if v is None:
+                valtype = ast.TypeTerminal(token=ast.Token(
+                    ttype=ast.TokenType.TYPE, literal="Null"))
+            elif type(v) == str:
+                valtype = ast.TypeTerminal(token=ast.Token(
+                    ttype=ast.TokenType.TYPE, literal="Str"))
+            elif type(v) == int:
+                valtype = ast.TypeTerminal(token=ast.Token(
+                    ttype=ast.TokenType.TYPE, literal="Int"))
+            elif type(v) == float:
+                valtype = ast.TypeTerminal(token=ast.Token(
+                    ttype=ast.TokenType.TYPE, literal="Num"))
+            elif type(v) == bool:
+                valtype = ast.TypeTerminal(token=ast.Token(
+                    ttype=ast.TokenType.TYPE, literal="Bool"))
+            elif type(v) == list:
+                items = []
+                for item in v:
+                    subtype = self._typeof_recursion(item)
+                    items.append(subtype)
+                valtype = ast.TypeArray(array=items)
+            elif type(v) == dict:
+                items = {}
+                for key, item in v.items():
+                    subtype = self._typeof_recursion(item)
+                    items[key] = subtype
+                valtype = ast.TypeMap(map=items)
+        elif isinstance(value, MFunction):
             # print(f"typechecker._typeof_recursion: v.definition.types = {v.definition.types}")
-            valtype = v.definition.types
-        elif isinstance(v, ast.UserType):
-            valtype = ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Type"))
+            valtype = value.definition.types
+        elif isinstance(value, MType):
+            valtype = ast.TypeTerminal(token=ast.Token(
+                ttype=ast.TokenType.TYPE, literal="Type"))
         else:
             "print_value: Unknown value type!"
         return valtype
 
-    def typeof(self, value: ast.Value) -> ast.TypeExpr:
+    def typeof(self, value: MObject) -> ast.TypeExpr:
         return self._typeof_recursion(value)
 
-    def issubtype(self, subtype: ast.Value, supertype: ast.Value) -> bool:
-        if type(subtype.value) != ast.UserType or type(supertype.value) != ast.UserType:
+    def issubtype(self, subtype: MObject, supertype: MObject) -> bool:
+        if type(subtype) != MType or type(supertype) != MType:
             return False
-        t1 = subtype.value.definition
-        env1 = subtype.value.interpreter.env
-        t2 = supertype.value.definition
-        env2 = supertype.value.interpreter.env
+        t1 = subtype.definition
+        env1 = subtype.interpreter.env
+        t2 = supertype.definition
+        env2 = supertype.interpreter.env
         return self._subtype_recursion(t1=t1, t2=t2, env1=env1, env2=env2)

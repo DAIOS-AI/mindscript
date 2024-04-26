@@ -1,5 +1,7 @@
 import re 
-from ms.ast import TokenType, Expr, List, Dict, FunctionObject, UserType, Value, TypeArray
+from typing import List, Dict
+from ms.ast import TokenType, Expr, TypeArray
+from ms.objects import MObject, MValue, MType, MFunction
 
 TABLEN = 2
 MAXDEPTH = 4
@@ -195,7 +197,7 @@ class Printer():
         return content
 
     def type_annotation(self, node):
-        comment = node.comment.literal
+        annotation = node.annotation.literal
         return node.expr.accept(self)
 
     def type_terminal(self, node):
@@ -242,38 +244,41 @@ class Printer():
 
     def print_value(self, value):
         repr = None
-        v = value.value
-        c = value.comment
-        if v is None:
-            repr = "null"
-        elif type(v) == str:
-            repr = f'"{v}"'
-        elif type(v) == float or type(v) == int:
-            repr = str(v)
-        elif type(v) == bool:
-            repr = "true" if v else "false"
-        elif type(v) == list:
-            if self.is_max_depth(): return "[...]"
-            items = []
-            self.indent_incr()
-            for item in v:
-                txt = self.prefix + self.print_value(item)
-                items.append(txt)
-            self.indent_decr()
-            repr = "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
-        elif type(v) == dict:
-            if self.is_max_depth(): return "{...}"
-            items = []
-            self.indent_incr()
-            for key, item in v.items():
-                txt = self.prefix + f'"{key}": ' + self.print_value(item)
-                items.append(txt)
-            self.indent_decr()
-            repr = "{\n" + ",\n".join(items) + "\n" + self.prefix + "}"
-        elif isinstance(v, FunctionObject):
-            repr = v.definition.accept(self)
-        elif isinstance(v, UserType):
-            repr = v.definition.accept(self)
+        if isinstance(value, MValue):
+            v = value.value
+            c = value.annotation
+            if v is None:
+                repr = "null"
+            elif type(v) == str:
+                repr = f'"{v}"'
+            elif type(v) == float or type(v) == int:
+                repr = str(v)
+            elif type(v) == bool:
+                repr = "true" if v else "false"
+            elif type(v) == list:
+                if self.is_max_depth(): return "[...]"
+                items = []
+                self.indent_incr()
+                for item in v:
+                    txt = self.prefix + self.print_value(item)
+                    items.append(txt)
+                self.indent_decr()
+                repr = "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
+            elif type(v) == dict:
+                if self.is_max_depth(): return "{...}"
+                items = []
+                self.indent_incr()
+                for key, item in v.items():
+                    txt = self.prefix + f'"{key}": ' + self.print_value(item)
+                    items.append(txt)
+                self.indent_decr()
+                repr = "{\n" + ",\n".join(items) + "\n" + self.prefix + "}"
+            else:
+                raise ValueError("print_value received an MValue that is not recognized.")
+        elif isinstance(value, MFunction):
+            repr = value.definition.accept(self)
+        elif isinstance(value, MType):
+            repr = value.definition.accept(self)
         else:
             "print_value: Unknown value type!"
         return repr
@@ -282,6 +287,6 @@ class Printer():
         repr = ""
         if isinstance(value, Expr):
             repr = value.accept(self)
-        elif isinstance(value, Value):
+        elif isinstance(value, MObject):
             repr = self.print_value(value)
         return self.shorten_if_possible(repr)   

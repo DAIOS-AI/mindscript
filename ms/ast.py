@@ -19,6 +19,7 @@ TokenType = Enum(
         "OBJECT",
         "ARRAY",
         "FUNCTION",
+        "MAGIC",
         "TYPECONS",
         "TYPETYPE",
         "TYPE",
@@ -104,6 +105,7 @@ class RuntimeError(Exception):
     def __init__(self, message):
         super().__init__(message)
 
+
 class TypeError(Exception):
     def __init__(self, message):
         super().__init__(message)
@@ -127,7 +129,7 @@ class Assign(Expr):
 
 class Annotation(Expr):
     operator: Optional[Token]
-    comment: Optional[Token]
+    annotation: Optional[Token]
     expr: Expr
 
     def accept(self, visitor, **kwargs):
@@ -267,10 +269,11 @@ class Program(BaseModel):
 
 
 class TypeExpr(Expr):
+    annotation: Optional[str]
     pass
 
 
-class TypeDefinition(TypeExpr):
+class TypeDefinition(Expr):
     operator: Optional[Token] = None
     expr: TypeExpr
 
@@ -280,7 +283,7 @@ class TypeDefinition(TypeExpr):
 
 class TypeAnnotation(TypeExpr):
     operator: Optional[Token]
-    comment: Optional[Token]
+    annotation: Optional[Token]
     expr: Expr
 
     def accept(self, visitor, **kwargs):
@@ -366,194 +369,5 @@ class Continue(Control):
         self.expr = expr
 
 
-# Value types
-
-# Primitive value.
-class Value():
-    value: any
-    comment: str
-
-    def __init__(self, value, comment=None):
-        self.value = value
-        self.comment = comment
-
-
-# Types.
-
-
-class UserType():
-    definition: Expr
-
-    def __init__(self, ip: 'Interpreter', definition: TypeExpr):  # type: ignore
-        self._ip = ip
-        self._definition = definition
-
-    def __expr__(self):
-        text = self.interpreter.printer.print(self.definition)
-        return text
-
-    def __str__(self):
-        text = self.interpreter.printer.print(self.definition)
-        return text
-
-    @property
-    def interpreter(self):
-        return self._ip
-    
-    @property
-    def definition(self):
-        return self._definition
-
-
-# Environment.
-
-class Environment():
-
-    def __init__(self, enclosing=None):
-        self.enclosing: Optional['Environment'] = enclosing
-        self.vars = {}
-
-    def define(self, key: str, value: Value = None) -> bool:
-        if value is None:
-            value = Value(None, None)
-        self.vars[key] = value
-        return True
-
-    def set(self, key: str, value: Value) -> bool:
-        if key in self.vars:
-            self.vars[key] = value
-            return True
-        if self.enclosing is not None:
-            return self.enclosing.set(key, value)
-        raise KeyError()
-
-    def get(self, key: str) -> Value:
-        if key in self.vars:
-            return self.vars[key]
-        if self.enclosing is not None:
-            return self.enclosing.get(key)
-        raise KeyError()
-
-
-# Callables.
-
-
-class FunctionObject():
-
-    def __init__(self, ip: 'Interpreter', definition: Function): # type: ignore
-        self._ip = ip
-        self._definition = definition
-        self._params = definition.parameters
-        
-        types = []
-
-        # Create input types.
-        if type(definition.types.left) == TypeArray:
-            ptypes = definition.types.left.array
-            assert(len(self.params) == len(ptypes))
-            for ptype in ptypes:
-                typedef = TypeDefinition(expr=ptype)
-                usertype = Value(UserType(ip, typedef), None)
-                types.append(usertype)
-        else:
-            assert(len(self.params) == 1)
-            ptype = definition.types.left
-            typedef = TypeDefinition(expr=ptype)
-            usertype = Value(UserType(ip, typedef), None)
-            types.append(usertype)
-
-        # Create output type.
-        ptype = definition.types.right
-        typedef = TypeDefinition(expr=ptype)
-        usertype = Value(UserType(ip, typedef), None)
-        types.append(usertype)
-
-        self._types = types
-
-        # print(f"function initialization: types = {self.types}")
-
-    @property
-    def interpreter(self) -> 'Interpreter': # type: ignore
-        return self._ip
-    
-    @property
-    def params(self) -> List[str]:
-        return self._params
-    
-    @property
-    def types(self) -> List[Value]:
-        return self._types
-    
-    @property
-    def definition(self) -> Function:
-        return self._definition
-
-    @abstractmethod
-    def call(self, args: List[Value]) -> Value:  # type: ignore
-        pass
-
-    def __repr__(self):
-        # print(f"UserFunction.repr: definition = {self.definition}")
-        return self.interpreter.printer.print(self.definition)
-
-    def __str__(self):
-        # print(f"UserFunction.str: definition = {self.definition}")
-        return self.interpreter.printer.print(self.definition)
-
-
-class NativeFunction(FunctionObject):
-
-    def __init__(self, ip: 'Interpreter', definition: Union[Function,str]): # type: ignore
-        if type(definition) == str:
-            definition = ip.parser.parse(definition + " do null end").program[0]
-        super().__init__(ip, definition)
-        self._definition.expr = Terminal(
-            token=Token(
-                ttype=TokenType.TYPE,
-                literal="<native function>"
-            )
-        )
-
-    def call(self, args: List[Value]) -> Value:
-        # Call function with new environment containing arguments.
-        if len(self.params) != len(args):
-            raise TypeError("Wrong number of parameters")
-        # Call function with new environment containing arguments.
-        env = Environment(enclosing=self.interpreter.env)
-        for index in range(len(self.params)):
-            if not self.interpreter.checktype(args[index], self.types[index]):
-                raise TypeError(f"Wrong type of function argument.")
-        value = self.func(args)
-        if not self.interpreter.checktype(value, self.types[-1]):
-            raise TypeError(f"Wrong type of function output.")
-        return value
-
-    @abstractmethod
-    def func(self, args: List[Value]) -> Value:
-        pass
-
-
-
-class UserFunction(FunctionObject):
-
-    def __init__(self, ip: 'Interpreter', definition: Function): # type: ignore
-        super().__init__(ip, definition)
-
-    def call(self, args: List[Value]) -> Value:
-        if len(self.params) != len(args):
-            raise TypeError("Wrong number of parameters")
-        # Call function with new environment containing arguments.
-        env = Environment(enclosing=self.interpreter.env)
-        for index in range(len(self.params)):
-            if not self.interpreter.checktype(args[index], self.types[index]):
-                raise TypeError(f"Wrong type of function argument.")
-            self.interpreter.define(self.params[index].literal, args[index])
-        try:
-            value = self.interpreter.execute_block(self.definition.expr, env)
-        except Return as e:
-            value = e.expr
-        if not self.interpreter.checktype(value, self.types[-1]):
-            raise TypeError(f"Wrong type of function output.")
-        return value
 
 
