@@ -138,8 +138,6 @@ class MFunction(MObject):
 
         self._types = types
 
-        # print(f"function initialization: types = {self.types}")
-
     @property
     def interpreter(self) -> 'Interpreter':  # type: ignore
         return self._ip
@@ -168,8 +166,23 @@ class MFunction(MObject):
     def annotation(self, note):
         self._definition.types.annotation = note
 
+    def call(self, args: List[MObject]) -> MObject:
+        if len(self.params) != len(args):
+            raise ast.TypeError("Wrong number of parameters")
+
+        for index in range(len(self.params)):
+            if not self.interpreter.checktype(args[index], self.types[index]):
+                raise ast.TypeError(f"Wrong type of function argument.")
+
+        value = self.func(args)
+
+        if not self.interpreter.checktype(value, self.types[-1]):
+            raise ast.TypeError(f"Wrong type of function output.")
+
+        return value
+
     @abstractmethod
-    def call(self, args: List[MObject]) -> MObject:  # type: ignore
+    def func(self, args: List[MObject]) -> MObject:
         pass
 
     def __repr__(self):
@@ -196,20 +209,6 @@ class MNativeFunction(MFunction):
             )
         )
 
-    def call(self, args: List[MObject]) -> MObject:
-        # Call function with new environment containing arguments.
-        if len(self.params) != len(args):
-            raise ast.TypeError("Wrong number of parameters")
-        # Call function with new environment containing arguments.
-        env = Environment(enclosing=self.environment)
-        for index in range(len(self.params)):
-            if not self.interpreter.checktype(args[index], self.types[index]):
-                raise ast.TypeError(f"Wrong type of function argument.")
-        value = self.func(args)
-        if not self.interpreter.checktype(value, self.types[-1]):
-            raise ast.TypeError(f"Wrong type of function output.")
-        return value
-
     @abstractmethod
     def func(self, args: List[MObject]) -> MObject:
         pass
@@ -220,21 +219,12 @@ class MUserFunction(MFunction):
     def __init__(self, ip: 'Interpreter', definition: ast.Function):  # type: ignore
         super().__init__(ip, definition)
 
-    def call(self, args: List[MObject]) -> MObject:
-        if len(self.params) != len(args):
-            raise ast.TypeError("Wrong number of parameters")
-        # Call function with new environment containing arguments.
+    def func(self, args: List[MObject]) -> MObject:
         env = Environment(enclosing=self.environment)
         for index in range(len(self.params)):
-            if not self.interpreter.checktype(args[index], self.types[index]):
-                raise ast.TypeError(f"Wrong type of function argument.")
-            self.interpreter.define(self.params[index].literal, args[index])
+            env.define(self.params[index].literal, args[index])
         try:
             value = self.interpreter.execute_block(self.definition.expr, env)
         except ast.Return as e:
             value = e.expr
-        if not self.interpreter.checktype(value, self.types[-1]):
-            raise ast.TypeError(f"Wrong type of function output.")
         return value
-
-

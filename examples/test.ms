@@ -120,3 +120,9 @@ print("Should print the type of the object.")
 let ObjType = typeof(obj)
 print(ObjType)
 
+(# "Who should be the next president?" function())
+examples([
+  ["one", 1], 
+  ["two", 2], 
+  ["twenty-one", 21]
+])

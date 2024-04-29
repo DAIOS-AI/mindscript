@@ -236,6 +236,7 @@ class Printer():
         self.indent_incr()
         items = []
         for key, expr in node.map.items():
+            if key in node.required: key = key + "!"
             txt = self.prefix + key + ": " + expr.accept(self)
             items.append(txt)
         self.indent_decr()

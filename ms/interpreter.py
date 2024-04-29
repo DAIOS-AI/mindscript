@@ -4,7 +4,7 @@ from ms.printer import Printer
 from ms.parser import Parser
 from ms.types import TypeChecker
 from ms.objects import MObject, MValue, MType, MFunction, MUserFunction, Environment
-from ms.magic import MMagicFunction
+from ms.oracle import MOracleFunction
 
 
 class Interpreter:
@@ -416,9 +416,9 @@ class Interpreter:
 
     def function(self, node: ast.Expr):
         node.types = node.types.accept(self)
-        if type(node.expr) == ast.Terminal and node.expr.token.ttype == ast.TokenType.MAGIC:
-            magic_callable = MMagicFunction(ip=self, definition=node)
-            return magic_callable
+        if type(node.expr) == ast.Terminal and node.expr.token.ttype == ast.TokenType.ORACLE:
+            oracle_callable = MOracleFunction(ip=self, definition=node)
+            return oracle_callable
         try:
             user_callable = MUserFunction(ip=self, definition=node)
             # Create a new environment to protect the closure environment.
@@ -473,6 +473,6 @@ class Interpreter:
         for key, expr in node.map.items():
             new_node = expr.accept(self)
             dictionary[key] = new_node
-        return ast.TypeMap(map=dictionary)
+        return ast.TypeMap(map=dictionary, required=node.required)
 
 

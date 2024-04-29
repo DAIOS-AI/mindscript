@@ -44,6 +44,13 @@ class TypeChecker():
                 return True
 
         elif type1 == ast.TypeArray and type2 == ast.TypeArray:
+            print(type1)
+            print(type2)
+            if len(t1.array) != 1 and len(t2.array) == 1:
+                return all(
+                    self._subtype_recursion(sub, t2.array[0], env1, env2, visited)
+                    for sub in t1.array
+                )
             if len(t1.array) != len(t2.array):
                 return False
             return all(
@@ -110,7 +117,7 @@ class TypeChecker():
                 for key, item in v.items():
                     subtype = self._typeof_recursion(item)
                     items[key] = subtype
-                valtype = ast.TypeMap(map=items)
+                valtype = ast.TypeMap(map=items, required=[])
         elif isinstance(value, MFunction):
             # print(f"typechecker._typeof_recursion: v.definition.types = {v.definition.types}")
             valtype = value.definition.types

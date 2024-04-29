@@ -118,6 +118,7 @@ class JSONSchema():
         return schema
 
     def type_map(self, node, optional=False, env=None):
+        required = []
         schema = '{\n'
         self.indent_incr()
         if node.annotation is not None:
@@ -128,12 +129,14 @@ class JSONSchema():
         self.indent_incr()
         items = []
         for key, expr in node.map.items():
+            if key in node.required: required.append(key)
             subschema = self.prefix + f'"{key}": ' + expr.accept(self, env=env)
             items.append(subschema)
         schema += ",\n".join(items) + "\n"
         self.indent_decr()
 
-        schema += self.prefix + '}\n'
+        schema += self.prefix + '},\n'
+        schema += self.prefix + '"required": ["' + '", "'.join(required) + '"]\n'
         self.indent_decr()
         schema += self.prefix + '}'
         return schema

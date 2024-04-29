@@ -41,7 +41,7 @@ from ms.lexer import Lexer
 #     target      -> ID | declaration
 #     declaration -> "let" ID
 #     function    -> "function" "~(" (parameter ("," parameter)*)? ")" 
-#                       ("->" type_expr)? ("magic" | block)
+#                       ("->" type_expr)? ("oracle" | block)
 #     parameter   -> "#" STRING ID (":" type_expr)? | ID (":" type_expr)?
 #
 #     type_def    -> "type" type_expr
@@ -51,7 +51,7 @@ from ms.lexer import Lexer
 #     type_prim   -> ID | TYPE | type_arr | type_map | "(" type_expr ")"
 #     type_arr    -> "[" ((type_expr ",")* "]"
 #     type_map    -> "{" (type_item ("," type_item)*)? "}"
-#     type_item   -> "#" STRING STRING ":" type_expr | STRING ":" type_expr
+#     type_item   -> "#" STRING STRING "!"? ":" type_expr | STRING "!"? ":" type_expr
 # ```
 ###
 
@@ -430,15 +430,15 @@ class Parser:
                 TokenType.RROUND, "Expected closing ')' after list of function parameters.")
             out_type = self.parse_type_expr() if self.match(
                 [TokenType.ARROW]) else self.any_type_terminal(operator.line, operator.col)
-            in_type = types[0] if len(types) == 1 else ast.TypeArray(array=types)
+            in_type = ast.TypeArray(array=types)
             # TODO: Operator here is the function, not the arrow, since arrow is optional.
             functype = ast.TypeBinary(operator=operator, left=in_type, right=out_type)
 
-            if self.match([TokenType.MAGIC]):
-                magictoken = self.previous()
+            if self.match([TokenType.ORACLE]):
+                oracletoken = self.previous()
                 return ast.Function(
                     operator=operator, parameters=params, 
-                    types=functype, expr=ast.Terminal(token=magictoken)
+                    types=functype, expr=ast.Terminal(token=oracletoken)
                 )
             else:
                 expr = self.parse_block()
@@ -565,19 +565,23 @@ class Parser:
 
     def parse_type_map(self):
         dictionary = {}
+        required = {}
         self.consume(TokenType.LCURLY, "Expected opening '{'.")
         if self.match([TokenType.RCURLY]):
-            return ast.TypeMap(map={})
-        [key, expr] = self.parse_type_item()
+            return ast.TypeMap(map={}, required={})
+        [key, req, expr] = self.parse_type_item()
         dictionary[key.literal] = expr
+        if req: required[key.literal] = True 
         while self.match([TokenType.COMMA]):
-            [key, expr] = self.parse_type_item()
+            [key, req, expr] = self.parse_type_item()
             dictionary[key.literal] = expr
+            if req: required[key.literal] = True 
         self.consume(TokenType.RCURLY,
                      "Expected closing '}' after list of members.")
-        return ast.TypeMap(map=dictionary)
+        return ast.TypeMap(map=dictionary, required=required)
 
     def parse_type_item(self):
+        required = False
         if self.match([TokenType.HASH]):
             operator = self.previous()
             self.consume(TokenType.STRING,
@@ -585,14 +589,16 @@ class Parser:
             annotation = self.previous()
             self.consume(TokenType.STRING, "Expected a member key.")
             key = self.previous()
+            required = True if self.match([TokenType.BANG]) else False
             self.consume(TokenType.COLON, "Expected ':' after member key.")
             expr = self.parse_type_expr()
-            return [key, ast.TypeAnnotation(operator=operator, annotation=annotation, expr=expr)]
+            return [key, required, ast.TypeAnnotation(operator=operator, annotation=annotation, expr=expr)]
         self.consume(TokenType.STRING, "Expected a member key.")
         key = self.previous()
+        required = True if self.match([TokenType.BANG]) else False
         self.consume(TokenType.COLON, "Expected ':' after member key.")
         expr = self.parse_type_expr()
-        return [key, expr]
+        return [key, required, expr]
 
     def parse(self, code: str):
         self.reset()

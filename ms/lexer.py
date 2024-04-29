@@ -20,7 +20,7 @@ Keywords = {
     "elif": TokenType.ELIF,
     "else": TokenType.ELSE,
     "function": TokenType.FUNCTION,
-    "magic": TokenType.MAGIC,
+    "oracle": TokenType.ORACLE,
     "for": TokenType.FOR,
     "in": TokenType.IN,
     "type": TokenType.TYPECONS,
@@ -220,6 +220,9 @@ class Lexer:
 
         if c == "?":
             return self.add_token(TokenType.QUESTION, "?")
+
+        if c == "!":
+            return self.add_token(TokenType.BANG, "!")
 
         if c == "." and not self.is_digit(self.peek()):
             return self.add_token(TokenType.PERIOD, ".")

@@ -7,6 +7,7 @@ from ms.schema import JSONSchema
 from ms.objects import MType, MValue, MObject, MFunction
 import ms.ast as ast
 
+
 dotenv.load_dotenv()
 api_key = os.getenv("TEXTSYNTH_API_KEY")
 headers = {"Authorization": f"Bearer {api_key}"}
@@ -43,14 +44,14 @@ OUTPUT
 """
 
 
-class MMagicFunction(MFunction):
+class MOracleFunction(MFunction):
 
     def __init__(self, ip: 'Interpreter', definition: ast.Function):  # type: ignore
         super().__init__(ip, definition)
         self._definition.expr = ast.Terminal(
             token=ast.Token(
                 ttype=ast.TokenType.TYPE,
-                literal="<magic function>"
+                literal="<oracle function>"
             )
 
         )
@@ -62,19 +63,7 @@ class MMagicFunction(MFunction):
         self.output_schema_obj = json.loads(self.output_schema)
         self.output_annotation = definition.types.right.annotation
 
-    def call(self, args: List[MObject]) -> MObject:
-        if len(self.params) != len(args):
-            raise ast.TypeError("Wrong number of parameters")
-        for index in range(len(self.params)):
-            if not self.interpreter.checktype(args[index], self.types[index]):
-                raise ast.TypeError(f"Wrong type of function argument.")
-        value = self.magic(args)
-        value.annotation = self.output_annotation
-        if not self.interpreter.checktype(value, self.types[-1]):
-            raise ast.TypeError(f"Wrong type of function output.")
-        return value
-
-    def magic(self, args: List[MObject]):
+    def func(self, args: List[MObject]):
         task = self.definition.types.annotation
         input_schema = self.input_schema
         output_schema = self.output_schema
@@ -87,7 +76,7 @@ class MMagicFunction(MFunction):
             json={"prompt": prompt, "schema": json.loads(output_schema)}
         ) as response:
             response_obj = response.json()
-            # print(f"magic: response = {response_obj}")
+            # print(f"oracle: response = {response_obj}")
             response_txt = response_obj["text"]
             output = self.interpreter.eval(response_txt)
 

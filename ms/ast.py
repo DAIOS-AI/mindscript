@@ -19,7 +19,7 @@ TokenType = Enum(
         "OBJECT",
         "ARRAY",
         "FUNCTION",
-        "MAGIC",
+        "ORACLE",
         "TYPECONS",
         "TYPETYPE",
         "TYPE",
@@ -47,6 +47,7 @@ TokenType = Enum(
         "COMMA",
         "COLON",
         "QUESTION",
+        "BANG",
         "ARROW",
         "ID",
         "ADDRESS",
@@ -323,6 +324,7 @@ class TypeArray(TypeExpr):
 
 class TypeMap(TypeExpr):
     map: Dict[str, TypeExpr]
+    required: Dict[str, bool]
 
     def accept(self, visitor, **kwargs):
         return visitor.type_map(self, **kwargs)
