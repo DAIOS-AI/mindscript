@@ -128,7 +128,8 @@ class MFunction(MObject):
     def annotation(self, note):
         self._definition.types.annotation = note
 
-    def call(self, arg: MObject) -> MObject:
+    def call(self, operator: ast.Token, arg: MObject) -> MObject:
+        self._operator = operator
         if not self.interpreter.checktype(arg, self.intype):
             raise ast.TypeError(f"Wrong type of function argument.")
 
@@ -138,6 +139,9 @@ class MFunction(MObject):
             raise ast.TypeError(f"Wrong type of function output.")
 
         return value
+
+    def error(self, msg: str):
+        self.interpreter.error(self._operator, msg)
 
     @abstractmethod
     def func(self, args: List[MObject]) -> MObject:

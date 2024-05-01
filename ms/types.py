@@ -43,6 +43,8 @@ class TypeChecker():
             if t1.token.literal == t2.token.literal:
                 return True
 
+        elif type1 == ast.TypeArray and type2 == ast.TypeTerminal and t2.token.literal == "Array":
+            return True
         elif type1 == ast.TypeArray and type2 == ast.TypeArray:
             if len(t1.array) != 1 and len(t2.array) == 1:
                 return all(
@@ -56,6 +58,8 @@ class TypeChecker():
                 for sub1, sub2 in zip(t1.array, t2.array)
             )
 
+        elif type1 == ast.TypeMap and type2 == ast.TypeTerminal and t2.token.literal == "Object":
+            return True
         elif type1 == ast.TypeMap and type2 == ast.TypeMap:
             if not set(t1.map.keys()).issubset(set(t2.map.keys())):
                 return False

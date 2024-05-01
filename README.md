@@ -17,7 +17,7 @@ obtained by consulting an oracle, implemented as a large language model (&Psi;).
 
 - MindScript implements an [oracle machine](https://en.wikipedia.org/wiki/Oracle_machine).
 - Minimal C-like/JavaScript syntax on top of JSON data types.
-- Runtime type checking.
+- Dynamically typed with runtime type checking.
 - Code comments are semantic type annotations.
 - (Current version) implemented in Python.
 

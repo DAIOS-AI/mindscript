@@ -136,6 +136,11 @@ let au = function(planet: Str) -> Num oracle
 print("AU Mercury      : " + str(au("Mercury")))
 print("AU Venus        : " + str(au("Venus")))
 print("AU Earth        : " + str(au("Earth")))
-print("AU Mars         : " + str(au("Mars")))
-print("AU Asteroid belt: " + str(au("Asteroid belt")))
-print("AU Jupiter      : " + str(au("Jupiter")))
+
+print("# Testing for subtypes.")
+assert(issubtype([type [Int], type Array]))
+assert(issubtype([type Array, type Array]))
+assert(issubtype([type [], type Array]))
+
+assert(issubtype([type Object, type Object]))
+assert(issubtype([type {}, type Object]))

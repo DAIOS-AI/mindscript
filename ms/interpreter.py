@@ -432,7 +432,7 @@ class Interpreter:
                     pass
         elif isinstance(iterator, MFunction):
             env = Environment(enclosing=self.env)
-            iter = iterator.call(MValue(None, None))
+            iter = iterator.call(node.operator, MValue(None, None))
             while iter.value is not None:
                 try:
                     self.destructure(env, target, node.operator, iter)
@@ -442,7 +442,7 @@ class Interpreter:
                     break
                 except ast.Continue as e:
                     pass
-                iter = iterator.call(MValue(None, None))
+                iter = iterator.call(node.operator, MValue(None, None))
         else:
             self.error(node.operator,
                        "Can only iterate over array, object, or callable.")
@@ -453,7 +453,7 @@ class Interpreter:
         arg = node.argument.accept(self)
         if isinstance(callee, MFunction):
             try:
-                return callee.call(arg)
+                return callee.call(node.operator, arg)
             except ast.TypeError as e:
                 self.error(node.operator, str(e))
                 return MValue(None, None)

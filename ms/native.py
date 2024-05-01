@@ -20,7 +20,7 @@ from ms.schema import JSONSchema
 
 class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(filename: Str) -> {}")
+        super().__init__(ip, "function(filename: Str) -> Object")
 
     def func(self, arg: MObject):
         try:
@@ -105,14 +105,14 @@ class TypeOf(MNativeFunction):
     def func(self, arg: MObject):
         return self.interpreter.typeof(arg)
 
-# class Assert(MNativeFunction):
-#     def __init__(self, ip: Interpreter):
-#         super().__init__(ip, "function(value: Bool) -> Bool")
+class Assert(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "function(value: Bool) -> Bool")
 
-#     def func(self, args: List[Any]):
-#         if not args[0].value:
-#             operator = self.definition.operator
-#             self.interpreter.error(, "")
+    def func(self, arg: MObject):
+        if not arg.value:
+            self.error("Assertion failed.")
+        return MValue(True, None)
 
 
 class IsSubtype(MNativeFunction):
@@ -143,6 +143,7 @@ def interpreter(interactive=False):
     ip.define("typeof", TypeOf(ip=ip))
     ip.define("issubtype", IsSubtype(ip=ip))
     ip.define("schema", Schema(ip=ip))
+    ip.define("assert", Assert(ip=ip))
 
     # Clean the lexer's code buffer.
     ip.parser.lexer.reset()
