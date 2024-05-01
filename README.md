@@ -13,7 +13,7 @@ computation as first class citizens. Formal computation is implemented as
 a Turing-complete programming language (&lambda;), while informal computation is 
 obtained by consulting an oracle, implemented as a large language model (&Psi;).
 
-Features:
+*Features:*
 
 - MindScript implements an [oracle machine](https://en.wikipedia.org/wiki/Oracle_machine).
 - Minimal C-like/JavaScript syntax on top of JSON data types.
@@ -22,14 +22,14 @@ Features:
 - (Current version) implemented in Python.
 
 
-Applications:
+*Applications:*
 
 - Processing of unstructured information
 - Language model agents
 - Semantic web
 - and much more.
 
-Requirements:
+*Requirements:*
 
 - Tested with Python 3.9
 
