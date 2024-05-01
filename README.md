@@ -8,22 +8,26 @@ An experimental programming language combining formal and informal computation.
 
 ## Description
 
-MindScript is a programming language which treats both formal and informal
+MindScript is a programming language with both formal and informal
 computation as first class citizens. Formal computation is implemented as
 a Turing-complete programming language, while informal computation is 
-implemented by consulting a large language model representing an oracle.
+obtained by consulting an oracle, implemented as a large language model.
 
 Features:
 
 - MindScript implements an [oracle machine](https://en.wikipedia.org/wiki/Oracle_machine).
 - Minimal C-like/JavaScript syntax on top of JSON data types.
-- Runtime formal type checking.
+- Runtime type checking.
 - Code comments are semantic type annotations.
 - (Current version) implemented in Python.
 
 
 Applications:
-- Semantic Web
+
+- Processing of unstructured information
+- Language model agents
+- Semantic web
+- and much more.
 
 
 ## Quickstart
