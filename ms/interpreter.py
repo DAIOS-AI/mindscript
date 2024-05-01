@@ -3,9 +3,59 @@ import ms.ast as ast
 from ms.printer import Printer
 from ms.parser import Parser
 from ms.types import TypeChecker
-from ms.objects import MObject, MValue, MType, MFunction, MUserFunction, Environment
+from ms.objects import MObject, MValue, MType, MFunction
 from ms.oracle import MOracleFunction
 
+
+# Environment.
+
+class Environment():
+
+    def __init__(self, enclosing=None):
+        self.enclosing: Optional['Environment'] = enclosing
+        self.vars = {}
+
+    def define(self, key: str, value: MValue = None) -> bool:
+        if value is None:
+            value = MValue(None, None)
+        self.vars[key] = value
+        return True
+
+    def set(self, key: str, value: MValue) -> bool:
+        if key in self.vars:
+            self.vars[key] = value
+            return True
+        if self.enclosing is not None:
+            return self.enclosing.set(key, value)
+        raise KeyError()
+
+    def get(self, key: str) -> MObject:
+        if key in self.vars:
+            return self.vars[key]
+        if self.enclosing is not None:
+            return self.enclosing.get(key)
+        raise KeyError()
+
+
+# User-defined functions.
+
+class MUserFunction(MFunction):
+
+    def __init__(self, ip: 'Interpreter', definition: ast.Function):  # type: ignore
+        super().__init__(ip, definition)
+
+    def func(self, arg: MObject) -> MObject:
+        env = Environment(enclosing=self.environment)
+        if self.param is not None:
+            env.define(self.param.literal, arg)
+        try:
+            value = self.interpreter.execute_block(self.definition.expr, env)
+        except ast.Return as e:
+            value = e.expr
+        return value
+
+
+# Interpreter.
 
 class Interpreter:
 
@@ -41,7 +91,7 @@ class Interpreter:
     def typeof(self, value: MObject) -> MType:
         definition = self.checker.typeof(value)
         return MType(self, definition)
-    
+
     def issubtype(self, subtype: MObject, supertype: MObject) -> bool:
         res = self.checker.issubtype(subtype, supertype)
         return res
@@ -307,7 +357,7 @@ class Interpreter:
                 values.append(value)
         finally:
             self.env = previous
-        
+
         return MValue(values, None)
 
     def map(self, node: ast.Expr):
@@ -336,7 +386,8 @@ class Interpreter:
             for expr in block.exprs:
                 value = expr.accept(self)
         finally:
-            # Restore the enclosing environment, potentially discarding many nested inner ones.
+            # Restore the enclosing environment, potentially 
+            # discarding nested inner environment.
             self.env = previous
         return value
 
@@ -370,7 +421,7 @@ class Interpreter:
         elif type(iterator) == MValue and type(iterator.value) == dict:
             env = Environment(enclosing=self.env)
             for iter in iterator.value.items():
-                iter = MValue([MValue(iter[0],None), iter[1]], None)
+                iter = MValue([MValue(iter[0], None), iter[1]], None)
                 try:
                     self.destructure(env, target, node.operator, iter)
                     value = self.execute_block(node.expr, env)
@@ -470,5 +521,3 @@ class Interpreter:
             new_node = expr.accept(self)
             dictionary[key] = new_node
         return ast.TypeMap(map=dictionary, required=node.required)
-
-

@@ -1,6 +1,6 @@
 from typing import List, Any
-from ms.objects import MNativeFunction, MValue, MObject, Environment
-from ms.interpreter import Interpreter
+from ms.objects import MNativeFunction, MValue, MObject
+from ms.interpreter import Interpreter, Environment
 from ms.types import TypeChecker
 from ms.schema import JSONSchema
 
