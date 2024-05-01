@@ -10,8 +10,8 @@ An experimental programming language combining formal and informal computation.
 
 MindScript is a programming language with both formal and informal
 computation as first class citizens. Formal computation is implemented as
-a Turing-complete programming language, while informal computation is 
-obtained by consulting an oracle, implemented as a large language model.
+a Turing-complete programming language (&lambda;), while informal computation is 
+obtained by consulting an oracle, implemented as a large language model (&Psi;).
 
 Features:
 
@@ -32,5 +32,12 @@ Applications:
 
 ## Quickstart
 
+```
+# "Determine the distance of the planet from the sun in astronomical units."
+let au = function(planet: Str) -> Num oracle
+
+au("earth") 
+au("mars")
+```
 
 
