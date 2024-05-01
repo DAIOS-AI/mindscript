@@ -80,9 +80,8 @@ class JSONSchema():
         schema = node.expr.accept(self, env=env)
         return schema
 
-    # TODO
-    def type_unary(self, node, optional=False):
-        schema = node.expr.accept(self, optional=True, env=None)
+    def type_unary(self, node, optional=False, env=None):
+        schema = node.expr.accept(self, optional=True, env=env)
         return schema
     
     # TODO

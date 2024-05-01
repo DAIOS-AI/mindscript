@@ -63,11 +63,11 @@ class MOracleFunction(MFunction):
         self.output_schema_obj = json.loads(self.output_schema)
         self.output_annotation = definition.types.right.annotation
 
-    def func(self, args: List[MObject]):
+    def func(self, arg: MObject):
         task = self.definition.types.annotation
         input_schema = self.input_schema
         output_schema = self.output_schema
-        input = self.prepare_inputs(args)
+        input = self.interpreter.printer.print(arg)
         prompt = TEMPLATE.format(
             task=task, input=input, input_schema=input_schema, output_schema=output_schema)
 
@@ -83,8 +83,4 @@ class MOracleFunction(MFunction):
         # print(prompt + response_txt)
         return output
 
-    def prepare_inputs(self, args: List[MObject]):
-        inputs = [self.interpreter.printer.print(item) for item in args]
-        if len(inputs) == 1:
-            return inputs[0]
-        return "[" + ", ".join(inputs) + "]"
+

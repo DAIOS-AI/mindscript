@@ -6,6 +6,7 @@ from ms.ast import IncompleteExpression, Return
 
 GREEN = "\033[32m"
 BLUE = "\033[94m"
+RED = "\x1B[31m"
 RESET = "\033[0m"
 WELCOME = """
 MindScript Version 0.1
@@ -55,6 +56,8 @@ def repl():
         except EOFError:
             print()
             exit(0)
+        # except Exception as e:
+        #     print(f"{RED}{str(e)}{RESET}")
 
 
 if __name__ == "__main__":

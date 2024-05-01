@@ -21,11 +21,10 @@ from ms.schema import JSONSchema
 class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(filename: Str) -> {}")
-        self.ip = ip
 
-    def func(self, args: List[MObject]):
+    def func(self, arg: MObject):
         try:
-            with open(args[0].value, "r") as fh:
+            with open(arg.value, "r") as fh:
                 code = fh.read()
 
             ip = interpreter()
@@ -39,7 +38,7 @@ class Import(MNativeFunction):
                         module[key] = val
                 env = env.enclosing
         except FileNotFoundError as e:
-            print(f"File not found: {args[0]}")
+            print(f"File not found: {arg}")
             return None
         except Exception as e:
             print(e)
@@ -52,8 +51,8 @@ class Str(MNativeFunction):
         super().__init__(ip, "function(value: Any) -> Str")
         self.ip = ip
 
-    def func(self, args: List[MObject]):
-        repr = self.ip.printer.print(args[0])
+    def func(self, arg: MObject):
+        repr = self.ip.printer.print(arg)
         return MValue(repr, None)
 
 
@@ -61,34 +60,29 @@ class Print(MNativeFunction):
     def __init__(self, ip: Interpreter):
         definition = "function(value: Any) -> Any"
         super().__init__(ip, definition)
-        self.ip = ip
 
-    def func(self, args: List[MObject]):
-        if type(args[0].value) == str:
-            print(args[0].value)
+    def func(self, arg: MObject):
+        if type(arg) == MValue and type(arg.value) == str:
+            print(arg.value)
         else:
-            repr = self.ip.printer.print(args[0])
+            repr = self.interpreter.printer.print(arg)
             print(repr)
-        return args[0]
+        return arg
 
 
 class Dump(MNativeFunction):
     def __init__(self, ip: Interpreter):
         definition = "function() -> Null"
         super().__init__(ip, definition)
-        self.ip = ip
 
-    def func(self, args: List[MObject]):
-        if len(args) == 0:
-            tag = ""
-        else:
-            tag = args[0]
+    def func(self, arg: MObject):
+        tag = arg
         env = self.ip.env
         pre = "=> "
         print("=== STATE DUMP START")
         while env is not None:
             print(pre)
-            txt = self.ip.printer.print(MValue(env.vars, None))
+            txt = self.interpreter.printer.print(MValue(env.vars, None))
             print(txt)
             pre = "==" + pre
             env = env.enclosing
@@ -99,38 +93,43 @@ class Dump(MNativeFunction):
 class GetEnv(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function() -> {}")
-        self.ip = ip
 
-    def func(self, args: List[MObject]):
-        return MValue(self.ip.env.vars, None)
+    def func(self, arg: MObject):
+        return MValue(self.interpreter.env.vars, None)
 
 
 class TypeOf(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(value: Any) -> Type")
-        self.ip = ip
 
-    def func(self, args: List[Any]):
-        return self.ip.typeof(args[0])
+    def func(self, arg: MObject):
+        return self.interpreter.typeof(arg)
+
+# class Assert(MNativeFunction):
+#     def __init__(self, ip: Interpreter):
+#         super().__init__(ip, "function(value: Bool) -> Bool")
+
+#     def func(self, args: List[Any]):
+#         if not args[0].value:
+#             operator = self.definition.operator
+#             self.interpreter.error(, "")
 
 
 class IsSubtype(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(sub: Type, super: Type) -> Bool")
-        self.ip = ip
+        super().__init__(ip, "function(types: [Type, Type]) -> Bool")
 
-    def func(self, args: List[Any]):
-        confirmed = self.ip.issubtype(args[0], args[1])
+    def func(self, arg: MObject):
+        confirmed = self.interpreter.issubtype(arg.value[0], arg.value[1])
         return MValue(confirmed, None)
 
 class Schema(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(value: Type) -> Str")
-        self.ip = ip
         self.printer = JSONSchema()
 
-    def func(self, args: List[Any]):
-        valtype = self.printer.print_schema(args[0])
+    def func(self, arg: MObject):
+        valtype = self.printer.print_schema(arg)
         return MValue(valtype, None)
 
 

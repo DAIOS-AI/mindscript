@@ -39,7 +39,7 @@ closure()
 
 
 print("\n# Closure test and callback: Creating an adder function.\n# Should print: 8")
-let createAdder = function(n: Int) -> Int do
+let createAdder = function(n: Int) -> Int -> Int do
     function(m: Int) -> Int do (n + m) end
 end
 
@@ -51,21 +51,22 @@ print("\n# Creating a point structure and adder function.\n")
 let Point = type {"x": Num, "y": Num}
 print(Point)
 
-let point = function(x: Num, y: Num) -> Point do
-  {"x": x, "y": y}
+let point = function(point: [Num, Num]) -> Point do
+  {"x": point[0], "y": point[1]}
 end
 print(point)
 
-let point_add = function(p: Point, q: Point) -> Point do
+let point_add = function(points: [Point, Point]) -> Point do
+  [let p, let q] = points
   {"x": p.x + q.x, "y": p.y + q.y}
 end
 print(point_add)
 
-[let p, let q] = [point(1, -1), point(-1, 1)]
+[let p, let q] = [point([1., -1.]), point([-1., 1.])]
 print(p)
 print(q)
 
-let r = point_add(p, q)
+let r = point_add([p, q])
 print(r)
 
 print("Should be [0, 0]")
@@ -84,7 +85,8 @@ end
 print(factorial)
 
 print("\n# Testing for loops.")
-let range = function(s: Int, e: Int) -> (Null -> Int?) do
+let range = function(bounds: [Int, Int]) -> (Null -> Int?) do
+  [let s, let e] = bounds
   function() -> Int? do
     if s<e then
       let value = s
@@ -103,14 +105,14 @@ print("\nLoops over objects.")
 for let x in {"x": 1, "y": 2, "z": 3} do print(x) end
 
 print("\nLoops over iterators.")
-for let x in range(1, 4) do print(x) end
+for let x in range([1, 4]) do print(x) end
 
 print("\n# Type checking.")
 let obj = {
   "name": "Pedro", 
   "sayname": function() do
       print(this.name)
-    end
+  end
 }
 
 print("Should print the object.")
@@ -120,9 +122,20 @@ print("Should print the type of the object.")
 let ObjType = typeof(obj)
 print(ObjType)
 
-(# "Who should be the next president?" function())
-examples([
-  ["one", 1], 
-  ["two", 2], 
-  ["twenty-one", 21]
-])
+let show_age = function(arg: {"name": Str, "age": Int}) -> Int do
+  {"age": let age} = arg
+  return(age)
+end
+let age = show_age({"age": 45, "name": "something"})
+print("Should print '45': " + str(age))
+
+print("# Trying oracle functions.")
+# "Determine the distance of the planet to the sun in astronomical units."
+let au = function(planet: Str) -> Num oracle
+
+print("AU Mercury      : " + str(au("Mercury")))
+print("AU Venus        : " + str(au("Venus")))
+print("AU Earth        : " + str(au("Earth")))
+print("AU Mars         : " + str(au("Mars")))
+print("AU Asteroid belt: " + str(au("Asteroid belt")))
+print("AU Jupiter      : " + str(au("Jupiter")))

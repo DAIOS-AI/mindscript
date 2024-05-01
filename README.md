@@ -13,10 +13,11 @@ implemented by consulting a large language model representing an oracle.
 
 Features:
 
-- MindScript implements an [oracle machine][https://en.wikipedia.org/wiki/Oracle_machine].
+- MindScript implements an [oracle machine](https://en.wikipedia.org/wiki/Oracle_machine).
 - Minimal C-like/JavaScript syntax on top of JSON data types.
 - Runtime formal type checking.
 - Code comments are semantic type annotations.
+- (Current version) implemented in Python.
 
 
 Applications:

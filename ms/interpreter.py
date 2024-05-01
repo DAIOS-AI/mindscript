@@ -159,14 +159,13 @@ class Interpreter:
     def unary(self, node: ast.Expr):
         operator = node.operator
         expr = node.expr.accept(self)
-        value = expr.value
         if operator.ttype == ast.TokenType.NOT:
-            if type(value) == bool:
-                return MValue(not value, None)
+            if type(expr) == MValue and type(expr.value) == bool:
+                return MValue(not expr.value, None)
             self.error(operator, "Expected a boolean.")
         elif operator.ttype == ast.TokenType.MINUS:
-            if type(value) == int or type(value) == float:
-                return MValue(-value, None)
+            if type(expr) == MValue and type(expr.value) == int or type(expr.value) == float:
+                return MValue(-expr.value, None)
             self.error(operator, "Expected a number.")
         elif operator.ttype == ast.TokenType.RETURN:
             raise ast.Return(operator, expr)
@@ -225,7 +224,7 @@ class Interpreter:
         # This should never be called directly.
         self.error(node.index, "Set should not be interpreted directly.")
 
-    def assign_search(self, env, target, operator, value):
+    def destructure(self, env, target, operator, value):
         if isinstance(target, ast.Terminal):
             identifier = target.token.literal
             try:
@@ -238,7 +237,7 @@ class Interpreter:
             # Push the annotation into the value!
             annotation = target.annotation.literal
             value.annotation = annotation
-            return self.assign_search(env, target.expr, operator, value)
+            return self.destructure(env, target.expr, operator, value)
         elif isinstance(target, ast.Declaration):
             # Capture inner declaration!
             identifier = target.token.literal
@@ -262,31 +261,34 @@ class Interpreter:
                     return value
                 self.error(operator, "Array index out of range.")
             self.error(operator, "Attempted to use a non-integer index.")
-        elif isinstance(target, ast.Array):
+        elif isinstance(target, ast.Array) and type(value.value) == list:
+            res = []
             source = value.value
-            if len(target.array) != len(source):
+            if len(target.array) > len(source):
                 self.error(
-                    operator, "Attempted an assignment between two arrays of different sizes.")
-            for n in range(len(source)):
-                self.assign_search(env, target.array[n], operator, source[n])
-            return value
-        elif isinstance(target, ast.Map):
+                    operator, "The assignment expects a larger array on the right-hand-side.")
+            for n in range(len(target.array)):
+                self.destructure(env, target.array[n], operator, source[n])
+                res.append(source[n])
+            return MValue(res, None)
+        elif isinstance(target, ast.Map) and type(value.value) == dict:
             res = {}
             source = value.value
             for key in target.map.keys():
                 if key not in source:
                     self.error(
                         operator, f"Attempted to extract the unknown key '{key}' from the right-hand-side.")
-                self.assign_search(env, target.map[key], operator, source[key])
+                self.destructure(env, target.map[key], operator, source[key])
                 res[key] = source[key]
-            return res
+            return MValue(res, None)
         self.error(operator, "Attempted to assign to a wrong target.")
 
     def assign(self, node: ast.Expr):
-        # Capture environment, because expression might change it.
+        # Capture environment, because expression on the rhs might change it,
+        # e.g. in a function or type instantiation.
         previous = self.env
         value = node.expr.accept(self)
-        return self.assign_search(previous, node.target, node.operator, value)
+        return self.destructure(previous, node.target, node.operator, value)
 
     def declaration(self, node: ast.Expr):
         # operator, identifier
@@ -353,43 +355,43 @@ class Interpreter:
     def forloop(self, node: ast.Expr):
         value = None
         target = node.target
-        iterator = node.iterator.accept(self).value
-        if type(iterator) == list:
+        iterator = node.iterator.accept(self)
+        if type(iterator) == MValue and type(iterator.value) == list:
             env = Environment(enclosing=self.env)
-            for iter in iterator:
+            for iter in iterator.value:
                 try:
-                    self.assign_search(env, target, node.operator, iter)
+                    self.destructure(env, target, node.operator, iter)
                     value = self.execute_block(node.expr, env)
                 except ast.Break as e:
                     value = e.expr
                     break
                 except ast.Continue as e:
                     pass
-        elif type(iterator) == dict:
+        elif type(iterator) == MValue and type(iterator.value) == dict:
             env = Environment(enclosing=self.env)
-            for iter in iterator.items():
+            for iter in iterator.value.items():
                 iter = MValue([MValue(iter[0],None), iter[1]], None)
                 try:
-                    self.assign_search(env, target, node.operator, iter)
+                    self.destructure(env, target, node.operator, iter)
                     value = self.execute_block(node.expr, env)
                 except ast.Break as e:
                     value = e.expr
                     break
                 except ast.Continue as e:
                     pass
-        elif isinstance(iterator, ast.Callable):
+        elif isinstance(iterator, MFunction):
             env = Environment(enclosing=self.env)
-            iter = iterator.call([])
+            iter = iterator.call(MValue(None, None))
             while iter.value is not None:
                 try:
-                    self.assign_search(env, target, node.operator, iter)
+                    self.destructure(env, target, node.operator, iter)
                     value = self.execute_block(node.expr, env)
                 except ast.Break as e:
                     value = e.expr
                     break
                 except ast.Continue as e:
                     pass
-                iter = iterator.call([])
+                iter = iterator.call(MValue(None, None))
         else:
             self.error(node.operator,
                        "Can only iterate over array, object, or callable.")
@@ -397,22 +399,16 @@ class Interpreter:
 
     def call(self, node: ast.Expr):
         callee = node.expr.accept(self)
-        args = []
-        for argument in node.arguments:
-            arg = argument.accept(self)
-            args.append(arg)
+        arg = node.argument.accept(self)
         if isinstance(callee, MFunction):
             try:
-                return callee.call(args)
+                return callee.call(arg)
             except ast.TypeError as e:
                 self.error(node.operator, str(e))
                 return MValue(None, None)
 
         # Calling a function on a constant value.
-        if len(args) > 0:
-            self.error(
-                node.operator, "Attempted to call a constant function with one or more arguments.")
-        return callee
+        self.error(node.operator, "Not a function.")
 
     def function(self, node: ast.Expr):
         node.types = node.types.accept(self)

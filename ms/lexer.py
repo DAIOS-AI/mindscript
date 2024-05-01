@@ -1,4 +1,4 @@
-from typing import Tuple, Callable, Any
+from typing import Any
 from ms.ast import TokenType, Token, LexicalError
 
 

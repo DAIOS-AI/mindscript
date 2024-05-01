@@ -1,6 +1,4 @@
-from collections import namedtuple
 from enum import Enum
-from abc import abstractmethod
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel
 
@@ -220,7 +218,7 @@ class For(Expr):
 class Call(Expr):
     expr: Expr
     operator: Optional[Token]
-    arguments: List[Expr]
+    argument: Expr
 
     def accept(self, visitor, **kwargs):
         return visitor.call(self, **kwargs)
@@ -339,7 +337,7 @@ class TypeGrouping(TypeExpr):
 
 class Function(Expr):
     operator: Optional[Token]
-    parameters: List[Token]
+    parameter: Optional[Token]
     types: TypeBinary
     expr: Expr
 

@@ -165,31 +165,22 @@ class Printer():
 
     def call(self, node):
         callee = node.expr.accept(self)
-        args = "("
-        if len(node.arguments) > 0:
-            args += node.arguments[0].accept(self)
-            for argument in node.arguments[1:]:
-                args += ", " + argument.accept(self)
-        args += ")"
+        args = "(" + node.argument.accept(self) + ")"
         return callee + args
 
     def function(self, node):
-        pairs = []
-        in_types = node.types.left
+        parameter = []
+        in_type = node.types.left
         out_type = node.types.right
-        if type(in_types) == TypeArray:
-            for param, param_type in zip(node.parameters, in_types.array):
-                name = param.literal
-                type_spec = param_type.accept(self)
-                pairs.append(f"{name}: {type_spec}")
+        if node.parameter is None:
+            parameter = ""
         else:
-            name = node.parameters[0].literal
-            type_spec = in_types.accept(self)
-            pairs.append(f"{name}: {type_spec}")
-        parameters = ", ".join(pairs)
+            name = node.parameter.literal
+            type_spec = in_type.accept(self)
+            parameter = f"{name}: {type_spec}"
         out_spec = out_type.accept(self)
         expr = node.expr.accept(self)
-        return f"function({parameters}) -> {out_spec} {expr}"
+        return f"function({parameter}) -> {out_spec} {expr}"
 
     def type_definition(self, node):
         expr = node.expr.accept(self)

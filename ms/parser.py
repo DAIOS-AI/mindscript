@@ -8,6 +8,7 @@ from ms.lexer import Lexer
 # BNF of grammar:
 # ```
 #     program     -> chunk EOF
+#     chunk       -> control*
 #     control     -> | "return" "~(" expression ")"
 #                    | "break" "~(" expression ")"
 #                    | "continue" "~(" expression ")"
@@ -21,17 +22,16 @@ from ms.lexer import Lexer
 #     term        -> factor (("+"|"-") factor)*
 #     factor      -> unary (("*"|"/"|"%") unary)*
 #     unary       -> ("not"|"-") call | call
-#     call        -> primary ( "~(" arguments ")" | "." IDENTIFIER | "~[" expression "]" )*
-#     arguments   -> expression ("," expression)*
+#     call        -> primary ( "~(" expression? ")" | "." ID | "~[" expression "]" )*
 #
 #     primary     -> INTEGER | NUMBER | STRING | BOOLEAN | NULL | array | map
-#                    | type_def | function | target | ( "~(" | "(" ) expression ")"
-#                    | block | conditional | while | for
+#                    | type | function | target | ( "~(" | "(" ) expression ")"
+#                    | block | conditional | for
 #     array       -> "[" (expression ("," expression)*)? "]"
 #     map         -> "{" (item ("," item)*)? "}"
-#     item        -> "#" STRING STRING ":" expression | STRING ":" expression
+#     item        -> ("#" STRING)? key ":" expression
+#     key         -> STRING | IDENTIFIER
 #
-#     chunk       -> control*
 #     block       -> "do" chunk "end"
 #     conditional -> "if" expression "then" chunk
 #                     ("elif" expression "then" chunk)*
@@ -40,18 +40,18 @@ from ms.lexer import Lexer
 #     for         -> "for" expression "in" expression block
 #     target      -> ID | declaration
 #     declaration -> "let" ID
-#     function    -> "function" "~(" (parameter ("," parameter)*)? ")" 
+#     function    -> "function" "~(" parameter? ")" 
 #                       ("->" type_expr)? ("oracle" | block)
-#     parameter   -> "#" STRING ID (":" type_expr)? | ID (":" type_expr)?
+#     parameter   -> ("#" STRING)? ID (":" type_expr)?
 #
-#     type_def    -> "type" type_expr
-#     type_expr   -> "#" STRING type_expr | type_binary
+#     type        -> "type" type_expr
+#     type_expr   -> ("#" STRING)? type_expr
 #     type_binary -> type_unary "->" type_expr | type_unary
 #     type_unary  -> type_prim "?" | type_prim
 #     type_prim   -> ID | TYPE | type_arr | type_map | "(" type_expr ")"
 #     type_arr    -> "[" ((type_expr ",")* "]"
 #     type_map    -> "{" (type_item ("," type_item)*)? "}"
-#     type_item   -> "#" STRING STRING "!"? ":" type_expr | STRING "!"? ":" type_expr
+#     type_item   -> ("#" STRING)? key "!"? ":" type_expr
 # ```
 ###
 
@@ -123,11 +123,21 @@ class Parser:
             )
         )
 
+    def null_type_terminal(self, line: int, col: int):
+        return ast.TypeTerminal(
+            token=Token(
+                ttype=TokenType.TYPE,
+                literal="Null",
+                line=line,
+                col=col
+            )
+        )
+
     def null_terminal(self, line: int, col: int):
         return ast.Terminal(
             token=Token(
                 ttype=TokenType.NULL,
-                literal="null",
+                literal=None,
                 line=line,
                 col=col
             )
@@ -257,11 +267,14 @@ class Parser:
         while self.match([TokenType.CLROUND, TokenType.PERIOD, TokenType.CLSQUARE]):
             operator = self.previous()
             if operator.ttype == TokenType.CLROUND:
-                arguments = self.parse_arguments()
+                if self.check(TokenType.RROUND):
+                    argument = self.null_terminal(operator.line, operator.col)
+                else:
+                    argument = self.parse_expression()
                 self.consume(TokenType.RROUND,
-                             "Expected ')' to close argument list.")
+                             "Expected closing ')'.")
                 primary = ast.Call(expr=primary, operator=operator,
-                                   arguments=arguments)
+                                   argument=argument)
             elif operator.ttype == TokenType.CLSQUARE:
                 index = self.parse_expression()
                 primary = ast.ArrayGet(
@@ -278,16 +291,6 @@ class Parser:
                 else:
                     self.error(operator, "Expected a property name.")
         return primary
-
-    def parse_arguments(self):
-        if self.check(TokenType.RROUND):
-            return []
-        expression = self.parse_expression()
-        arguments = [expression]
-        while self.match([TokenType.COMMA]):
-            expression = self.parse_expression()
-            arguments.append(expression)
-        return arguments
 
     def parse_primary(self):
         # print(f"parse_primary: next token = {self.peek()}")
@@ -359,16 +362,28 @@ class Parser:
             self.consume(TokenType.STRING,
                          "Expected a string annotation after '#'.")
             annotation = self.previous()
-            self.consume(TokenType.STRING, "Expected a member key.")
-            key = self.previous()
+            key = self.parse_key()
             self.consume(TokenType.COLON, "Expected ':' after member key.")
             expr = self.parse_expression()
             return [key, ast.Annotation(operator=operator, annotation=annotation, expr=expr)]
-        self.consume(TokenType.STRING, "Expected a member key.")
-        key = self.previous()
+        key = self.parse_key()
         self.consume(TokenType.COLON, "Expected ':' after member key.")
         expr = self.parse_expression()
         return [key, expr]
+
+    def parse_key(self):
+        if self.match([TokenType.ID]):
+            key = self.previous()
+            new_key = Token(
+                ttype=TokenType.STRING,
+                line=key.line,
+                col=key.col,
+                literal=key.literal)
+            return new_key
+        elif self.match([TokenType.STRING]):
+            key = self.previous()
+            return key
+        self.error(self.peek(), "Expected a member key.")
 
     def parse_chunk_until(self, ends: List[Token]):
         exprs = []
@@ -425,41 +440,28 @@ class Parser:
             operator = self.previous()
             self.consume(TokenType.CLROUND,
                          "Expected '(' after 'function' keyword.")
-            params, types = self.parse_parameters()
+            if self.check(TokenType.RROUND):
+                param, in_type = None, self.null_type_terminal(operator.line, operator.col)
+            else:
+                param, in_type = self.parse_parameter()
             self.consume(
-                TokenType.RROUND, "Expected closing ')' after list of function parameters.")
+                TokenType.RROUND, "Expected closing ')' after function parameter.")
             out_type = self.parse_type_expr() if self.match(
                 [TokenType.ARROW]) else self.any_type_terminal(operator.line, operator.col)
-            in_type = ast.TypeArray(array=types)
             # TODO: Operator here is the function, not the arrow, since arrow is optional.
             functype = ast.TypeBinary(operator=operator, left=in_type, right=out_type)
 
+            expr = None
             if self.match([TokenType.ORACLE]):
                 oracletoken = self.previous()
-                return ast.Function(
-                    operator=operator, parameters=params, 
-                    types=functype, expr=ast.Terminal(token=oracletoken)
-                )
+                expr = ast.Terminal(token=oracletoken)
             else:
                 expr = self.parse_block()
-                return ast.Function(
-                    operator=operator, parameters=params, 
-                    types=functype, expr=expr
-                )
-
-    def parse_parameters(self):
-        params = []
-        types = []
-        if self.check(TokenType.RROUND):
-            return [params, types]        
-        param, ptype = self.parse_parameter()
-        params.append(param)
-        types.append(ptype)
-        while self.match([TokenType.COMMA]):
-            param, ptype = self.parse_parameter()
-            params.append(param)
-            types.append(ptype)
-        return [params, types]
+            
+            return ast.Function(
+                operator=operator, parameter=param, 
+                types=functype, expr=expr
+            )
 
     def parse_parameter(self):
         annotation = None
@@ -587,14 +589,12 @@ class Parser:
             self.consume(TokenType.STRING,
                          "Expected a string annotation after '#'.")
             annotation = self.previous()
-            self.consume(TokenType.STRING, "Expected a member key.")
-            key = self.previous()
+            key = self.parse_key()
             required = True if self.match([TokenType.BANG]) else False
             self.consume(TokenType.COLON, "Expected ':' after member key.")
             expr = self.parse_type_expr()
             return [key, required, ast.TypeAnnotation(operator=operator, annotation=annotation, expr=expr)]
-        self.consume(TokenType.STRING, "Expected a member key.")
-        key = self.previous()
+        key = self.parse_key()
         required = True if self.match([TokenType.BANG]) else False
         self.consume(TokenType.COLON, "Expected ':' after member key.")
         expr = self.parse_type_expr()
@@ -622,5 +622,7 @@ class Parser:
             # print("Detected incomplete expression.")
             self.lexer = previous_lexer
             raise (e)
+
+        # print(f"parser.parse: tree = {tree}")
 
         return tree

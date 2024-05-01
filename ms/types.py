@@ -14,8 +14,8 @@ class TypeChecker():
             elif isinstance(t, ast.TypeTerminal) and t.token.ttype == ast.TokenType.ID:
                 key = t.token.literal
                 value = env.get(key)
-                t = value.value.definition
-                env = value.value.env
+                t = value.definition
+                env = value.environment
             else:
                 resolving = False
         return [t, env]
@@ -44,8 +44,6 @@ class TypeChecker():
                 return True
 
         elif type1 == ast.TypeArray and type2 == ast.TypeArray:
-            print(type1)
-            print(type2)
             if len(t1.array) != 1 and len(t2.array) == 1:
                 return all(
                     self._subtype_recursion(sub, t2.array[0], env1, env2, visited)
@@ -64,7 +62,8 @@ class TypeChecker():
             for key in t2.map.keys():
                 if key not in t1.map:
                     nulltype = ast.Terminal(
-                        ast.Token(ttype=ast.TokenType.TYPE, literal="Null"))
+                        token=ast.Token(
+                            ttype=ast.TokenType.TYPE, literal="Null"))
                     valid = self._subtype_recursion(
                         nulltype, t2.map[key], env1, env2, visited)
                 else:

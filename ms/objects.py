@@ -114,29 +114,15 @@ class MFunction(MObject):
         self._ip = ip
         self._env = ip.env
         self._definition = definition
-        self._params = definition.parameters
-
-        types = []
+        self._param = definition.parameter
 
         # Create input types.
-        if type(definition.types.left) == ast.TypeArray:
-            ptypes = definition.types.left.array
-            assert (len(self.params) == len(ptypes))
-            for ptype in ptypes:
-                usertype = MType(ip, ptype)
-                types.append(usertype)
-        else:
-            assert (len(self.params) == 1)
-            ptype = definition.types.left
-            usertype = MType(ip, ptype)
-            types.append(usertype)
+        ptype = definition.types.left
+        self._intype = MType(ip, ptype)
 
         # Create output type.
         ptype = definition.types.right
-        usertype = MType(ip, ptype)
-        types.append(usertype)
-
-        self._types = types
+        self._outtype = MType(ip, ptype)
 
     @property
     def interpreter(self) -> 'Interpreter':  # type: ignore
@@ -147,12 +133,16 @@ class MFunction(MObject):
         return self._env
 
     @property
-    def params(self) -> List[str]:
-        return self._params
+    def param(self) -> List[str]:
+        return self._param
 
     @property
-    def types(self) -> List[MObject]:
-        return self._types
+    def intype(self) -> List[MObject]:
+        return self._intype
+
+    @property
+    def outtype(self) -> List[MObject]:
+        return self._outtype
 
     @property
     def definition(self) -> ast.Function:
@@ -166,17 +156,13 @@ class MFunction(MObject):
     def annotation(self, note):
         self._definition.types.annotation = note
 
-    def call(self, args: List[MObject]) -> MObject:
-        if len(self.params) != len(args):
-            raise ast.TypeError("Wrong number of parameters")
+    def call(self, arg: MObject) -> MObject:
+        if not self.interpreter.checktype(arg, self.intype):
+            raise ast.TypeError(f"Wrong type of function argument.")
 
-        for index in range(len(self.params)):
-            if not self.interpreter.checktype(args[index], self.types[index]):
-                raise ast.TypeError(f"Wrong type of function argument.")
+        value = self.func(arg)
 
-        value = self.func(args)
-
-        if not self.interpreter.checktype(value, self.types[-1]):
+        if not self.interpreter.checktype(value, self.outtype):
             raise ast.TypeError(f"Wrong type of function output.")
 
         return value
@@ -210,7 +196,7 @@ class MNativeFunction(MFunction):
         )
 
     @abstractmethod
-    def func(self, args: List[MObject]) -> MObject:
+    def func(self, arg: MObject) -> MObject:
         pass
 
 
@@ -219,10 +205,10 @@ class MUserFunction(MFunction):
     def __init__(self, ip: 'Interpreter', definition: ast.Function):  # type: ignore
         super().__init__(ip, definition)
 
-    def func(self, args: List[MObject]) -> MObject:
+    def func(self, arg: MObject) -> MObject:
         env = Environment(enclosing=self.environment)
-        for index in range(len(self.params)):
-            env.define(self.params[index].literal, args[index])
+        if self.param is not None:
+            env.define(self.param.literal, arg)
         try:
             value = self.interpreter.execute_block(self.definition.expr, env)
         except ast.Return as e:
