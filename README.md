@@ -1,3 +1,5 @@
+![mindscript](https://user-images.githubusercontent.com/)
+
 # MindScript
 
 An experimental programming language combining formal and informal computation.
