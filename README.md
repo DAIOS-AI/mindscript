@@ -1,4 +1,4 @@
-![mindscript](https://raw.githubusercontent.com/DAIOS-AI/mindscript/main/media/mindscript.png)
+![mindscript](media/mindscript.png)
 
 # MindScript
 
