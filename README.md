@@ -29,8 +29,23 @@ Applications:
 - Semantic web
 - and much more.
 
+Requirements:
+
+- Tested with Python 3.9
 
 ## Quickstart
+
+To run the REPL, enter
+```
+> python mindscript.py
+```
+
+To run a program `myprogram.ms`, enter
+```
+> python mindscript.py myprogram.ms
+```
+
+## Examples
 
 ```
 # "Determine the distance of the planet from the sun in astronomical units."
