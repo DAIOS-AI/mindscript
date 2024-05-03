@@ -640,6 +640,6 @@ class Parser:
             self.lexer = previous_lexer
             raise (e)
 
-        print(f"parser.parse: tree = {tree}")
+        # print(f"parser.parse: tree = {tree}")
 
         return tree
