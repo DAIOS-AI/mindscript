@@ -216,9 +216,9 @@ class For(Expr):
 
 
 class Call(Expr):
-    expr: Expr
     operator: Optional[Token]
-    argument: Expr
+    expr: Expr
+    arguments: List[Expr]
 
     def accept(self, visitor, **kwargs):
         return visitor.call(self, **kwargs)
@@ -337,7 +337,7 @@ class TypeGrouping(TypeExpr):
 
 class Function(Expr):
     operator: Optional[Token]
-    parameter: Optional[Token]
+    parameters: List[Token]
     types: TypeBinary
     expr: Expr
 

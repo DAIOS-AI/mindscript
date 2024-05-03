@@ -56,18 +56,29 @@ class MOracleFunction(MFunction):
 
         )
         schema_printer = JSONSchema()
+        in_type = ast.TypeMap(
+            annotation=definition.types.annotation,
+            map={key: value.definition for key, value in zip(definition.parameters, self.intypes)},
+            required={key: True for key in definition.parameters}
+        )
         self.input_schema = schema_printer.print_schema(
-            MType(ip, definition.types.left))
+            MType(ip, in_type))
         self.output_schema = schema_printer.print_schema(
             MType(ip, definition.types.right))
         self.output_schema_obj = json.loads(self.output_schema)
         self.output_annotation = definition.types.right.annotation
 
-    def func(self, arg: MObject):
+    def prepare_input(self, args: List[MObject]):
+        data = {}
+        for key, arg in zip(self.params, args):
+            data[key] = arg
+        return self.interpreter.printer.print(MValue(data, None))
+
+    def func(self, args: List[MObject]):
         task = self.definition.types.annotation
         input_schema = self.input_schema
         output_schema = self.output_schema
-        input = self.interpreter.printer.print(arg)
+        input = self.prepare_input(args)
         prompt = TEMPLATE.format(
             task=task, input=input, input_schema=input_schema, output_schema=output_schema)
 

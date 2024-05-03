@@ -22,7 +22,7 @@ from ms.lexer import Lexer
 #     term        -> factor (("+"|"-") factor)*
 #     factor      -> unary (("*"|"/"|"%") unary)*
 #     unary       -> ("not"|"-") call | call
-#     call        -> primary ( "~(" expression? ")" | "." ID | "~[" expression "]" )*
+#     call        -> primary ( "~(" expression* ")" | "." ID | "~[" expression "]" )*
 #
 #     primary     -> INTEGER | NUMBER | STRING | BOOLEAN | NULL | array | map
 #                    | type | function | target | ( "~(" | "(" ) expression ")"
@@ -40,7 +40,7 @@ from ms.lexer import Lexer
 #     for         -> "for" expression "in" expression block
 #     target      -> ID | declaration
 #     declaration -> "let" ID
-#     function    -> "function" "~(" parameter? ")" 
+#     function    -> "function" "~(" parameter* ")" 
 #                       ("->" type_expr)? ("oracle" | block)
 #     parameter   -> ("#" STRING)? ID (":" type_expr)?
 #
@@ -267,14 +267,17 @@ class Parser:
         while self.match([TokenType.CLROUND, TokenType.PERIOD, TokenType.CLSQUARE]):
             operator = self.previous()
             if operator.ttype == TokenType.CLROUND:
-                if self.check(TokenType.RROUND):
-                    argument = self.null_terminal(operator.line, operator.col)
-                else:
+                arguments = []
+                if not self.check(TokenType.RROUND):
                     argument = self.parse_expression()
+                    arguments.append(argument)
+                    while self.match([TokenType.COMMA]):
+                        argument = self.parse_expression()
+                        arguments.append(argument)
                 self.consume(TokenType.RROUND,
                              "Expected closing ')'.")
                 primary = ast.Call(expr=primary, operator=operator,
-                                   argument=argument)
+                                   arguments=arguments)
             elif operator.ttype == TokenType.CLSQUARE:
                 index = self.parse_expression()
                 primary = ast.ArrayGet(
@@ -440,16 +443,33 @@ class Parser:
             operator = self.previous()
             self.consume(TokenType.CLROUND,
                          "Expected '(' after 'function' keyword.")
-            if self.check(TokenType.RROUND):
-                param, in_type = None, self.null_type_terminal(operator.line, operator.col)
-            else:
-                param, in_type = self.parse_parameter()
+            params = []
+            ptypes = []
+            if not self.check(TokenType.RROUND):
+                param, ptype = self.parse_parameter()
+                params.append(param)
+                ptypes.append(ptype)
+                while self.match([TokenType.COMMA]):
+                    param, ptype = self.parse_parameter()
+                    params.append(param)
+                    ptypes.append(ptype)
             self.consume(
-                TokenType.RROUND, "Expected closing ')' after function parameter.")
-            out_type = self.parse_type_expr() if self.match(
-                [TokenType.ARROW]) else self.any_type_terminal(operator.line, operator.col)
-            # TODO: Operator here is the function, not the arrow, since arrow is optional.
-            functype = ast.TypeBinary(operator=operator, left=in_type, right=out_type)
+                TokenType.RROUND, "Expected closing ')' after function parameters.")
+            if len(params) == 0:
+                params.append(Token(
+                    ttype=TokenType.ID, 
+                    literal="_", 
+                    line=operator.line, 
+                    col=operator.col))
+                ptypes.append(self.null_type_terminal(operator.line, operator.col))
+
+            if self.match([TokenType.ARROW]):
+                types = self.parse_type_expr()
+            else:
+                types = self.any_type_terminal(operator.line, operator.col)
+
+            for ptype in reversed(ptypes):
+                types = ast.TypeBinary(operator=operator, left=ptype, right=types)
 
             expr = None
             if self.match([TokenType.ORACLE]):
@@ -457,11 +477,8 @@ class Parser:
                 expr = ast.Terminal(token=oracletoken)
             else:
                 expr = self.parse_block()
-            
-            return ast.Function(
-                operator=operator, parameter=param, 
-                types=functype, expr=expr
-            )
+            print(f"parser.parse_function: params = {params}")
+            return ast.Function(operator=operator, parameters=params, types=types, expr=expr)
 
     def parse_parameter(self):
         annotation = None
@@ -623,6 +640,6 @@ class Parser:
             self.lexer = previous_lexer
             raise (e)
 
-        # print(f"parser.parse: tree = {tree}")
+        print(f"parser.parse: tree = {tree}")
 
         return tree

@@ -3,7 +3,7 @@ from typing import List, Dict
 from ms.ast import TokenType, Expr, TypeArray
 from ms.objects import MObject, MValue, MType, MFunction
 
-TABLEN = 2
+TABLEN = 4
 MAXDEPTH = 4
 LINELEN = 80
 
@@ -165,22 +165,22 @@ class Printer():
 
     def call(self, node):
         callee = node.expr.accept(self)
-        args = "(" + node.argument.accept(self) + ")"
-        return callee + args
+        arg_list = [arg.accept(self) for arg in node.arguments]
+        arguments = "(" + ", ".join(arg_list) + ")"
+        return callee + arguments
 
     def function(self, node):
-        parameter = []
-        in_type = node.types.left
-        out_type = node.types.right
-        if node.parameter is None:
-            parameter = ""
-        else:
-            name = node.parameter.literal
-            type_spec = in_type.accept(self)
-            parameter = f"{name}: {type_spec}"
-        out_spec = out_type.accept(self)
+        parameters = []
+        types = node.types
+        for param in node.parameters:
+            param_name = param.literal
+            param_type = types.left.accept(self)
+            parameters.append(f"{param_name}: {param_type}")
+            types = types.right
+        out_type = types.accept(self)
         expr = node.expr.accept(self)
-        return f"function({parameter}) -> {out_spec} {expr}"
+        param_list = ", ".join(parameters)
+        return f"function({param_list}) -> {out_type} {expr}"
 
     def type_definition(self, node):
         expr = node.expr.accept(self)

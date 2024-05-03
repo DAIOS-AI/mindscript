@@ -22,9 +22,10 @@ class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(filename: Str) -> Object")
 
-    def func(self, arg: MObject):
+    def func(self, args: List[MObject]):
+        filename = args[0].value
         try:
-            with open(arg.value, "r") as fh:
+            with open(filename, "r") as fh:
                 code = fh.read()
 
             ip = interpreter()
@@ -38,7 +39,7 @@ class Import(MNativeFunction):
                         module[key] = val
                 env = env.enclosing
         except FileNotFoundError as e:
-            print(f"File not found: {arg}")
+            print(f"File not found: {filename}")
             return None
         except Exception as e:
             print(e)
@@ -51,7 +52,8 @@ class Str(MNativeFunction):
         super().__init__(ip, "function(value: Any) -> Str")
         self.ip = ip
 
-    def func(self, arg: MObject):
+    def func(self, args: List[MObject]):
+        arg = args[0]
         repr = self.ip.printer.print(arg)
         return MValue(repr, None)
 
@@ -61,7 +63,8 @@ class Print(MNativeFunction):
         definition = "function(value: Any) -> Any"
         super().__init__(ip, definition)
 
-    def func(self, arg: MObject):
+    def func(self, args: List[MObject]):
+        arg = args[0]
         if type(arg) == MValue and type(arg.value) == str:
             print(arg.value)
         else:
@@ -75,8 +78,7 @@ class Dump(MNativeFunction):
         definition = "function() -> Null"
         super().__init__(ip, definition)
 
-    def func(self, arg: MObject):
-        tag = arg
+    def func(self, args: List[MObject]):
         env = self.ip.env
         pre = "=> "
         print("=== STATE DUMP START")
@@ -92,9 +94,9 @@ class Dump(MNativeFunction):
 
 class GetEnv(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function() -> {}")
+        super().__init__(ip, "function() -> Object")
 
-    def func(self, arg: MObject):
+    def func(self, args: List[MObject]):
         return MValue(self.interpreter.env.vars, None)
 
 
@@ -102,14 +104,16 @@ class TypeOf(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(value: Any) -> Type")
 
-    def func(self, arg: MObject):
+    def func(self, args: List[MObject]):
+        arg = args[0]
         return self.interpreter.typeof(arg)
 
 class Assert(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "function(value: Bool) -> Bool")
 
-    def func(self, arg: MObject):
+    def func(self, args: List[MObject]):
+        arg = args[0]
         if not arg.value:
             self.error("Assertion failed.")
         return MValue(True, None)
@@ -117,10 +121,10 @@ class Assert(MNativeFunction):
 
 class IsSubtype(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(types: [Type, Type]) -> Bool")
+        super().__init__(ip, "function(subtype: Type, supertype: Type) -> Bool")
 
-    def func(self, arg: MObject):
-        confirmed = self.interpreter.issubtype(arg.value[0], arg.value[1])
+    def func(self, args: List[MObject]):
+        confirmed = self.interpreter.issubtype(args[0], args[1])
         return MValue(confirmed, None)
 
 class Schema(MNativeFunction):
@@ -128,7 +132,8 @@ class Schema(MNativeFunction):
         super().__init__(ip, "function(value: Type) -> Str")
         self.printer = JSONSchema()
 
-    def func(self, arg: MObject):
+    def func(self, args: List[MObject]):
+        arg = args[0]
         valtype = self.printer.print_schema(arg)
         return MValue(valtype, None)
 

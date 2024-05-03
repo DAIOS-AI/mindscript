@@ -44,10 +44,10 @@ class MUserFunction(MFunction):
     def __init__(self, ip: 'Interpreter', definition: ast.Function):  # type: ignore
         super().__init__(ip, definition)
 
-    def func(self, arg: MObject) -> MObject:
+    def func(self, args: List[MObject]) -> MObject:
         env = Environment(enclosing=self.environment)
-        if self.param is not None:
-            env.define(self.param.literal, arg)
+        for param, arg in zip(self.params, args):
+            env.define(param.literal, arg)
         try:
             value = self.interpreter.execute_block(self.definition.expr, env)
         except ast.Return as e:
@@ -450,10 +450,10 @@ class Interpreter:
 
     def call(self, node: ast.Expr):
         callee = node.expr.accept(self)
-        arg = node.argument.accept(self)
+        args = [arg.accept(self) for arg in node.arguments]
         if isinstance(callee, MFunction):
             try:
-                return callee.call(node.operator, arg)
+                return callee.call(node.operator, args)
             except ast.TypeError as e:
                 self.error(node.operator, str(e))
                 return MValue(None, None)

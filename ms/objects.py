@@ -33,10 +33,6 @@ class MValue(MObject):
         self._annotation = val
 
 
-
-
-
-
 # Types.
 
 
@@ -86,15 +82,19 @@ class MFunction(MObject):
         self._ip = ip
         self._env = ip.env
         self._definition = definition
-        self._param = definition.parameter
+        self._params = definition.parameters
 
-        # Create input types.
-        ptype = definition.types.left
-        self._intype = MType(ip, ptype)
-
-        # Create output type.
-        ptype = definition.types.right
-        self._outtype = MType(ip, ptype)
+        # Create input  types.
+        self._intypes = []
+        types = definition.types
+        while type(types) == ast.TypeBinary:
+            ptype = types.left
+            typeobj = MType(ip, ptype)
+            self._intypes.append(typeobj)
+            types = types.right
+        ptype = types
+        typeobj = MType(ip, ptype)
+        self._outtype = typeobj
 
     @property
     def interpreter(self) -> 'Interpreter':  # type: ignore
@@ -105,15 +105,15 @@ class MFunction(MObject):
         return self._env
 
     @property
-    def param(self) -> List[str]:
-        return self._param
+    def params(self) -> List[str]:
+        return self._params
 
     @property
-    def intype(self) -> List[MObject]:
-        return self._intype
+    def intypes(self) -> List[MObject]:
+        return self._intypes
 
     @property
-    def outtype(self) -> List[MObject]:
+    def outtype(self) -> MObject:
         return self._outtype
 
     @property
@@ -128,12 +128,13 @@ class MFunction(MObject):
     def annotation(self, note):
         self._definition.types.annotation = note
 
-    def call(self, operator: ast.Token, arg: MObject) -> MObject:
+    def call(self, operator: ast.Token, args: List[MObject]) -> MObject:
         self._operator = operator
-        if not self.interpreter.checktype(arg, self.intype):
-            raise ast.TypeError(f"Wrong type of function argument.")
+        for arg, typeobj in zip(args, self.intypes):
+            if not self.interpreter.checktype(arg, typeobj):
+                raise ast.TypeError(f"Wrong type of function argument.")
 
-        value = self.func(arg)
+        value = self.func(args)
 
         if not self.interpreter.checktype(value, self.outtype):
             raise ast.TypeError(f"Wrong type of function output.")
@@ -172,6 +173,6 @@ class MNativeFunction(MFunction):
         )
 
     @abstractmethod
-    def func(self, arg: MObject) -> MObject:
+    def func(self, args: List[MObject]) -> MObject:
         pass
 
