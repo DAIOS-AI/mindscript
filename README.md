@@ -41,7 +41,7 @@ as a large language model (&Psi;).
 **Features:**
 
 - Implements an [oracle machine](https://en.wikipedia.org/wiki/Oracle_machine).
-- Minimal C-like/JavaScript syntax on top of JSON data types.
+- Minimal C-like/JavaScript/Lua syntax on top of JSON data types.
 - Everything is an expression.
 - Dynamically typed with runtime type checking.
 - Code comments are semantic type annotations.
