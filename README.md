@@ -152,15 +152,38 @@ let factorial = fun(n: Int) -> Int do
 end
 ```
 
-Some notes:
-- The arguments and the output can have a type annotation. If this is omitted, 
-  the type `Any` is assumed.
+Note that:
+- The arguments and the output can have a type annotation. Omitted types are assumed
+  to be equal to `Any`.
 - If no argument is provided in the function declaration, the a `null` argument
   is added automatically.
 - The body of the function is enclosed in a `do ... end` block containing
   expressions. The function returns the value of the last expression,
   unless an explicit `return([VALUE])` expression is provided.
-- 
+
+Functions are curried. Thus, the function
+
+```
+let sum = fun(n: Int, m: Int) -> Int do
+    return(n + m)
+end
+```
+
+has type `Int -> Int -> Int`, and the following works:
+```
+> sum(1, 3)
+4
+
+> let add_one = sum(1)
+fun(m: Int) -> Int
+
+> add_one(3)
+4
+
+> sum(1)(3)
+4
+```
+
 
 
 
