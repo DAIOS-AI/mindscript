@@ -93,12 +93,20 @@ In addition, there are container types:
 - `Function`: function objects;
 - `Any`: an arbitrary type.
 
-The `typeof` returns the type of a given expression:
+The `typeof` function returns the type of a given expression:
 
 ```
 > typeof({name: "Albert Einstein", age: 76})
 
 { name: Str, age: Int }
+
+> typeof(print)
+
+Any -> Any
+
+> typeof(typeof)
+
+Any -> Type
 ```
 
 
