@@ -49,8 +49,7 @@ To run a program `myprogram.ms`, enter
 
 ## Basics
 
-MindScript is dynamically typed --- only the values (but not the variables)
-have a type. 
+MindScript is dynamically typed: only the values have a type, not the variables.
 
 ```
 let greeting = "Hello, world!"
@@ -176,7 +175,30 @@ fun(m: Int) -> Int
 4
 ```
 
+### Control structures
 
+There are only three control structures in MindScript:
+- logical expressions
+- conditionals
+- iterations (`for` loops)
+
+**Logical expressions** are short-circuited: as soon as the truth value is
+known, the remaining subexpressions are not evaluated. For instance:
+```
+(2/1 == 1) or (2/2 == 1) or (2/3 == 2)
+```
+will only evaluate up to `(2/2 == 1)`, omitting the evaluation of `(2/3 == 2)`.
+
+**Conditionals** are expressed using the familiar `if ... then` blocks:
+```
+if n==0 then
+    ...expression...
+elif n==1 then
+    ...expressions...
+else
+    ...expressions...
+end
+```
 
 
 
