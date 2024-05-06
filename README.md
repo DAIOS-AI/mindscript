@@ -77,7 +77,7 @@ print(42)
 let my_variable = 42
 ```
 
-### Data types
+### Formal data types
 
 The basic data types are:
 - `Null`: the `null` value;
@@ -109,4 +109,31 @@ Any -> Any
 Any -> Type
 ```
 
+### Informal data types
+
+A value can be annotated with an explanatory comment, which becomes its informal
+type. Informal types do not have well-defined semantics, but they influence their
+evaluation by the oracle (see the section on oracles). Comments are created by
+the annotation operator `#` which attaches a string to the value of the following
+expression: 
+
+```
+# "The speed of light in meters per second."
+let c = 299792458
+```
+
+
+### Expressions
+
+Most of the usual operators are available and they have the expected precedence rules:
+
+```
++ - * / % == != < <= > >= not and or
+```
+
+In addition, 
+
+### Functions
+
+Functions are defined 
 
