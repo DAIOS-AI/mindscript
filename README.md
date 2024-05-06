@@ -58,7 +58,7 @@ au("mars")
 ## Basics
 
 MindScript is dynamically typed --- only the values (but not the variables)
-have a type. To define a new variable, use `let [VARNAME] = [VALUE]`:
+have a type. 
 
 ```
 let greeting = "Hello, world!"
@@ -66,6 +66,16 @@ let greeting = "Hello, world!"
 ```
 
 This defines a variable named `greeting` containing a value `Hello, world!` of type `Str`.
+
+Everything is an expression. For instance, all of the following expression evaluate
+to `42`:
+
+```
+42
+(40 + 2)
+print(42)
+let my_variable = 42
+```
 
 ### Data types
 
