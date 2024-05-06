@@ -6,6 +6,8 @@ An experimental programming language combining formal and informal computation.
 
 (C) 2024 DAIOS Technologies Limited
 
+![preview](media/screenshot.png)
+
 ## Description
 
 MindScript is a programming language with both formal and informal
@@ -43,16 +45,6 @@ To run the REPL, enter
 To run a program `myprogram.ms`, enter
 ```
 > python mindscript.py myprogram.ms
-```
-
-## Examples
-
-```
-# "Determine the distance of the planet from the sun in astronomical units."
-let au = function(planet: Str) -> Num oracle
-
-au("earth") 
-au("mars")
 ```
 
 ## Basics
@@ -168,8 +160,8 @@ let sum = fun(n: Int, m: Int) -> Int do
 end
 ```
 
-has type `Int -> Int -> Int` (arguments are passed consumed one-by-one, producing 
-intermediate functions as results), and the following works:
+has type `Int -> Int -> Int`, that is, arguments are consumed one-by-one, 
+producing intermediate functions as results, and the following works:
 ```
 > sum(1, 3)
 4

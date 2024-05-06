@@ -82,13 +82,13 @@ class MOracleFunction(MFunction):
         input = self.prepare_input(args)
         prompt = TEMPLATE.format(
             task=task, input=input, input_schema=input_schema, output_schema=output_schema)
-        print(f"oracle: prompt = {prompt}")
+        # print(f"oracle: prompt = {prompt}")
         with requests.post(
             api_url, headers=headers,
             json={"prompt": prompt, "schema": self.output_schema_obj}
         ) as response:
             response_obj = response.json()
-            print(f"oracle: response = {response_obj}")
+            # print(f"oracle: response = {response_obj}")
             response_txt = response_obj["text"]
             # response_txt = response_obj["content"]
             output = self.interpreter.eval(response_txt)
