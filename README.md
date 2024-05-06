@@ -131,9 +131,38 @@ Most of the usual operators are available and they have the expected precedence 
 + - * / % == != < <= > >= not and or
 ```
 
-In addition, 
+Types aren't cast automatically, and applying an operator to values having incompatible
+types will lead to runtime errors. 
 
 ### Functions
 
-Functions are defined 
+Functions are defined the `fun` keyword. This builds a lambda expression, hence the
+functions are anonymous. Functions can have one of more arguments and they can be
+typed. 
+
+As an example, consider the factorial function:
+
+```
+let factorial = fun(n: Int) -> Int do
+    if n==0 then 
+        0
+    else
+        n * factorial(n - 1)
+    end
+end
+```
+
+Some notes:
+- The arguments and the output can have a type annotation. If this is omitted, 
+  the type `Any` is assumed.
+- If no argument is provided in the function declaration, the a `null` argument
+  is added automatically.
+- The body of the function is enclosed in a `do ... end` block containing
+  expressions. The function returns the value of the last expression,
+  unless an explicit `return([VALUE])` expression is provided.
+- 
+
+
+
+
 
