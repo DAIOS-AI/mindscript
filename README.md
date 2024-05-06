@@ -105,7 +105,7 @@ The basic data types are:
 In addition, there are container types:
 - `Array`: arrays, as in `[1, 2, 3]`;
 - `Object`: objects or dictionaries, as in `{name: "Albert Einstein", age: 76}`;
-- `Function`: function objects;
+- `Fun`: function objects;
 - `Any`: an arbitrary type.
 
 The `typeof` function returns the type of a given expression:
@@ -252,7 +252,7 @@ In addition, the flow of execution can be modified through
 - `continue( expr )`, which evaluates to `expr` and initiates the next iteration,
 - `break( expr )`, which evaluates to `expr` and exits the entire for-loop.
 
-## Types
+## Formal types
 
 New types are built using the `type` keyword followed by a *type expression*:
 ```
@@ -263,7 +263,7 @@ let Person = type {
     hobbies: [Str]
 }
 ```
-Once created, they can be used as a normal MindScript value of type `Type`:
+Once created, they can be used as a normal MindScript values of type `Type`:
 ```
 > typeof(Person)
 Type
@@ -272,7 +272,19 @@ Type
 true
 ```
 
-
+Notes:
+- Primitive types: The primitive types are `Bool`, `Int`, `Num`, and `String`.
+- The container types are built using delimiters `[...]` (arrays) or `{...}` (objects) 
+  and then further specifying the types of their members. If the members are arbitrary,
+  use `Array` and `Object` instead.
+- Similarly, function types are indicated by an arrow `->` as in `(Int -> Str) -> Str`.
+  To indicate an arbiraty functional structure, use `Fun`.
+- You can omit the quotes/double-quotes of keys if they don't violate the naming conventions
+  of variable names.
+- Mandatory object properties are indicated using `!`. Hence, `name!: Str` is a required
+  property, whereas `name: Str` isn't.
+- Optional elements (i.e. can have `null`) are indicated using `?`. Thus, `Str?` is
+  either a string or `null`, whereas `Str` can only be a valid string.
 
 
 
