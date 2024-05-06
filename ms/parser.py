@@ -40,7 +40,7 @@ from ms.lexer import Lexer
 #     for         -> "for" expression "in" expression block
 #     target      -> ID | declaration
 #     declaration -> "let" ID
-#     function    -> "function" "~(" parameter* ")" 
+#     function    -> "fun" "~(" parameter* ")" 
 #                       ("->" type_expr)? ("oracle" | block)
 #     parameter   -> ("#" STRING)? ID (":" type_expr)?
 #
@@ -276,6 +276,8 @@ class Parser:
                         arguments.append(argument)
                 self.consume(TokenType.RROUND,
                              "Expected closing ')'.")
+                if len(arguments) == 0:
+                    arguments.append(self.null_terminal(operator.line, operator.col))
                 primary = ast.Call(expr=primary, operator=operator,
                                    arguments=arguments)
             elif operator.ttype == TokenType.CLSQUARE:
@@ -386,6 +388,9 @@ class Parser:
         elif self.match([TokenType.STRING]):
             key = self.previous()
             return key
+        # Only in interactive mode: Expected a missing expression.
+        if self.check(TokenType.EOF) and self.interactive:
+            raise ast.IncompleteExpression()
         self.error(self.peek(), "Expected a member key.")
 
     def parse_chunk_until(self, ends: List[Token]):
@@ -442,7 +447,7 @@ class Parser:
         if self.match([TokenType.FUNCTION]):
             operator = self.previous()
             self.consume(TokenType.CLROUND,
-                         "Expected '(' after 'function' keyword.")
+                         "Expected '(' after 'fun' keyword.")
             params = []
             ptypes = []
             if not self.check(TokenType.RROUND):
@@ -477,7 +482,6 @@ class Parser:
                 expr = ast.Terminal(token=oracletoken)
             else:
                 expr = self.parse_block()
-            print(f"parser.parse_function: params = {params}")
             return ast.Function(operator=operator, parameters=params, types=types, expr=expr)
 
     def parse_parameter(self):

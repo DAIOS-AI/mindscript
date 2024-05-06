@@ -19,7 +19,7 @@ Keywords = {
     "then": TokenType.THEN,
     "elif": TokenType.ELIF,
     "else": TokenType.ELSE,
-    "function": TokenType.FUNCTION,
+    "fun": TokenType.FUNCTION,
     "oracle": TokenType.ORACLE,
     "for": TokenType.FOR,
     "in": TokenType.IN,

@@ -1,6 +1,8 @@
 from typing import Optional, List, Union
 from abc import abstractmethod
 import ms.ast as ast
+from copy import deepcopy
+from functools import partialmethod
 
 # Value types
 
@@ -82,7 +84,6 @@ class MFunction(MObject):
         self._ip = ip
         self._env = ip.env
         self._definition = definition
-        self._params = definition.parameters
 
         # Create input  types.
         self._intypes = []
@@ -106,7 +107,7 @@ class MFunction(MObject):
 
     @property
     def params(self) -> List[str]:
-        return self._params
+        return self._definition.parameters
 
     @property
     def intypes(self) -> List[MObject]:
@@ -130,6 +131,9 @@ class MFunction(MObject):
 
     def call(self, operator: ast.Token, args: List[MObject]) -> MObject:
         self._operator = operator
+
+        if len(args) < len(self.params):
+            return self.partial(args)
         for arg, typeobj in zip(args, self.intypes):
             if not self.interpreter.checktype(arg, typeobj):
                 raise ast.TypeError(f"Wrong type of function argument.")
@@ -140,6 +144,24 @@ class MFunction(MObject):
             raise ast.TypeError(f"Wrong type of function output.")
 
         return value
+
+    def partial(self, args: List[MObject]) -> MObject:
+        n_args = len(args)
+        funcobj = deepcopy(self)
+        funcobj.func = lambda new_args: self.func(args + new_args)
+        funcobj._definition.parameters = funcobj.params[n_args:]
+        funcobj._intypes = funcobj._intypes[n_args:]
+        types = funcobj.definition.types.right
+        for _ in range(len(args)-1):
+            types= types.right
+        funcobj._definition.types = types
+        # print(f"MFunction.partial: funcobj = {funcobj}")
+        # print(f"MFunction.partial: funcobj.params = {funcobj.params}")
+        # print(f"MFunction.partial: funcobj.definition = {funcobj.definition}")
+        # print(f"MFunction.partial: funcobj.intypes = {funcobj.intypes}")
+        # print(f"MFunction.partial: funcobj.outtype = {funcobj.outtype}")
+        # print(f"MFunction.partial: funcobj.func = {funcobj.func}")
+        return funcobj
 
     def error(self, msg: str):
         self.interpreter.error(self._operator, msg)
@@ -155,6 +177,26 @@ class MFunction(MObject):
     def __str__(self):
         # print(f"UserFunction.str: definition = {self.definition}")
         return self.interpreter.printer.print(self.definition)
+
+
+class MPartialFunction(MFunction):
+
+    # type: ignore
+    def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
+        if type(definition) == str:
+            definition = ip.parser.parse(
+                definition + " do null end").program[0]
+        super().__init__(ip, definition)
+        self._definition.expr = ast.Terminal(
+            token=ast.Token(
+                ttype=ast.TokenType.TYPE,
+                literal="<native function>"
+            )
+        )
+
+    @abstractmethod
+    def func(self, args: List[MObject]) -> MObject:
+        pass
 
 
 class MNativeFunction(MFunction):

@@ -163,6 +163,14 @@ class Printer():
         content += self.prefix + "end"
         return content
 
+    def forloop(self, node):
+        if self.is_max_depth(): return "for ... end"
+        target = node.target.accept(self)
+        iterator = node.iterator.accept(self)
+        block = node.expr.accept(self)
+        content = "for " + target + " in " + iterator + " " + block
+        return content
+
     def call(self, node):
         callee = node.expr.accept(self)
         arg_list = [arg.accept(self) for arg in node.arguments]
@@ -173,6 +181,7 @@ class Printer():
         parameters = []
         types = node.types
         for param in node.parameters:
+            # print(f"printer.function: types = {types}")
             param_name = param.literal
             param_type = types.left.accept(self)
             parameters.append(f"{param_name}: {param_type}")
@@ -180,7 +189,7 @@ class Printer():
         out_type = types.accept(self)
         expr = node.expr.accept(self)
         param_list = ", ".join(parameters)
-        return f"function({param_list}) -> {out_type} {expr}"
+        return f"fun({param_list}) -> {out_type} {expr}"
 
     def type_definition(self, node):
         expr = node.expr.accept(self)

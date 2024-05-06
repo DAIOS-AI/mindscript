@@ -16,9 +16,9 @@ print(x)
 
 print("\n# Closure test.\n # Should print: outer")
 let x = "global"
-let outer = function() do
+let outer = fun() do
   let x = "outer"
-  let inner = function() do
+  let inner = fun() do
     print(x)
   end
   inner()
@@ -28,9 +28,9 @@ outer()
 
 
 print("\n# Closure test.\n# Should print: local")
-let makeClosure = function() do
+let makeClosure = fun() do
     let local = "local"
-    let closure = function() do print(local) end
+    let closure = fun() do print(local) end
     return(closure)
 end
 
@@ -38,25 +38,25 @@ let closure = makeClosure()
 closure()
 
 
-print("\n# Closure test and callback: Creating an adder function.\n# Should print: 8")
-let createAdder = function(n: Int) -> Int -> Int do
-    function(m: Int) -> Int do (n + m) end
+print("\n# Closure test and callback: Creating an adder fun.\n# Should print: 8")
+let createAdder = fun(n: Int) -> Int -> Int do
+    fun(m: Int) -> Int do (n + m) end
 end
 
 let adder = createAdder(5)
 print(adder(3))
 
 
-print("\n# Creating a point structure and adder function.\n")
+print("\n# Creating a point structure and adder fun.\n")
 let Point = type {"x": Num, "y": Num}
 print(Point)
 
-let point = function(point: [Num, Num]) -> Point do
+let point = fun(point: [Num, Num]) -> Point do
   {"x": point[0], "y": point[1]}
 end
 print(point)
 
-let point_add = function(points: [Point, Point]) -> Point do
+let point_add = fun(points: [Point, Point]) -> Point do
   [let p, let q] = points
   {"x": p.x + q.x, "y": p.y + q.y}
 end
@@ -77,7 +77,7 @@ let speed = 300000000
 print(speed)
 
 # "computes the factorial of a given integer."
-let factorial = function(n: Int) -> Int do
+let factorial = fun(n: Int) -> Int do
   if n==0 or n==1 then 1
   else n*factorial(n-1)
   end
@@ -85,9 +85,9 @@ end
 print(factorial)
 
 print("\n# Testing for loops.")
-let range = function(bounds: [Int, Int]) -> (Null -> Int?) do
+let range = fun(bounds: [Int, Int]) -> (Null -> Int?) do
   [let s, let e] = bounds
-  function() -> Int? do
+  fun() -> Int? do
     if s<e then
       let value = s
       s = s + 1
@@ -110,7 +110,7 @@ for let x in range([1, 4]) do print(x) end
 print("\n# Type checking.")
 let obj = {
   "name": "Pedro", 
-  "sayname": function() do
+  "sayname": fun() do
       print(this.name)
   end
 }
@@ -122,16 +122,16 @@ print("Should print the type of the object.")
 let ObjType = typeof(obj)
 print(ObjType)
 
-let show_age = function(arg: {"name": Str, "age": Int}) -> Int do
+let show_age = fun(arg: {"name": Str, "age": Int}) -> Int do
   {"age": let age} = arg
   return(age)
 end
 let age = show_age({"age": 45, "name": "something"})
 print("Should print '45': " + str(age))
 
-print("# Trying oracle functions.")
+print("# Trying oracle funs.")
 # "Determine the distance of the planet to the sun in astronomical units."
-let au = function(planet: Str) -> Num oracle
+let au = fun(planet: Str) -> Num oracle
 
 print("AU Mercury      : " + str(au("Mercury")))
 print("AU Venus        : " + str(au("Venus")))

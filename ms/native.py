@@ -20,7 +20,7 @@ from ms.schema import JSONSchema
 
 class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(filename: Str) -> Object")
+        super().__init__(ip, "fun(filename: Str) -> Object")
 
     def func(self, args: List[MObject]):
         filename = args[0].value
@@ -49,7 +49,7 @@ class Import(MNativeFunction):
 
 class Str(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(value: Any) -> Str")
+        super().__init__(ip, "fun(value: Any) -> Str")
         self.ip = ip
 
     def func(self, args: List[MObject]):
@@ -60,7 +60,7 @@ class Str(MNativeFunction):
 
 class Print(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        definition = "function(value: Any) -> Any"
+        definition = "fun(value: Any) -> Any"
         super().__init__(ip, definition)
 
     def func(self, args: List[MObject]):
@@ -75,11 +75,11 @@ class Print(MNativeFunction):
 
 class Dump(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        definition = "function() -> Null"
+        definition = "fun() -> Null"
         super().__init__(ip, definition)
 
     def func(self, args: List[MObject]):
-        env = self.ip.env
+        env = self.interpreter.env
         pre = "=> "
         print("=== STATE DUMP START")
         while env is not None:
@@ -94,7 +94,7 @@ class Dump(MNativeFunction):
 
 class GetEnv(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function() -> Object")
+        super().__init__(ip, "fun() -> Object")
 
     def func(self, args: List[MObject]):
         return MValue(self.interpreter.env.vars, None)
@@ -102,15 +102,16 @@ class GetEnv(MNativeFunction):
 
 class TypeOf(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(value: Any) -> Type")
+        super().__init__(ip, "fun(value: Any) -> Type")
 
     def func(self, args: List[MObject]):
         arg = args[0]
         return self.interpreter.typeof(arg)
 
+
 class Assert(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(value: Bool) -> Bool")
+        super().__init__(ip, "fun(value: Bool) -> Bool")
 
     def func(self, args: List[MObject]):
         arg = args[0]
@@ -121,15 +122,16 @@ class Assert(MNativeFunction):
 
 class IsSubtype(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(subtype: Type, supertype: Type) -> Bool")
+        super().__init__(ip, "fun(subtype: Type, supertype: Type) -> Bool")
 
     def func(self, args: List[MObject]):
         confirmed = self.interpreter.issubtype(args[0], args[1])
         return MValue(confirmed, None)
 
+
 class Schema(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "function(value: Type) -> Str")
+        super().__init__(ip, "fun(value: Type) -> Str")
         self.printer = JSONSchema()
 
     def func(self, args: List[MObject]):

@@ -3,6 +3,7 @@ import sys
 import ms
 import readline
 from ms.ast import IncompleteExpression, Return
+import traceback
 
 GREEN = "\033[32m"
 BLUE = "\033[94m"
@@ -50,14 +51,20 @@ def repl():
             lines = ""
         except IncompleteExpression:
             prompt = "| "
-        except (KeyboardInterrupt, Return):
+        except Return:
             print("\nExiting...")
             exit(0)
         except EOFError:
             print()
             exit(0)
-        # except Exception as e:
-        #     print(f"{RED}{str(e)}{RESET}")
+        except KeyboardInterrupt:
+            print("<Cancel input>")
+            prompt = "> "
+            lines = ""
+        except Exception as e:
+            print(f"{RED}{traceback.format_exc()}{RESET}")
+            prompt = "> "
+            lines = ""
 
 
 if __name__ == "__main__":
