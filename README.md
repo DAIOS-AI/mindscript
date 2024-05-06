@@ -89,6 +89,8 @@ outer b
 outer a
 outer b
 ```
+as the declaration of the variable `a` inside the block
+shadows the outer variable named `a`.
 
 ### Formal data types
 
