@@ -16,6 +16,7 @@ An experimental programming language combining formal and informal computation.
 <li><a href="#operators">Operators</a></li>
 <li><a href="#functions">Functions</a></li>
 <li><a href="#control-structures">Control structures</a></li>
+<li><a href="#destructuring">Destructuring</a></li>
 <li><a href="#types">Types</a></li>
 <li><a href="#formal-types">Formal types</a></li>
 <li><a href="#informal-types">Informal types</a></li>
@@ -214,7 +215,7 @@ for v in [1, 2, 3] do
     print(v)
 end
 
-for [key, value] in {"x": 1, "y": 2, "z": 3}
+for [key, value] in {"x": 1, "y": 2, "z": 3} do
     print("(key, value) = " + str(key, value))
 end
 
@@ -230,6 +231,23 @@ repeatedly call an iterator `iter` as `iter()` until it returns a `null` value.
 In addition, the flow of execution can be modified through
 - `continue( expr )`, which evaluates to `expr` and initiates the next iteration,
 - `break( expr )`, which evaluates to `expr` and exits the entire for-loop.
+
+### Destructuring
+
+Destructuring assignments is a syntax that permits unpacking the members of
+an array or the properties of an object into distinct values.
+
+```
+[let x, let y] = [2, -3]
+```
+After this assignment, `x == 2` and `y == -3`.
+
+```
+{name: let n, email: let e} = {name: "Albert", email: "albert@einstein.org"}
+```
+After this assignment, `n == "Albert"` and `e == "albert@einstein.org"`.
+
+These can be arbitrarily nested.
 
 ## Types
 
