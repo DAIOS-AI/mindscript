@@ -65,13 +65,18 @@ let greeting = "Hello, world!"
 
 ```
 
+This defines a variable named `greeting` containing a value `Hello, world!` of type `Str`.
+
 ### Data types
 
 The basic data types are:
+- `Null`: the `null` value;
+- `Bool`: booleans, either `true` or `false`;
 - `Int`: integers like `42`;
 - `Num`: floating-point numbers like `3.1459`;
-- `Str`: strings like `"hello, world!"` or `'hello, world!'`;
-- ``
+- `Str`: strings, enclosed in double- or single quotes as in `"hello, world!"` or `'hello, world!'`;
+- `Array`: arrays, as in `[1, 2, 3]`;
+- `Object`: objects or dictionaries, as in `{name: "Albert Einstein", age: }`
 
 ```
 ```
