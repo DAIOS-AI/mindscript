@@ -59,6 +59,11 @@ as a large language model (&Psi;).
 
 - Tested with Python 3.9
 
+**Disclaimer:**
+
+This is a strictly experimental programming language. The implementation is not guaranteed
+to be correct, nor does it aim to be efficient. If there's enough traction, a C runtime
+will follow.
 
 ## Quickstart
 
