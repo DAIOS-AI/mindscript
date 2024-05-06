@@ -225,9 +225,15 @@ In addition, the flow of execution can be modified through
 
 ## Types
 
+MindScript's unique feature is its support of both formal and informal types.
+Types constrain the values that an expression can take, however, formal types
+impose constraints that can be deduced (via computation), while informal types
+impose inductive constraints which guide the evaluation of an expression using
+a black-box process (much like our own thought process).
+
 ### Formal types
 
-The basic data types are:
+The primitive built-in data types are:
 - `Null`: the `null` value;
 - `Bool`: booleans, either `true` or `false`;
 - `Int`: integers like `42`;
