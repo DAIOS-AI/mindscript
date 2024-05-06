@@ -4,7 +4,7 @@
 
 An experimental programming language combining formal and informal computation.
 
-(C) 2024 DAIOS Technologies Limited
+&copy; 2024 DAIOS Technologies Limited
 
 ![preview](media/screenshot.png)
 
@@ -307,6 +307,9 @@ let Person = {
     age: Int
 }
 ```
+
+## Oracles
+
 
 
 
