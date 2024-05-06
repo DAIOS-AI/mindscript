@@ -8,6 +8,20 @@ An experimental programming language combining formal and informal computation.
 
 ![preview](media/screenshot.png)
 
+## Table of Contents
+<ul>
+<li><a href="#description">Description</a></li>
+<li><a href="#quickstart">Quickstart</a></li>
+<li><a href="#basics">Basics</a></li>
+<li><a href="#operators">Operators</a></li>
+<li><a href="#functions">Functions</a></li>
+<li><a href="#control-structures">Control structures</a></li>
+<li><a href="#types">Types</a></li>
+<li><a href="#formal-types">Formal types</a></li>
+<li><a href="#informal-types">Informal types</a></li>
+<li><a href="#oracles">Oracles</a></li>
+</ul>
+
 ## Description
 
 MindScript is a programming language with both formal and informal
@@ -35,21 +49,6 @@ obtained by consulting an oracle, implemented as a large language model (&Psi;).
 **Requirements:**
 
 - Tested with Python 3.9
-
-## Table of Contents
-<ul>
-<li><a href="#description">Description</a></li>
-<li><a href="#quickstart">Quickstart</a></li>
-<li><a href="#basics">Basics</a></li>
-<li><a href="#operators">Operators</a></li>
-<li><a href="#functions">Functions</a></li>
-<li><a href="#control-structures">Control structures</a></li>
-<li><a href="#types">Types</a></li>
-<li><a href="#formal-types">Formal types</a></li>
-<li><a href="#informal-types">Informal types</a></li>
-<li><a href="#oracles">Oracles</a></li>
-</ul>
-
 
 
 ## Quickstart
