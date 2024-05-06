@@ -55,4 +55,16 @@ au("earth")
 au("mars")
 ```
 
+## Basics
+
+MindScript is dynamically typed --- only the values (but not the variables)
+have a type. 
+
+### Data types
+
+
+
+```
+```
+
 
