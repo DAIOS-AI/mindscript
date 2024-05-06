@@ -92,58 +92,13 @@ outer b
 as the declaration of the variable `a` inside the block
 shadows the outer variable named `a`.
 
-### Formal data types
 
-The basic data types are:
-- `Null`: the `null` value;
-- `Bool`: booleans, either `true` or `false`;
-- `Int`: integers like `42`;
-- `Num`: floating-point numbers like `3.1459`;
-- `Str`: strings, enclosed in double- or single quotes as in `"hello, world!"` or `'hello, world!'`;
-- `Type`: the type of a type.
-
-In addition, there are container types:
-- `Array`: arrays, as in `[1, 2, 3]`;
-- `Object`: objects or dictionaries, as in `{name: "Albert Einstein", age: 76}`;
-- `Fun`: function objects;
-- `Any`: an arbitrary type.
-
-The `typeof` function returns the type of a given expression:
-
-```
-> typeof({name: "Albert Einstein", age: 76})
-
-{ name: Str, age: Int }
-
-> typeof(print)
-
-Any -> Any
-
-> typeof(typeof)
-
-Any -> Type
-```
-
-### Informal data types
-
-A value can be annotated with an explanatory comment, which becomes its informal
-type. Informal types do not have well-defined semantics, but they influence their
-evaluation by the oracle (see the section on oracles). Comments are created by
-the annotation operator `#` which attaches a string to the value of the following
-expression: 
-
-```
-# "The speed of light in meters per second."
-let c = 299792458
-```
-
-
-### Expressions
+### Operators
 
 Most of the usual operators are available and they have the expected precedence rules:
 
 ```
-+ - * / % == != < <= > >= not and or
+= + - * / % == != < <= > >= not and or
 ```
 
 Types aren't cast automatically, and applying an operator to values having incompatible
@@ -252,7 +207,41 @@ In addition, the flow of execution can be modified through
 - `continue( expr )`, which evaluates to `expr` and initiates the next iteration,
 - `break( expr )`, which evaluates to `expr` and exits the entire for-loop.
 
-## Formal types
+## Types
+
+### Formal types
+
+The basic data types are:
+- `Null`: the `null` value;
+- `Bool`: booleans, either `true` or `false`;
+- `Int`: integers like `42`;
+- `Num`: floating-point numbers like `3.1459`;
+- `Str`: strings, enclosed in double- or single quotes as in `"hello, world!"` or `'hello, world!'`;
+- `Type`: the type of a type.
+
+In addition, there are container types:
+- `Array`: arrays, as in `[1, 2, 3]`;
+- `Object`: objects or dictionaries, as in `{name: "Albert Einstein", age: 76}`;
+- `Fun`: function objects;
+- `Any`: an arbitrary type.
+
+The `typeof` function returns the type of a given expression:
+
+```
+> typeof({name: "Albert Einstein", age: 76})
+
+{ name: Str, age: Int }
+
+> typeof(print)
+
+Any -> Any
+
+> typeof(typeof)
+
+Any -> Type
+```
+
+### Custom formal types
 
 New types are built using the `type` keyword followed by a *type expression*:
 ```
@@ -279,13 +268,45 @@ Notes:
   use `Array` and `Object` instead.
 - Similarly, function types are indicated by an arrow `->` as in `(Int -> Str) -> Str`.
   To indicate an arbiraty functional structure, use `Fun`.
-- You can omit the quotes/double-quotes of keys if they don't violate the naming conventions
+- You can omit the quotes/double-quotes of keys if they follow the naming convention
   of variable names.
 - Mandatory object properties are indicated using `!`. Hence, `name!: Str` is a required
   property, whereas `name: Str` isn't.
 - Optional elements (i.e. can have `null`) are indicated using `?`. Thus, `Str?` is
-  either a string or `null`, whereas `Str` can only be a valid string.
+  either equal to a string or `null`, whereas `Str` can only be a valid string.
 
+## Informal types
+
+A value can be annotated with an explanatory comment, which becomes its informal
+type. Informal types do not have well-defined semantics, but they influence their
+evaluation by the oracle (see the section on oracles). Comments are created by
+the annotation operator `#` which attaches a string to the value of the following
+expression: 
+
+```
+# "The speed of light in meters per second."
+let c = 299792458
+```
+
+Since the annotation gets attached to the value of the expression, the following
+code will produce a function of informal type "Computes the sum of two integers."
+```
+# "Computes the sum of two integers."
+let sum = fun(n: Int, m: Int) -> Int do
+    n + m
+end
+```
+
+Likewise, this allows annotating type expressions:
+```
+let Person = {
+    # "The name of the person."
+    name!: Str,
+    
+    # "The age of the person."
+    age: Int
+}
+```
 
 
 
