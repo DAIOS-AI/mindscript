@@ -25,9 +25,17 @@ An experimental programming language combining formal and informal computation.
 ## Description
 
 MindScript is a programming language with both formal and informal
-computation as first class citizens. Formal computation is implemented as
-a Turing-complete programming language (&lambda;), while informal computation is 
-obtained by consulting an oracle, implemented as a large language model (&Psi;).
+computation as first class citizens. 
+
+MindScript's unique feature is its support of both formal and informal types.
+Types constrain the values that an expression can take, however, formal types
+impose constraints that can be deduced (via computation), while informal types
+impose inductive constraints which guide the evaluation of an expression using
+a black-box process (much like our own thought process).
+
+Formal computation is implemented as a Turing-complete programming language (&lambda;),
+whereas informal evaluations are obtained by consulting an oracle, implemented
+as a large language model (&Psi;).
 
 **Features:**
 
@@ -224,12 +232,6 @@ In addition, the flow of execution can be modified through
 - `break( expr )`, which evaluates to `expr` and exits the entire for-loop.
 
 ## Types
-
-MindScript's unique feature is its support of both formal and informal types.
-Types constrain the values that an expression can take, however, formal types
-impose constraints that can be deduced (via computation), while informal types
-impose inductive constraints which guide the evaluation of an expression using
-a black-box process (much like our own thought process).
 
 ### Formal types
 
