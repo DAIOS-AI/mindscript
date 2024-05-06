@@ -162,14 +162,14 @@ Note that:
   unless an explicit `return([VALUE])` expression is provided.
 
 Functions are curried. Thus, the function
-
 ```
 let sum = fun(n: Int, m: Int) -> Int do
     return(n + m)
 end
 ```
 
-has type `Int -> Int -> Int`, and the following works:
+has type `Int -> Int -> Int` (arguments are passed consumed one-by-one, producing 
+intermediate functions as results), and the following works:
 ```
 > sum(1, 3)
 4
