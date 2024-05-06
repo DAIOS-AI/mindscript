@@ -179,8 +179,9 @@ fun(m: Int) -> Int
 
 There are only three control structures in MindScript:
 - logical expressions
-- conditionals
-- iterations (`for` loops)
+- if-then expressions
+- for-loop expressions
+- (there are no while loops)
 
 **Logical expressions** are short-circuited: as soon as the truth value is
 known, the remaining subexpressions are not evaluated. For instance:
@@ -189,16 +190,43 @@ known, the remaining subexpressions are not evaluated. For instance:
 ```
 will only evaluate up to `(2/2 == 1)`, omitting the evaluation of `(2/3 == 2)`.
 
-**Conditionals** are expressed using the familiar `if ... then` blocks:
+**If-then** expressions have a simple `if ... then` block structure:
 ```
-if n==0 then
-    ...expression...
-elif n==1 then
-    ...expressions...
+if n == 1 then
+    print("The value is 1.")
+elif n == 2 then
+    print("The value is 2.")
 else
-    ...expressions...
+    print("The value is unknown.")
 end
 ```
+
+**For-loops** come in three forms: iteration over the elements of an array,
+over the key-value pairs of an object, and over the non-null outputs of
+an *iterator* (see below).
+```
+for let v in [1, 2, 3] do
+    print(v)
+end
+
+for [let key, let value] in {"x": 1, "y": 2, "z": 3}
+    print("(key, value) = " + str(key, value))
+end
+
+for let v in iter do
+    print(v)
+end
+```
+
+An iterator is a "function" of type `Null -> Any` that generates a sequence
+of values. These are typically implemented using closures. The for loop will
+repeatedly call an iterator `iter` as `iter()` until it returns a `null` value.
+
+The entire for-loop evaluates to the last evaluated expression, i.e. as if
+the executions of its body had been concatenated.
+
+
+
 
 
 
