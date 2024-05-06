@@ -58,11 +58,20 @@ au("mars")
 ## Basics
 
 MindScript is dynamically typed --- only the values (but not the variables)
-have a type. 
+have a type. To define a new variable, use `let [VARNAME] = [VALUE]`:
+
+```
+let greeting = "Hello, world!"
+
+```
 
 ### Data types
 
-
+The basic data types are:
+- `Int`: integers like `42`;
+- `Num`: floating-point numbers like `3.1459`;
+- `Str`: strings like `"hello, world!"` or `'hello, world!'`;
+- ``
 
 ```
 ```
