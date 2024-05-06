@@ -210,15 +210,15 @@ over the key-value pairs of an *object*, and over the outputs of
 an *iterator* (see below). The entire for-loop evaluates to the last evaluated
 expression, i.e. as if the executions of its body are concatenated.
 ```
-for let v in [1, 2, 3] do
+for v in [1, 2, 3] do
     print(v)
 end
 
-for [let key, let value] in {"x": 1, "y": 2, "z": 3}
+for [key, value] in {"x": 1, "y": 2, "z": 3}
     print("(key, value) = " + str(key, value))
 end
 
-for let v in iter do
+for v in iter do
     print(v)
 end
 ```
