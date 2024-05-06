@@ -274,10 +274,11 @@ class Interpreter:
         # This should never be called directly.
         self.error(node.index, "Set should not be interpreted directly.")
 
-    def destructure(self, env, target, operator, value):
+    def destructure(self, env, target, operator, value, define=False):
         if isinstance(target, ast.Terminal):
             identifier = target.token.literal
             try:
+                if define: env.define(identifier)
                 env.set(identifier, value)
             except KeyError:
                 self.error(
@@ -287,7 +288,7 @@ class Interpreter:
             # Push the annotation into the value!
             annotation = target.annotation.literal
             value.annotation = annotation
-            return self.destructure(env, target.expr, operator, value)
+            return self.destructure(env, target.expr, operator, value, define)
         elif isinstance(target, ast.Declaration):
             # Capture inner declaration!
             identifier = target.token.literal
@@ -318,7 +319,7 @@ class Interpreter:
                 self.error(
                     operator, "The assignment expects a larger array on the right-hand-side.")
             for n in range(len(target.array)):
-                self.destructure(env, target.array[n], operator, source[n])
+                self.destructure(env, target.array[n], operator, source[n], define)
                 res.append(source[n])
             return MValue(res, None)
         elif isinstance(target, ast.Map) and type(value.value) == dict:
@@ -328,7 +329,7 @@ class Interpreter:
                 if key not in source:
                     self.error(
                         operator, f"Attempted to extract the unknown key '{key}' from the right-hand-side.")
-                self.destructure(env, target.map[key], operator, source[key])
+                self.destructure(env, target.map[key], operator, source[key], define)
                 res[key] = source[key]
             return MValue(res, None)
         self.error(operator, "Attempted to assign to a wrong target.")
@@ -411,7 +412,7 @@ class Interpreter:
             env = Environment(enclosing=self.env)
             for iter in iterator.value:
                 try:
-                    self.destructure(env, target, node.operator, iter)
+                    self.destructure(env, target, node.operator, iter, define=True)
                     value = self.execute_block(node.expr, env)
                 except ast.Break as e:
                     value = e.expr
@@ -423,7 +424,7 @@ class Interpreter:
             for iter in iterator.value.items():
                 iter = MValue([MValue(iter[0], None), iter[1]], None)
                 try:
-                    self.destructure(env, target, node.operator, iter)
+                    self.destructure(env, target, node.operator, iter, define=True)
                     value = self.execute_block(node.expr, env)
                 except ast.Break as e:
                     value = e.expr
@@ -435,7 +436,7 @@ class Interpreter:
             iter = iterator.call(node.operator, MValue(None, None))
             while iter.value is not None:
                 try:
-                    self.destructure(env, target, node.operator, iter)
+                    self.destructure(env, target, node.operator, iter, define=True)
                     value = self.execute_block(node.expr, env)
                 except ast.Break as e:
                     value = e.expr
