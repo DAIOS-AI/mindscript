@@ -82,10 +82,8 @@ end
 print(a)
 print(b)
 ```
-prints
+outputs
 ```
-outer a
-outer b
 inner a
 outer b
 outer a
