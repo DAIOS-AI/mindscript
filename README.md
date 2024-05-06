@@ -67,7 +67,7 @@ let greeting = "Hello, world!"
 
 This defines a variable named `greeting` containing a value `Hello, world!` of type `Str`.
 
-Everything is an expression. For instance, all of the following expression evaluate
+Everything is an expression. For instance, all of the following expressions evaluate
 to `42`:
 
 ```
@@ -85,10 +85,20 @@ The basic data types are:
 - `Int`: integers like `42`;
 - `Num`: floating-point numbers like `3.1459`;
 - `Str`: strings, enclosed in double- or single quotes as in `"hello, world!"` or `'hello, world!'`;
+- `Type`: the type of a type.
+
+In addition, there are container types:
 - `Array`: arrays, as in `[1, 2, 3]`;
-- `Object`: objects or dictionaries, as in `{name: "Albert Einstein", age: }`
+- `Object`: objects or dictionaries, as in `{name: "Albert Einstein", age: 76}`;
+- `Function`: function objects;
+- `Any`: an arbitrary type.
+
+The `typeof` returns the type of a given expression:
 
 ```
+> typeof({name: "Albert Einstein", age: 76})
+
+{ name: Str, age: Int }
 ```
 
 
