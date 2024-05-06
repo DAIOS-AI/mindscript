@@ -68,6 +68,30 @@ print(42)
 let my_variable = 42
 ```
 
+Variables are lexically scoped. The following code
+```
+let a = "outer a"
+let b = "outer b"
+
+do
+    let a = "inner a"
+    print(a)
+    print(b)
+end
+
+print(a)
+print(b)
+```
+prints
+```
+outer a
+outer b
+inner a
+outer b
+outer a
+outer b
+```
+
 ### Formal data types
 
 The basic data types are:
@@ -203,7 +227,8 @@ end
 
 **For-loops** come in three forms: iteration over the elements of an array,
 over the key-value pairs of an object, and over the non-null outputs of
-an *iterator* (see below).
+an *iterator* (see below). The entire for-loop evaluates to the last evaluated
+expression, i.e. as if the executions of its body are concatenated.
 ```
 for let v in [1, 2, 3] do
     print(v)
@@ -222,8 +247,13 @@ An iterator is a "function" of type `Null -> Any` that generates a sequence
 of values. These are typically implemented using closures. The for loop will
 repeatedly call an iterator `iter` as `iter()` until it returns a `null` value.
 
-The entire for-loop evaluates to the last evaluated expression, i.e. as if
-the executions of its body had been concatenated.
+In addition, the flow of execution can be modified through
+- `continue( expr )`, which evaluates to `expr` and initiates the next iteration,
+- `break( expr )`, which evaluates to `expr` and exits the entire for-loop.
+
+## Types
+
+
 
 
 
