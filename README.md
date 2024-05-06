@@ -36,6 +36,22 @@ obtained by consulting an oracle, implemented as a large language model (&Psi;).
 
 - Tested with Python 3.9
 
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#description">Description</a></li>
+    <li><a href="#quickstart">Quickstart</a></li>
+    <li><a href="#basics">Basics</a></li>
+    <li><a href="#operators">Operators</a></li>
+    <li><a href="#functions">Functions</a></li>
+    <li><a href="#control-structures">Control structures</a></li>
+    <li><a href="#types">Types</a></li>
+    <li><a href="#formal-types">Formal types</a></li>
+    <li><a href="#informal-types">Informal types</a></li>
+    <li><a href="#oracles">Oracles</a></li>
+  </ol>
+
+
+
 ## Quickstart
 
 To run the REPL, enter
