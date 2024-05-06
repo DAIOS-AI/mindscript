@@ -238,14 +238,15 @@ Destructuring assignments is a syntax that permits unpacking the members of
 an array or the properties of an object into distinct values.
 
 ```
-[let x, let y] = [2, -3]
+[let x, let y] = [2, -3, 1]
 ```
-After this assignment, `x == 2` and `y == -3`.
+After this assignment, `x == 2` and `y == -3`. The third element `1` gets ignored.
 
 ```
-{name: let n, email: let e} = {name: "Albert", email: "albert@einstein.org"}
+{name: let n, email: let e} = {id: 1234, email: "albert@einstein.org", name: "Albert"}
 ```
-After this assignment, `n == "Albert"` and `e == "albert@einstein.org"`.
+After this assignment, `n == "Albert"` and `e == "albert@einstein.org"`. The
+property `id` gets ignored.
 
 These can be arbitrarily nested.
 
