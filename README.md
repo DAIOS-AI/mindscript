@@ -214,7 +214,8 @@ known, the remaining subexpressions are not evaluated. For instance:
 ```
 will only evaluate up to `(2/2 == 1)`, omitting the evaluation of `(2/3 == 2)`.
 
-**If-then** expressions have a simple `if ... then` block structure:
+**If-then** expressions have a simple `if ... then` block structure with the
+familiar semantics:
 ```
 if n == 1 then
     print("The value is 1.")
@@ -225,8 +226,8 @@ else
 end
 ```
 
-**For-loops** come in three forms: iteration over the elements of an array,
-over the key-value pairs of an object, and over the non-null outputs of
+**For-loops** come in three forms: iteration over the elements of an *array*,
+over the key-value pairs of an *object*, and over the outputs of
 an *iterator* (see below). The entire for-loop evaluates to the last evaluated
 expression, i.e. as if the executions of its body are concatenated.
 ```
@@ -252,6 +253,27 @@ In addition, the flow of execution can be modified through
 - `break( expr )`, which evaluates to `expr` and exits the entire for-loop.
 
 ## Types
+
+New types are built using the `type` keyword followed by a *type expression*:
+```
+let Person = type {
+    name!: Str,
+    email!: Str?,
+    age: Int,
+    hobbies: [Str]
+}
+```
+Once created, they can be used as a normal MindScript value of type `Type`:
+```
+> typeof(Person)
+Type
+
+> issubtype({name: "Albert", email: null}, Person)
+true
+```
+
+
+
 
 
 
