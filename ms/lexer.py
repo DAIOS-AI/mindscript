@@ -105,8 +105,8 @@ class Lexer:
     def is_nonzero_digit(self, c: chr) -> bool:
         return "1" <= c and c <= "9"
 
-    def is_digit_dot(self, c: chr) -> bool:
-        return ("0" <= c and c <= "9") or c == "."
+    def is_hex_digit(self, c: chr) -> bool:
+        return ("0" <= c and c <= "9") or ("a" <= c and c <= "f") or ("A" <= c and c <= "F")    
 
     def is_id_start(self, c: chr) -> bool:
         return ("a" <= c and c <= "z") or ("A" <= c and c <= "Z") or (c == "_")
@@ -117,14 +117,25 @@ class Lexer:
     def is_address(self, c: chr) -> bool:
         return self.is_id(c) or (c in ".-_~+#,%&=*;:@/")
 
+    # See https://www.json.org/json-en.html
     def scan_string(self):
         lexeme = ""
         delimiter = self.advance()
-        escaping = False
-        while not self.is_at_end() and (self.peek() != delimiter or escaping):
+
+        while not self.is_at_end() and self.peek() != delimiter:
             c = self.advance()
             lexeme += c
-            escaping = True if c == "\\" else False
+            if c == "\\": # Control characters.
+                if self.peek() in [delimiter, "\\", "/", "b", "f", "n", "r", "t"]:
+                    lexeme += self.advance()
+                elif self.peek() == "u":
+                    lexeme += self.advance()
+                    for n in range(4):
+                        if not self.is_hex_digit(self.peek()):
+                            return None
+                        lexeme += self.advance()
+                else:
+                    return None
         if self.is_at_end():
             self.error("String was not terminated.")
         self.advance()
