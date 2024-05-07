@@ -30,7 +30,7 @@
      inkscape:zoom="10.248373"
      inkscape:cx="62.790457"
      inkscape:cy="18.490741"
-     inkscape:window-width="2490"
+     inkscape:window-width="2560"
      inkscape:window-height="1376"
      inkscape:window-x="0"
      inkscape:window-y="0"
@@ -104,19 +104,17 @@
        x="15.875"
        y="130.96875"
        ry="0.44097048" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88056px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial Bold';text-align:end;letter-spacing:-0.264583px;word-spacing:0px;text-anchor:end;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="22.08119"
-       y="137.04816"
-       id="text16311-8"><tspan
-         sodipodi:role="line"
-         id="tspan16309-5"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.88056px;font-family:Arial;-inkscape-font-specification:'Arial Bold';text-align:end;text-anchor:end;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
-         x="21.816607"
-         y="137.04816"
-         dx="0 -0.35277778">λ<tspan
-   style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:2.82222px;font-family:Arial;-inkscape-font-specification:'Arial Bold';baseline-shift:super;stroke-width:0.264583"
-   id="tspan207603">Ψ</tspan></tspan></text>
+    <g
+       aria-label="λΨ"
+       id="text16311-8"
+       style="font-weight:bold;font-size:3.88056px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial Bold';text-align:end;letter-spacing:-0.264583px;word-spacing:0px;text-anchor:end;fill:#ffffff;stroke-width:0.264583">
+      <path
+         d="m 20.375352,137.04816 h -0.549493 l -0.346749,-0.9133 q -0.06632,-0.17053 -0.153479,-0.45475 -0.0739,0.24253 -0.14969,0.44528 l -0.344854,0.92277 h -0.545704 l 0.77308,-2.01039 -0.293695,-0.7674 h 0.524861 l 0.301274,0.7674 z"
+         id="path249877" />
+      <path
+         d="m 19.916294,133.47573 h 0.407899 v 0.47267 q 0,0.35415 0.08957,0.48231 0.08957,0.12816 0.322461,0.13091 v -1.08589 h 0.406521 v 1.08589 q 0.158474,-0.003 0.24529,-0.0551 0.08819,-0.0537 0.128158,-0.17914 0.03996,-0.12678 0.03996,-0.37896 v -0.47267 h 0.406521 v 0.54019 q 0,0.31282 -0.0689,0.48645 -0.0689,0.17363 -0.243913,0.28525 -0.17501,0.11024 -0.507117,0.11989 v 0.58842 h -0.406521 v -0.58842 q -0.316949,-0.01 -0.496094,-0.11438 -0.177766,-0.1061 -0.250802,-0.28112 -0.07304,-0.17501 -0.07304,-0.49609 z"
+         style="font-size:2.82222px;baseline-shift:super"
+         id="path249879" />
+    </g>
   </g>
 </svg>
