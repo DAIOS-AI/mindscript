@@ -102,6 +102,9 @@ class Lexer:
     def is_digit(self, c: chr) -> bool:
         return "0" <= c and c <= "9"
 
+    def is_nonzero_digit(self, c: chr) -> bool:
+        return "1" <= c and c <= "9"
+
     def is_digit_dot(self, c: chr) -> bool:
         return ("0" <= c and c <= "9") or c == "."
 
@@ -129,21 +132,42 @@ class Lexer:
 
     def scan_integer(self):
         lexeme = ""
+        if not self.is_at_end() and self.is_nonzero_digit(self.peek()):
+            lexeme += self.advance()
         while not self.is_at_end() and self.is_digit(self.peek()):
             lexeme += self.advance()
-        if not self.is_at_end() and self.peek() == ".":
+        # Exclude possibility of a float.
+        if not self.is_at_end() and self.peek() in [".", "e", "E"]:
             return None
         return lexeme
 
+    # See https://www.json.org/json-en.html
     def scan_float(self):
         lexeme = ""
-        while not self.is_at_end() and self.is_digit_dot(self.peek()):
-            c = self.advance()
-            lexeme += c
-            if c == ".":
-                break
-        while not self.is_at_end() and self.is_digit(self.peek()):
+        if not self.is_at_end() and self.peek() == "0":
             lexeme += self.advance()
+        elif not self.is_at_end() and self.is_nonzero_digit(self.peek()):
+            lexeme += self.advance()
+            while not self.is_at_end() and self.is_digit(self.peek()):
+                lexeme += self.advance()
+        else:
+            return None
+        # Fraction
+        if not self.is_at_end() and self.peek() == ".":
+            lexeme += self.advance()
+            while not self.is_at_end() and self.is_digit(self.peek()):
+                lexeme += self.advance()
+        # Exponent
+        if not self.is_at_end() and self.peek() in ["e", "E"]:
+            lexeme += self.advance()
+            if not self.is_at_end() and self.peek() in ["-", "+"]:
+                lexeme += self.advance()
+            if not self.is_at_end() and self.is_digit(self.peek()):
+                lexeme += self.advance()
+            else:
+                return None 
+            while not self.is_at_end() and self.is_digit(self.peek()):
+                lexeme += self.advance()
         return lexeme
 
     def scan_id(self):
@@ -276,13 +300,12 @@ class Lexer:
             return self.add_token(TokenType.STRING, str(lexeme))
 
         if self.is_digit(c):
+            # Integer?
             self.rewind()
             lexeme = self.scan_integer()
             if lexeme:
                 return self.add_token(TokenType.INTEGER, int(lexeme))
-            self.rewind()
-
-        if self.is_digit_dot(c):
+            # Float?
             self.rewind()
             lexeme = self.scan_float()
             if lexeme:
