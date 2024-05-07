@@ -1,5 +1,7 @@
 ![mindscript](media/mindscript-logo.svg | width=500px)
 
+<img src="media/mindscript-logo.svg" width="500px">
+
 # MindScript
 
 An experimental programming language combining formal and informal computation.
