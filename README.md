@@ -1,4 +1,4 @@
-![mindscript](media/mindscript-logo.svg)
+![mindscript](media/mindscript-logo.svg| width=500px)
 
 # MindScript
 
