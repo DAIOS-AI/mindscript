@@ -79,13 +79,10 @@ class Interpreter:
         except ast.Return as e:
             return e.expr
         except (ast.Break, ast.Continue) as e:
-            self.parser.lexer.report_error(
-                e.operator.line,
-                e.operator.col,
-                "RUNTIME ERROR",
-                f"Unexpected control flow expression '{e.operator.literal}'.")
-        except RuntimeError as e:
+            self.error(e.operator, f"Unexpected control flow expression '{e.operator.literal}'.")
+        except ast.RuntimeError as e:
             pass
+            
         return val
 
     def typeof(self, value: MObject) -> MType:
@@ -100,13 +97,13 @@ class Interpreter:
         value_type = self.typeof(value)
         return self.issubtype(value_type, required)
 
-    def define(self, name: str, value: MValue):
+    def define(self, name: str, value: MObject):
         self.env.define(name, value)
 
     def error(self, token: ast.Token, msg):
         self.parser.lexer.report_error(
             token.line, token.col, "RUNTIME ERROR", msg)
-        raise RuntimeError(msg)
+        raise ast.RuntimeError(msg)
 
     def program(self, node: ast.Expr):
         value = None
@@ -127,30 +124,35 @@ class Interpreter:
 
         # Short-circuit operators.
         if operator.ttype == ast.TokenType.OR:
-            lvalue = node.left.accept(self).value
-            if type(lvalue) != bool:
+            lexpr = node.left.accept(self)
+            if type(lexpr) != MValue or type(lexpr.value) != bool:
                 self.error(operator, "Operands must be boolean.")
-            if lvalue:
+            if lexpr.value:
                 return MValue(True, None)
-            rvalue = node.right.accept(self).value
-            if type(rvalue) == bool:
-                return MValue(rvalue, None)
+            rexpr = node.right.accept(self)
+            if type(rexpr) == MValue and type(rexpr.value) == bool:
+                return MValue(rexpr.value, None)
             self.error(operator, "Operands must be boolean.")
 
         if operator.ttype == ast.TokenType.AND:
-            lvalue = node.left.accept(self).value
-            if type(lvalue) != bool:
+            lexpr = node.left.accept(self)
+            if type(lexpr) != MValue or type(lexpr.value) != bool:
                 self.error(operator, "Operands must be boolean.")
-            if not lvalue:
+            if not lexpr.value:
                 return MValue(False, None)
-            rvalue = node.right.accept(self).value
-            if type(rvalue) == bool:
-                return MValue(rvalue, None)
+            rexpr = node.right.accept(self)
+            if type(rexpr) == MValue and type(rexpr.value) == bool:
+                return MValue(rexpr.value, None)
             self.error(operator, "Operands must be boolean.")
 
         # Standard operators.
-        lvalue = node.left.accept(self).value
-        rvalue = node.right.accept(self).value
+        lexpr = node.left.accept(self)
+        rexpr = node.right.accept(self)
+        if type(lexpr) != MValue or type(rexpr) != MValue:
+            self.error(operator, "Wrong operand types.")
+
+        lvalue = lexpr.value
+        rvalue = rexpr.value
 
         if ((type(lvalue) == int or type(lvalue) == float)
                 and (type(rvalue) == int or type(rvalue) == float)):
@@ -162,6 +164,8 @@ class Interpreter:
             elif operator.ttype == ast.TokenType.MULT:
                 return MValue(lvalue * rvalue, None)
             elif operator.ttype == ast.TokenType.DIV:
+                if rvalue == 0.0:
+                    self.error(operator, "Division by zero.")
                 return MValue(lvalue / rvalue, None)
             elif operator.ttype == ast.TokenType.MOD:
                 return MValue(lvalue % rvalue, None)
@@ -204,7 +208,7 @@ class Interpreter:
                 return MValue(lvalue != rvalue, None)
             self.error(operator, "Unexpected operator for string operands.")
 
-        self.error(operator, "Inconsistent operands.")
+        self.error(operator, "Wrong operand types.")
 
     def unary(self, node: ast.Expr):
         operator = node.operator
@@ -248,8 +252,17 @@ class Interpreter:
     def array_get(self, node: ast.Expr):
         # expr, index
         operator = node.operator
-        getter = node.expr.accept(self).value
-        index = node.index.accept(self).value
+        getter_expr = node.expr.accept(self)
+        index_expr = node.index.accept(self)
+
+        if type(getter_expr) != MValue:
+            self.error(operator, "Attempted to access a member on a non-array.")
+        if type(index_expr) != MValue:
+            self.error(operator, "Array index must be an integer.")
+
+        getter = getter_expr.value
+        index = index_expr.value
+
         if type(getter) == list:
             if type(index) == int:
                 if abs(index) < len(getter):
@@ -262,8 +275,17 @@ class Interpreter:
     def object_get(self, node: ast.Expr):
         # expr, index
         operator = node.operator
-        getter = node.expr.accept(self).value
-        index = node.index.accept(self).value
+        getter_expr = node.expr.accept(self)
+        index_expr = node.index.accept(self)
+
+        if type(getter_expr) != MValue:
+            self.error(operator, "Attempted to access a property on a non-object.")
+        if type(index_expr) != MValue:
+            self.error(operator, "Wrong object property.")
+
+        getter = getter_expr.value
+        index = index_expr.value
+
         if type(getter) == dict and type(index) == str:
             if index in getter:
                 return getter[index]
@@ -295,16 +317,32 @@ class Interpreter:
             env.define(identifier, value)
             return value
         elif isinstance(target, ast.ObjectSet):
-            setter = target.expr.accept(self).value
-            index = target.index.accept(self).value
+            setter_expr = target.expr.accept(self)
+            index_expr = target.index.accept(self)
+
+            if type(setter_expr) != MValue:
+                self.error(operator, "Attempted to assign to a non-object.")
+            if type(index_expr) != MValue:
+                self.error(operator, "Wrong object property.")
+            setter = setter_expr.value
+            index = index_expr.value
+
             if type(index) == str and index in setter:
                 setter[index] = value
                 return value
             self.error(
                 operator, "Attempted to assign to an unknown property.")
         elif isinstance(target, ast.ArraySet):
-            setter = target.expr.accept(self).value
-            index = target.index.accept(self).value
+            setter_expr = target.expr.accept(self)
+            index_expr = target.index.accept(self)
+
+            if type(setter_expr) != MValue:
+                self.error(operator, "Attempted to assign to member of a non-array.")
+            if type(index_expr) != MValue:
+                self.error(operator, "Attempted to use a non-interger index.")
+            setter = setter_expr.value
+            index = index_expr.value
+
             if type(index) == int:
                 if abs(index) < len(setter):
                     index = index % len(setter)
@@ -312,7 +350,7 @@ class Interpreter:
                     return value
                 self.error(operator, "Array index out of range.")
             self.error(operator, "Attempted to use a non-integer index.")
-        elif isinstance(target, ast.Array) and type(value.value) == list:
+        elif type(target) == ast.Array and type(value.value) == list:
             res = []
             source = value.value
             if len(target.array) > len(source):
@@ -322,7 +360,7 @@ class Interpreter:
                 self.destructure(env, target.array[n], operator, source[n], define)
                 res.append(source[n])
             return MValue(res, None)
-        elif isinstance(target, ast.Map) and type(value.value) == dict:
+        elif type(target) == ast.Map and type(value.value) == dict:
             res = {}
             source = value.value
             for key in target.map.keys():
@@ -394,7 +432,10 @@ class Interpreter:
 
     def conditional(self, node: ast.Expr):
         for n in range(len(node.conds)):
-            condition = node.conds[n].accept(self).value
+            condexpr = node.conds[n].accept(self)
+            if type(condexpr) != MValue:
+                self.error(node.operators[n], "Condition must evaluate to a boolean value.")
+            condition = condexpr.value
             if type(condition) != bool:
                 self.error(
                     node.operators[n], "Condition must evaluate to a boolean value.")
@@ -433,8 +474,8 @@ class Interpreter:
                     pass
         elif isinstance(iterator, MFunction):
             env = Environment(enclosing=self.env)
-            iter = iterator.call(node.operator, MValue(None, None))
-            while iter.value is not None:
+            iter = iterator.call(node.operator, [MValue(None, None)])
+            while type(iter) != MValue or iter.value is not None:
                 try:
                     self.destructure(env, target, node.operator, iter, define=True)
                     value = self.execute_block(node.expr, env)
@@ -443,7 +484,7 @@ class Interpreter:
                     break
                 except ast.Continue as e:
                     pass
-                iter = iterator.call(node.operator, MValue(None, None))
+                iter = iterator.call(node.operator, [MValue(None, None)])
         else:
             self.error(node.operator,
                        "Can only iterate over array, object, or callable.")
@@ -453,11 +494,7 @@ class Interpreter:
         callee = node.expr.accept(self)
         args = [arg.accept(self) for arg in node.arguments]
         if isinstance(callee, MFunction):
-            try:
-                return callee.call(node.operator, args)
-            except ast.TypeError as e:
-                self.error(node.operator, str(e))
-                return MValue(None, None)
+            return callee.call(node.operator, args)
 
         # Calling a function on a constant value.
         self.error(node.operator, "Not a function.")

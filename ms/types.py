@@ -14,6 +14,8 @@ class TypeChecker():
             elif isinstance(t, ast.TypeTerminal) and t.token.ttype == ast.TokenType.ID:
                 key = t.token.literal
                 value = env.get(key)
+                if type(value) != MType:
+                    raise ValueError(f"Referencing '{key}', which is not a type.")
                 t = value.definition
                 env = value.environment
             else:

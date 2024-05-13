@@ -3,6 +3,8 @@ from ms.objects import MNativeFunction, MValue, MObject
 from ms.interpreter import Interpreter, Environment
 from ms.types import TypeChecker
 from ms.schema import JSONSchema
+from ms.bnf import BNFFormatter
+
 
 # Native functions.
 
@@ -39,11 +41,9 @@ class Import(MNativeFunction):
                         module[key] = val
                 env = env.enclosing
         except FileNotFoundError as e:
-            print(f"File not found: {filename}")
-            return None
+            self.error(f"File not found: {filename}")
         except Exception as e:
-            print(e)
-            return None
+            self.error(str(e))
         return MValue(module, None)
 
 
@@ -120,12 +120,28 @@ class Assert(MNativeFunction):
         return MValue(True, None)
 
 
+class Error(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(message: Str?) -> Null")
+    
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        if arg.value is None:
+            self.error("")
+        else:
+            self.error(arg.value)
+        return MValue(None, None)
+
+
 class IsSubtype(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(subtype: Type, supertype: Type) -> Bool")
 
     def func(self, args: List[MObject]):
-        confirmed = self.interpreter.issubtype(args[0], args[1])
+        try:
+            confirmed = self.interpreter.issubtype(args[0], args[1])
+        except Exception as e:
+            self.error(str(e))
         return MValue(confirmed, None)
 
 
@@ -136,7 +152,24 @@ class Schema(MNativeFunction):
 
     def func(self, args: List[MObject]):
         arg = args[0]
-        valtype = self.printer.print_schema(arg)
+        try:
+            valtype = self.printer.print_schema(arg)
+        except Exception as e:
+            self.error(str(e))
+        return MValue(valtype, None)
+
+
+class BNF(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Type) -> Str")
+        self.formatter = BNFFormatter()
+
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        try:
+            valtype = self.formatter.format(arg)
+        except Exception as e:
+            self.error(str(e))
         return MValue(valtype, None)
 
 
@@ -151,6 +184,8 @@ def interpreter(interactive=False):
     ip.define("issubtype", IsSubtype(ip=ip))
     ip.define("schema", Schema(ip=ip))
     ip.define("assert", Assert(ip=ip))
+    ip.define("bnf", BNF(ip=ip))
+    ip.define("error", Error(ip=ip))
 
     # Clean the lexer's code buffer.
     ip.parser.lexer.reset()

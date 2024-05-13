@@ -48,7 +48,7 @@ TokenType = Enum(
         "BANG",
         "ARROW",
         "ID",
-        "ADDRESS",
+        # "ADDRESS",
         "NOT",
         "AND",
         "OR",
@@ -82,8 +82,9 @@ class Token(BaseModel):
     def __str__(self):
         return self.__repr__()
 
-# Exceptions
 
+# Exceptions - Do not use these directly!
+# Use auxiliary functions instead (e.g. error(msg) type functions.)
 
 class IncompleteExpression(Exception):
     def __init__(self):
@@ -101,11 +102,6 @@ class SyntaxError(Exception):
 
 
 class RuntimeError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
-
-
-class TypeError(Exception):
     def __init__(self, message):
         super().__init__(message)
 

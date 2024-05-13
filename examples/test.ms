@@ -46,7 +46,6 @@ end
 let adder = createAdder(5)
 print(adder(3))
 
-
 print("\n# Creating a point structure and adder fun.\n")
 let Point = type {"x": Num, "y": Num}
 print(Point)
@@ -85,12 +84,11 @@ end
 print(factorial)
 
 print("\n# Testing for loops.")
-let range = fun(bounds: [Int, Int]) -> (Null -> Int?) do
-  [let s, let e] = bounds
+let range = fun(start: Int, stop: Int) -> (Null -> Int?) do
   fun() -> Int? do
-    if s<e then
-      let value = s
-      s = s + 1
+    if start<stop then
+      let value = start
+      start = start + 1
       return(value)
     else
       return(null)
@@ -105,7 +103,7 @@ print("\nLoops over objects.")
 for let x in {"x": 1, "y": 2, "z": 3} do print(x) end
 
 print("\nLoops over iterators.")
-for let x in range([1, 4]) do print(x) end
+for let x in range(1, 4) do print(x) end
 
 print("\n# Type checking.")
 let obj = {
@@ -138,9 +136,9 @@ print("AU Venus        : " + str(au("Venus")))
 print("AU Earth        : " + str(au("Earth")))
 
 print("# Testing for subtypes.")
-assert(issubtype([type [Int], type Array]))
-assert(issubtype([type Array, type Array]))
-assert(issubtype([type [], type Array]))
+assert(issubtype(type [Int], type Array))
+assert(issubtype(type Array, type Array))
+assert(issubtype(type [], type Array))
 
-assert(issubtype([type Object, type Object]))
-assert(issubtype([type {}, type Object]))
+assert(issubtype(type Object, type Object))
+assert(issubtype(type {}, type Object))

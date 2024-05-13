@@ -7,51 +7,51 @@ from ms.lexer import Lexer
 ###
 # BNF of grammar:
 # ```
-#     program     -> chunk EOF
-#     chunk       -> control*
-#     control     -> | "return" "~(" expression ")"
-#                    | "break" "~(" expression ")"
-#                    | "continue" "~(" expression ")"
-#                    | expression
-#     expression  -> "#" STRING expression | assignment
-#     assignment  -> disjunction "=" expression | disjunction
-#     disjunction -> conjunction ("or" conjunction)*
-#     conjunction -> equality ("and" equality)*
-#     equality    -> comparison (("=="|"!=") comparison)*
-#     comparison  -> term (("<"|"<="|">"|">=") term)*
-#     term        -> factor (("+"|"-") factor)*
-#     factor      -> unary (("*"|"/"|"%") unary)*
-#     unary       -> ("not"|"-") call | call
-#     call        -> primary ( "~(" expression* ")" | "." ID | "~[" expression "]" )*
+#     program     ::= chunk EOF
+#     chunk       ::= control*
+#     control     ::= "return" "~(" expression ")" |
+#                     "break" "~(" expression ")" |
+#                     "continue" "~(" expression ")" |
+#                     expression
+#     expression  ::= "#" STRING expression | assignment
+#     assignment  ::= disjunction "=" expression | disjunction
+#     disjunction ::= conjunction ("or" conjunction)*
+#     conjunction ::= equality ("and" equality)*
+#     equality    ::= comparison (("=="|"!=") comparison)*
+#     comparison  ::= term (("<"|"<="|">"|">=") term)*
+#     term        ::= factor (("+"|"-") factor)*
+#     factor      ::= unary (("*"|"/"|"%") unary)*
+#     unary       ::= ("not"|"-") call | call
+#     call        ::= primary ( "~(" expression* ")" | "." ID | "~[" expression "]" )*
 #
-#     primary     -> INTEGER | NUMBER | STRING | BOOLEAN | NULL | array | map
-#                    | type | function | target | ( "~(" | "(" ) expression ")"
-#                    | block | conditional | for
-#     array       -> "[" (expression ("," expression)*)? "]"
-#     map         -> "{" (item ("," item)*)? "}"
-#     item        -> ("#" STRING)? key ":" expression
-#     key         -> STRING | IDENTIFIER
+#     primary     ::= INTEGER | NUMBER | STRING | BOOLEAN | NULL | array | map |
+#                     type | function | target | ( "~(" | "(" ) expression ")" |
+#                     block | conditional | for
+#     array       ::= "[" (expression ("," expression)*)? "]"
+#     map         ::= "{" (item ("," item)*)? "}"
+#     item        ::= ("#" STRING)? key ":" expression
+#     key         ::= STRING | IDENTIFIER
 #
-#     block       -> "do" chunk "end"
-#     conditional -> "if" expression "then" chunk
+#     block       ::= "do" chunk "end"
+#     conditional ::= "if" expression "then" chunk
 #                     ("elif" expression "then" chunk)*
 #                     ("else" chunk)? "end"
-#     while       -> "while" expression control
-#     for         -> "for" expression "in" expression block
-#     target      -> ID | declaration
-#     declaration -> "let" ID
-#     function    -> "fun" "~(" parameter* ")" 
+#     while       ::= "while" expression control
+#     for         ::= "for" expression "in" expression block
+#     target      ::= ID | declaration
+#     declaration ::= "let" ID
+#     function    ::= "fun" "~(" parameter* ")" 
 #                       ("->" type_expr)? ("oracle" | block)
-#     parameter   -> ("#" STRING)? ID (":" type_expr)?
+#     parameter   ::= ("#" STRING)? ID (":" type_expr)?
 #
-#     type        -> "type" type_expr
-#     type_expr   -> ("#" STRING)? type_expr
-#     type_binary -> type_unary "->" type_expr | type_unary
-#     type_unary  -> type_prim "?" | type_prim
-#     type_prim   -> ID | TYPE | type_arr | type_map | "(" type_expr ")"
-#     type_arr    -> "[" ((type_expr ",")* "]"
-#     type_map    -> "{" (type_item ("," type_item)*)? "}"
-#     type_item   -> ("#" STRING)? key "!"? ":" type_expr
+#     type        ::= "type" type_expr
+#     type_expr   ::= ("#" STRING)? type_expr
+#     type_binary ::= type_unary "->" type_expr | type_unary
+#     type_unary  ::= type_prim "?" | type_prim
+#     type_prim   ::= ID | TYPE | type_arr | type_map | "(" type_expr ")"
+#     type_arr    ::= "[" ((type_expr ",")* "]"
+#     type_map    ::= "{" (type_item ("," type_item)*)? "}"
+#     type_item   ::= ("#" STRING)? key "!"? ":" type_expr
 # ```
 ###
 

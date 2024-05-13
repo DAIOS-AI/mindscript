@@ -51,7 +51,7 @@ class JSONSchema():
     # TODO: Solve for references.
     def type_terminal(self, node, optional=False, env=None):
         if node.token.ttype == ast.TokenType.ID:
-            raise TypeError(f"TODO: Referencing {node.token.literal}.")
+            raise ValueError(f"TODO: Referencing {node.token.literal}.")
         elif node.token.ttype == ast.TokenType.TYPE:
             obj = {"type": None}
             if node.token.literal == "Int":

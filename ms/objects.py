@@ -7,11 +7,14 @@ from functools import partialmethod
 # Value types
 
 # Primitive value.
+
+
 class MObject():
     @property
     @abstractmethod
     def annotation(self):
         pass
+
 
 class MValue(MObject):
     def __init__(self, value, annotation=None):
@@ -21,11 +24,11 @@ class MValue(MObject):
     @property
     def value(self):
         return self._value
-    
+
     @value.setter
     def value(self, val):
         self._value = val
-    
+
     @property
     def annotation(self):
         return self._annotation
@@ -45,18 +48,10 @@ class MType(MObject):
         self._env = ip.env
         self._definition = definition
 
-    def __expr__(self):
-        text = self.interpreter.printer.print(self.definition)
-        return text
-
-    def __str__(self):
-        text = self.interpreter.printer.print(self.definition)
-        return text
-
     @property
     def interpreter(self):
         return self._ip
-    
+
     @property
     def environment(self):
         return self._env
@@ -64,7 +59,7 @@ class MType(MObject):
     @property
     def definition(self):
         return self._definition
-    
+
     @property
     def annotation(self):
         self._definition.annotation
@@ -72,8 +67,6 @@ class MType(MObject):
     @annotation.setter
     def annotation(self, note):
         self._definition.annotation = note
-
-
 
 
 # Callables.
@@ -88,7 +81,7 @@ class MFunction(MObject):
         # Create input  types.
         self._intypes = []
         types = definition.types
-        while type(types) == ast.TypeBinary:
+        while len(self._intypes) < len(definition.parameters):
             ptype = types.left
             typeobj = MType(ip, ptype)
             self._intypes.append(typeobj)
@@ -124,7 +117,7 @@ class MFunction(MObject):
     @property
     def annotation(self):
         return self._definition.types.annotation
-    
+
     @annotation.setter
     def annotation(self, note):
         self._definition.types.annotation = note
@@ -136,12 +129,12 @@ class MFunction(MObject):
             return self.partial(args)
         for arg, typeobj in zip(args, self.intypes):
             if not self.interpreter.checktype(arg, typeobj):
-                raise ast.TypeError(f"Wrong type of function argument.")
+                self.error(f"Wrong type of function argument.")
 
         value = self.func(args)
 
         if not self.interpreter.checktype(value, self.outtype):
-            raise ast.TypeError(f"Wrong type of function output.")
+            self.error(f"Wrong type of function output.")
 
         return value
 
@@ -153,14 +146,8 @@ class MFunction(MObject):
         funcobj._intypes = funcobj._intypes[n_args:]
         types = funcobj.definition.types.right
         for _ in range(len(args)-1):
-            types= types.right
+            types = types.right
         funcobj._definition.types = types
-        # print(f"MFunction.partial: funcobj = {funcobj}")
-        # print(f"MFunction.partial: funcobj.params = {funcobj.params}")
-        # print(f"MFunction.partial: funcobj.definition = {funcobj.definition}")
-        # print(f"MFunction.partial: funcobj.intypes = {funcobj.intypes}")
-        # print(f"MFunction.partial: funcobj.outtype = {funcobj.outtype}")
-        # print(f"MFunction.partial: funcobj.func = {funcobj.func}")
         return funcobj
 
     def error(self, msg: str):
@@ -172,27 +159,22 @@ class MFunction(MObject):
 
     def __repr__(self):
         # print(f"UserFunction.repr: definition = {self.definition}")
-        return self.interpreter.printer.print(self.definition)
+        return "<function>"
 
     def __str__(self):
         # print(f"UserFunction.str: definition = {self.definition}")
-        return self.interpreter.printer.print(self.definition)
+        return "<function>"
 
 
 class MPartialFunction(MFunction):
 
+    # type: ignore
     # type: ignore
     def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
         if type(definition) == str:
             definition = ip.parser.parse(
                 definition + " do null end").program[0]
         super().__init__(ip, definition)
-        self._definition.expr = ast.Terminal(
-            token=ast.Token(
-                ttype=ast.TokenType.TYPE,
-                literal="<native function>"
-            )
-        )
 
     @abstractmethod
     def func(self, args: List[MObject]) -> MObject:
@@ -202,19 +184,19 @@ class MPartialFunction(MFunction):
 class MNativeFunction(MFunction):
 
     # type: ignore
+    # type: ignore
     def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
         if type(definition) == str:
             definition = ip.parser.parse(
                 definition + " do null end").program[0]
         super().__init__(ip, definition)
-        self._definition.expr = ast.Terminal(
-            token=ast.Token(
-                ttype=ast.TokenType.TYPE,
-                literal="<native function>"
-            )
-        )
 
     @abstractmethod
     def func(self, args: List[MObject]) -> MObject:
         pass
 
+    def __repr__(self):
+        return "<native function>"
+
+    def __str__(self):
+        return "<native function>"

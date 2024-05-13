@@ -187,11 +187,11 @@ class Lexer:
             lexeme += self.advance()
         return lexeme
 
-    def scan_address(self):
-        lexeme = self.advance()
-        while not self.is_at_end() and self.is_address(self.peek()):
-            lexeme += self.advance()
-        return lexeme
+    # def scan_address(self):
+    #     lexeme = self.advance()
+    #     while not self.is_at_end() and self.is_address(self.peek()):
+    #         lexeme += self.advance()
+    #     return lexeme
 
     def report_error(self, line: int, col: int, errtype: str, msg: str):
         lines = self.stream.splitlines()
@@ -342,12 +342,12 @@ class Lexer:
                 return self.add_token(ttype, lexeme)
             return self.add_token(TokenType.ID, lexeme)
 
-        if c == "@":
-            self.rewind()
-            lexeme = self.scan_address()
-            if lexeme:
-                return self.add_token(TokenType.ADDRESS, str(lexeme))
-            self.rewind()
+        # if c == "@":
+        #     self.rewind()
+        #     lexeme = self.scan_address()
+        #     if lexeme:
+        #         return self.add_token(TokenType.ADDRESS, str(lexeme))
+        #     self.rewind()
 
         self.error("Unexpected character.")
 

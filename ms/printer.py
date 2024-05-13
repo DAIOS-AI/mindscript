@@ -84,7 +84,7 @@ class Printer():
         if node.token.ttype == TokenType.STRING:
             literal = f"\"{literal}\""
         if node.token.ttype == TokenType.INTEGER:
-            literal = str(literal)
+            literal = repr(literal)
         if node.token.ttype == TokenType.NUMBER:
             literal = str(literal)
         return literal
@@ -244,18 +244,18 @@ class Printer():
 
 
     def print_value(self, value):
-        repr = None
+        txt = None
         if isinstance(value, MValue):
             v = value.value
             c = value.annotation
             if v is None:
-                repr = "null"
+                txt = "null"
             elif type(v) == str:
-                repr = f'"{v}"'
+                txt = repr(f'{v}')
             elif type(v) == float or type(v) == int:
-                repr = str(v)
+                txt = str(v)
             elif type(v) == bool:
-                repr = "true" if v else "false"
+                txt = "true" if v else "false"
             elif type(v) == list:
                 if self.is_max_depth(): return "[...]"
                 items = []
@@ -264,7 +264,7 @@ class Printer():
                     txt = self.prefix + self.print_value(item)
                     items.append(txt)
                 self.indent_decr()
-                repr = "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
+                txt = "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
             elif type(v) == dict:
                 if self.is_max_depth(): return "{...}"
                 items = []
@@ -273,21 +273,21 @@ class Printer():
                     txt = self.prefix + f'"{key}": ' + self.print_value(item)
                     items.append(txt)
                 self.indent_decr()
-                repr = "{\n" + ",\n".join(items) + "\n" + self.prefix + "}"
+                txt = "{\n" + ",\n".join(items) + "\n" + self.prefix + "}"
             else:
                 raise ValueError("print_value received an MValue that is not recognized.")
         elif isinstance(value, MFunction):
-            repr = value.definition.accept(self)
+            txt = value.definition.types.accept(self) + " " + str(value) 
         elif isinstance(value, MType):
-            repr = value.definition.accept(self)
+            txt = value.definition.accept(self)
         else:
             "print_value: Unknown value type!"
-        return repr
+        return txt
 
     def print(self, value):
-        repr = ""
+        txt = ""
         if isinstance(value, Expr):
-            repr = value.accept(self)
+            txt = value.accept(self)
         elif isinstance(value, MObject):
-            repr = self.print_value(value)
-        return self.shorten_if_possible(repr)   
+            txt = self.print_value(value)
+        return self.shorten_if_possible(txt)   
