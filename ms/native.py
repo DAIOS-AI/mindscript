@@ -50,11 +50,10 @@ class Import(MNativeFunction):
 class Str(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any) -> Str")
-        self.ip = ip
 
     def func(self, args: List[MObject]):
         arg = args[0]
-        repr = self.ip.printer.print(arg)
+        repr = self.interpreter.print(arg)
         return MValue(repr, None)
 
 
@@ -68,9 +67,19 @@ class Print(MNativeFunction):
         if type(arg) == MValue and type(arg.value) == str:
             print(arg.value)
         else:
-            repr = self.interpreter.printer.print(arg)
+            repr = self.interpreter.print(arg)
             print(repr)
         return arg
+
+
+class Exit(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        definition = "fun(_: Null) -> Null"
+        super().__init__(ip, definition)
+
+    def func(self, args: List[MObject]):
+        self.interpreter.exit()
+
 
 
 class Dump(MNativeFunction):
@@ -84,7 +93,7 @@ class Dump(MNativeFunction):
         print("=== STATE DUMP START")
         while env is not None:
             print(pre)
-            txt = self.interpreter.printer.print(MValue(env.vars, None))
+            txt = self.interpreter.print(MValue(env.vars, None))
             print(txt)
             pre = "==" + pre
             env = env.enclosing
@@ -186,6 +195,7 @@ def interpreter(interactive=False):
     ip.define("assert", Assert(ip=ip))
     ip.define("bnf", BNF(ip=ip))
     ip.define("error", Error(ip=ip))
+    ip.define("exit", Exit(ip=ip))
 
     # Clean the lexer's code buffer.
     ip.parser.lexer.reset()

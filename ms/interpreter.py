@@ -76,8 +76,6 @@ class Interpreter:
             return val
         try:
             val = tree.accept(self)
-        except ast.Return as e:
-            return e.expr
         except (ast.Break, ast.Continue) as e:
             self.error(e.operator, f"Unexpected control flow expression '{e.operator.literal}'.")
         except ast.RuntimeError as e:
@@ -100,10 +98,16 @@ class Interpreter:
     def define(self, name: str, value: MObject):
         self.env.define(name, value)
 
+    def print(self, value: MObject):
+        return self.printer.print(value)
+
     def error(self, token: ast.Token, msg):
         self.parser.lexer.report_error(
             token.line, token.col, "RUNTIME ERROR", msg)
         raise ast.RuntimeError(msg)
+
+    def exit(self):
+        raise ast.Exit()
 
     def program(self, node: ast.Expr):
         value = None
@@ -501,16 +505,17 @@ class Interpreter:
 
     def function(self, node: ast.Expr):
         node.types = node.types.accept(self)
-        if type(node.expr) == ast.Terminal and node.expr.token.ttype == ast.TokenType.ORACLE:
-            oracle_callable = MOracleFunction(ip=self, definition=node)
-            return oracle_callable
         try:
-            user_callable = MUserFunction(ip=self, definition=node)
+            if node.operator.ttype == ast.TokenType.FUNCTION:
+                callable = MUserFunction(ip=self, definition=node)
+            else:
+                examples = node.expr.accept(self)
+                callable = MOracleFunction(ip=self, definition=node, examples=examples)
             # Create a new environment to protect the closure environment.
             self.env = Environment(enclosing=self.env)
         except Exception as e:
-            print(e)
-        return user_callable
+            return MValue(None, None)
+        return callable
 
     def type_definition(self, node: ast.Expr):
         operator = node.operator

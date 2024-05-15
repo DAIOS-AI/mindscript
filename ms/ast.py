@@ -18,6 +18,7 @@ TokenType = Enum(
         "ARRAY",
         "FUNCTION",
         "ORACLE",
+        "FROM",
         "TYPECONS",
         "TYPETYPE",
         "TYPE",
@@ -365,5 +366,8 @@ class Continue(Control):
         self.expr = expr
 
 
+class Exit(Control):
+    def __init__(self):
+        pass
 
 

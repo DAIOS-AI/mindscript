@@ -2,7 +2,7 @@ import re
 import sys
 import ms
 import readline
-from ms.ast import IncompleteExpression, Return
+from ms.ast import IncompleteExpression, Return, Exit
 import traceback
 
 GREEN = "\033[32m"
@@ -51,7 +51,7 @@ def repl():
             lines = ""
         except IncompleteExpression:
             prompt = "| "
-        except Return:
+        except (Return, Exit):
             print("\nExiting...")
             exit(0)
         except EOFError:

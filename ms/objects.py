@@ -16,6 +16,7 @@ class MObject():
         pass
 
 
+
 class MValue(MObject):
     def __init__(self, value, annotation=None):
         self._value = value
@@ -36,6 +37,12 @@ class MValue(MObject):
     @annotation.setter
     def annotation(self, val):
         self._annotation = val
+
+    def __repr__(self):
+        if self.annotation is None:
+            return str(self.value)
+        return "# '{self.annotation}' " + self.value
+
 
 
 # Types.
@@ -151,7 +158,7 @@ class MFunction(MObject):
         return funcobj
 
     def error(self, msg: str):
-        self.interpreter.error(self._operator, msg)
+        self.interpreter.error(self.definition.operator, msg)
 
     @abstractmethod
     def func(self, args: List[MObject]) -> MObject:
@@ -168,8 +175,6 @@ class MFunction(MObject):
 
 class MPartialFunction(MFunction):
 
-    # type: ignore
-    # type: ignore
     def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
         if type(definition) == str:
             definition = ip.parser.parse(
@@ -183,8 +188,6 @@ class MPartialFunction(MFunction):
 
 class MNativeFunction(MFunction):
 
-    # type: ignore
-    # type: ignore
     def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
         if type(definition) == str:
             definition = ip.parser.parse(

@@ -25,7 +25,7 @@ from ms.lexer import Lexer
 #     call        ::= primary ( "~(" expression* ")" | "." ID | "~[" expression "]" )*
 #
 #     primary     ::= INTEGER | NUMBER | STRING | BOOLEAN | NULL | array | map |
-#                     type | function | target | ( "~(" | "(" ) expression ")" |
+#                     type | function | oracle | target | ( "~(" | "(" ) expression ")" |
 #                     block | conditional | for
 #     array       ::= "[" (expression ("," expression)*)? "]"
 #     map         ::= "{" (item ("," item)*)? "}"
@@ -41,7 +41,9 @@ from ms.lexer import Lexer
 #     target      ::= ID | declaration
 #     declaration ::= "let" ID
 #     function    ::= "fun" "~(" parameter* ")" 
-#                       ("->" type_expr)? ("oracle" | block)
+#                       ("->" type_expr)? block
+#     oracle      ::= "oracle" "~(" parameter* ")"
+#                       ("->" type_expr)? ("from" array)?
 #     parameter   ::= ("#" STRING)? ID (":" type_expr)?
 #
 #     type        ::= "type" type_expr
@@ -317,7 +319,7 @@ class Parser:
             return self.parse_conditional()
         if self.check(TokenType.FOR):
             return self.parse_for()
-        if self.check(TokenType.FUNCTION):
+        if self.check(TokenType.FUNCTION) or self.check(TokenType.ORACLE):
             return self.parse_function()
         if self.match([TokenType.LROUND, TokenType.CLROUND]):
             expr = self.parse_expression()
@@ -444,7 +446,7 @@ class Parser:
             return ast.For(operator=operator, target=target, iterator=iterator, expr=expr)
 
     def parse_function(self):
-        if self.match([TokenType.FUNCTION]):
+        if self.match([TokenType.FUNCTION, TokenType.ORACLE]):
             operator = self.previous()
             self.consume(TokenType.CLROUND,
                          "Expected '(' after 'fun' keyword.")
@@ -477,11 +479,12 @@ class Parser:
                 types = ast.TypeBinary(operator=operator, left=ptype, right=types)
 
             expr = None
-            if self.match([TokenType.ORACLE]):
-                oracletoken = self.previous()
-                expr = ast.Terminal(token=oracletoken)
-            else:
+            if operator.ttype == TokenType.FUNCTION:
                 expr = self.parse_block()
+            elif self.match([TokenType.FROM]):
+                expr = self.parse_array()
+            else:
+                expr = ast.Array(array=[])
             return ast.Function(operator=operator, parameters=params, types=types, expr=expr)
 
     def parse_parameter(self):

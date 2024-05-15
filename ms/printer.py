@@ -290,4 +290,4 @@ class Printer():
             txt = value.accept(self)
         elif isinstance(value, MObject):
             txt = self.print_value(value)
-        return self.shorten_if_possible(txt)   
+        return self.shorten_if_possible(txt)

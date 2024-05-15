@@ -23,6 +23,7 @@ Keywords = {
     "oracle": TokenType.ORACLE,
     "for": TokenType.FOR,
     "in": TokenType.IN,
+    "from": TokenType.FROM,
     "type": TokenType.TYPECONS,
     "Type": TokenType.TYPE,
     "Null": TokenType.TYPE,
