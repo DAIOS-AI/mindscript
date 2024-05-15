@@ -410,7 +410,8 @@ Then we can induce the output for a new input.
 
 5042
 ```
-(Notice the last answer should have been 5040).
+Notice in the previous example the oracle did not induce the factorial function
+(as 7! = 5040).
 
 Each example must have the format `[arg_1, arg_2, ..., arg_n, output]`. For instance,
 `[3, 2, "five"]` is a valid example for a function of type `Int -> Int -> Str`.
