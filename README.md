@@ -66,8 +66,8 @@ as a large language model (&Psi;).
 **Disclaimer:**
 
 This is a strictly experimental programming language. The implementation is not guaranteed
-to be correct, nor does it aim to be efficient. If there's enough traction, a C runtime
-will follow.
+to be correct, nor does it aim to be efficient. If there's enough interest, I will write
+a MindScript runtime in C.
 
 ## Quickstart
 
