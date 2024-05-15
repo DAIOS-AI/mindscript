@@ -482,7 +482,7 @@ class Parser:
             if operator.ttype == TokenType.FUNCTION:
                 expr = self.parse_block()
             elif self.match([TokenType.FROM]):
-                expr = self.parse_array()
+                expr = self.parse_expression()
             else:
                 expr = ast.Array(array=[])
             return ast.Function(operator=operator, parameters=params, types=types, expr=expr)

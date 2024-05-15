@@ -4,7 +4,7 @@ from ms.interpreter import Interpreter, Environment
 from ms.types import TypeChecker
 from ms.schema import JSONSchema
 from ms.bnf import BNFFormatter
-
+import ms.startup
 
 # Native functions.
 
@@ -30,7 +30,7 @@ class Import(MNativeFunction):
             with open(filename, "r") as fh:
                 code = fh.read()
 
-            ip = interpreter()
+            ip = ms.startup.interpreter()
             ip.env = Environment(enclosing=ip.env)
             ip.eval(code)
             module = dict()
@@ -79,7 +79,6 @@ class Exit(MNativeFunction):
 
     def func(self, args: List[MObject]):
         self.interpreter.exit()
-
 
 
 class Dump(MNativeFunction):
@@ -132,7 +131,7 @@ class Assert(MNativeFunction):
 class Error(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(message: Str?) -> Null")
-    
+
     def func(self, args: List[MObject]):
         arg = args[0]
         if arg.value is None:
@@ -182,21 +181,21 @@ class BNF(MNativeFunction):
         return MValue(valtype, None)
 
 
-def interpreter(interactive=False):
-    ip = Interpreter(interactive=interactive)
-    ip.define("import", Import(ip=ip))
-    ip.define("str", Str(ip=ip))
-    ip.define("print", Print(ip=ip))
-    ip.define("dump", Dump(ip=ip))
-    ip.define("get_env", GetEnv(ip=ip))
-    ip.define("typeof", TypeOf(ip=ip))
-    ip.define("issubtype", IsSubtype(ip=ip))
-    ip.define("schema", Schema(ip=ip))
-    ip.define("assert", Assert(ip=ip))
-    ip.define("bnf", BNF(ip=ip))
-    ip.define("error", Error(ip=ip))
-    ip.define("exit", Exit(ip=ip))
+class Size(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any) -> Int?")
 
-    # Clean the lexer's code buffer.
-    ip.parser.lexer.reset()
-    return ip
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        if type(arg) != MValue or type(arg.value) not in [list, dict]:
+            return MValue(None, None)
+        return MValue(len(arg.value), None)
+
+# class Append(MNativeFunction):
+#     def __init__(self, ip: Interpreter):
+#         super().__init__(ip, "fun(array: Array, value: Any) -> Array")
+
+#     def func(self, args: List[MObject]):
+#         array = args[0]
+#         value = args[1]
+#         return MValue(array.value + , None)

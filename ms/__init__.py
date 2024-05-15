@@ -1,2 +1,2 @@
-from ms.native import interpreter
+from ms.startup import interpreter
 

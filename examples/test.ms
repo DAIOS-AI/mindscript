@@ -129,7 +129,7 @@ print("Should print '45': " + str(age))
 
 print("# Trying oracle funs.")
 # "Determine the distance of the planet to the sun in astronomical units."
-let au = fun(planet: Str) -> Num oracle
+let au = oracle(planet: Str) -> Num
 
 print("AU Mercury      : " + str(au("Mercury")))
 print("AU Venus        : " + str(au("Venus")))
