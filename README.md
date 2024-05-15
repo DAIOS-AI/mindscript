@@ -412,6 +412,12 @@ Then we can induce the output for a new input.
 ```
 (Notice the last answer should have been 5040).
 
+Examples have the format `[arg_1, arg_2, ..., arg_n, output]`. So, for
+a function of type `Int -> Int -> Str`, a valid example would be
+`[3, 2, "five"]`.
+
+
+
 
 
 
