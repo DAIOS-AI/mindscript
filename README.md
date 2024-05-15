@@ -239,7 +239,7 @@ In addition, the flow of execution can be modified through
 
 ### Destructuring
 
-Destructuring assignments is a syntax that permits unpacking the members of
+Destructuring assignment is a syntax that permits unpacking the members of
 an array or the properties of an object into distinct values.
 
 ```
@@ -310,7 +310,7 @@ true
 ```
 
 Notes:
-- Primitive types: The primitive types are `Bool`, `Int`, `Num`, and `String`.
+- Primitive type atoms: The primitive types are `Bool`, `Int`, `Num`, and `String`.
 - The container types are built using delimiters `[...]` (arrays) or `{...}` (objects) 
   and then further specifying the types of their members. If the members are arbitrary,
   use `Array` and `Object` instead.
@@ -357,6 +357,57 @@ let Person = {
 ```
 
 ## Oracles
+
+Like functions, oracles produce outputs from inputs, but they do so using induction.
+Oracles are defined using the `oracle` keyword. For instance:
+
+```
+# "Write the name of an important researcher in the given field."
+let researcher = oracle(field: Str) -> {name: Str}
+```
+
+This creates an anonymous oracle with formal type `Str -> {name: Str}` and informal
+type `Write the name of an important researcher in the given field.` guiding the
+generation of the output (i.e. informal types get added to the LLM prompt).
+
+We can then use the oracle as if it were a function:
+
+```
+> researcher("physics")
+
+{"name" : "Albert Einstein"}
+
+> researcher("biology")
+
+{"name": "Charles Darwin"}
+```
+
+where the inputs and outputs should conform to the given formal type.
+
+### Examples
+
+To help with the induction process one can also build the oracle
+with examples. These are given using the `from` keyword plus an
+array containing the examples.
+
+```
+let examples = [[0, 1], [1, 1], [2, 2], [3, 6], [4, 24], [5, 120]]
+let factorial = oracle(number: Int) -> Int from examples
+```
+
+Then we can induce the output for a new input.
+
+```
+> factorial(6)
+
+720
+
+> factorial(7)
+
+5042
+```
+(Notice the last answer should have been 5040).
+
 
 
 
