@@ -23,6 +23,7 @@ import ms.startup
 class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(filename: Str) -> Object")
+        self.annotation = "Imports a module located at a given filename."
 
     def func(self, args: List[MObject]):
         filename = args[0].value
@@ -50,6 +51,7 @@ class Import(MNativeFunction):
 class Str(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any) -> Str")
+        self.annotation = "Converts a value into a string."
 
     def func(self, args: List[MObject]):
         arg = args[0]
@@ -61,6 +63,7 @@ class Print(MNativeFunction):
     def __init__(self, ip: Interpreter):
         definition = "fun(value: Any) -> Any"
         super().__init__(ip, definition)
+        self.annotation = "Prints a value."
 
     def func(self, args: List[MObject]):
         arg = args[0]
@@ -76,6 +79,7 @@ class Exit(MNativeFunction):
     def __init__(self, ip: Interpreter):
         definition = "fun(_: Null) -> Null"
         super().__init__(ip, definition)
+        self.annotation = "Exits the program."
 
     def func(self, args: List[MObject]):
         self.interpreter.exit()
@@ -85,6 +89,7 @@ class Dump(MNativeFunction):
     def __init__(self, ip: Interpreter):
         definition = "fun() -> Null"
         super().__init__(ip, definition)
+        self.annotation = "Prints the current environment and its parents."
 
     def func(self, args: List[MObject]):
         env = self.interpreter.env
@@ -103,6 +108,7 @@ class Dump(MNativeFunction):
 class GetEnv(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun() -> Object")
+        self.annotation = "Returns the current environment."
 
     def func(self, args: List[MObject]):
         return MValue(self.interpreter.env.vars, None)
@@ -111,6 +117,7 @@ class GetEnv(MNativeFunction):
 class TypeOf(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any) -> Type")
+        self.annotation = "Returns the type of the value."
 
     def func(self, args: List[MObject]):
         arg = args[0]
@@ -119,7 +126,8 @@ class TypeOf(MNativeFunction):
 
 class Assert(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(value: Bool) -> Bool")
+        super().__init__(ip, "fun(condition: Bool) -> Bool")
+        self.annotation = "Asserts the condition."
 
     def func(self, args: List[MObject]):
         arg = args[0]
@@ -131,6 +139,7 @@ class Assert(MNativeFunction):
 class Error(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(message: Str?) -> Null")
+        self.annotation = "Throws a runtime error."
 
     def func(self, args: List[MObject]):
         arg = args[0]
@@ -144,6 +153,7 @@ class Error(MNativeFunction):
 class IsSubtype(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(subtype: Type, supertype: Type) -> Bool")
+        self.annotation = "Checks whether a type is a subtype of another type."
 
     def func(self, args: List[MObject]):
         try:
@@ -156,6 +166,7 @@ class IsSubtype(MNativeFunction):
 class Schema(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Type) -> Str")
+        self.annotation = "Returns the JSON schema of a type."
         self.printer = JSONSchema()
 
     def func(self, args: List[MObject]):
@@ -170,6 +181,7 @@ class Schema(MNativeFunction):
 class BNF(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Type) -> Str")
+        self.annotation = "Returns the BNF grammar of a type."
         self.formatter = BNFFormatter()
 
     def func(self, args: List[MObject]):
@@ -184,10 +196,11 @@ class BNF(MNativeFunction):
 class Size(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any) -> Int?")
+        self.annotation = "Returns the size of a collection or a string."
 
     def func(self, args: List[MObject]):
         arg = args[0]
-        if type(arg) != MValue or type(arg.value) not in [list, dict]:
+        if type(arg) != MValue or type(arg.value) not in [list, dict, str]:
             return MValue(None, None)
         return MValue(len(arg.value), None)
 

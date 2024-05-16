@@ -259,9 +259,6 @@ class Lexer:
         if c == "?":
             return self.add_token(TokenType.QUESTION, "?")
 
-        if c == "!":
-            return self.add_token(TokenType.BANG, "!")
-
         if c == "." and not self.is_digit(self.peek()):
             return self.add_token(TokenType.PERIOD, ".")
 
@@ -286,6 +283,7 @@ class Lexer:
             if not self.is_at_end() and self.peek() == "=":
                 self.advance()
                 return self.add_token(TokenType.NEQ, "!=")
+            return self.add_token(TokenType.BANG, "!")
 
         if c == "<":
             if not self.is_at_end() and self.peek() == "=":

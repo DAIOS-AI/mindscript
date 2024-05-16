@@ -84,6 +84,7 @@ class MFunction(MObject):
         self._ip = ip
         self._env = ip.env
         self._definition = definition
+        self._operator = definition.operator
 
         # Create input  types.
         self._intypes = []
@@ -158,7 +159,7 @@ class MFunction(MObject):
         return funcobj
 
     def error(self, msg: str):
-        self.interpreter.error(self.definition.operator, msg)
+        self.interpreter.error(self._operator, msg)
 
     @abstractmethod
     def func(self, args: List[MObject]) -> MObject:

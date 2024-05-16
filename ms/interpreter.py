@@ -211,6 +211,14 @@ class Interpreter:
             elif operator.ttype == ast.TokenType.NEQ:
                 return MValue(lvalue != rvalue, None)
             self.error(operator, "Unexpected operator for string operands.")
+        
+        elif type(lvalue) == list and type(rvalue) == list:
+            if operator.ttype == ast.TokenType.PLUS:
+                return MValue(lvalue + rvalue, None)
+
+        elif type(lvalue) == dict and type(rvalue) == dict:
+            if operator.ttype == ast.TokenType.PLUS:
+                return MValue(lvalue | rvalue, None)
 
         self.error(operator, "Wrong operand types.")
 
@@ -331,11 +339,9 @@ class Interpreter:
             setter = setter_expr.value
             index = index_expr.value
 
-            if type(index) == str and index in setter:
+            if type(index) == str:
                 setter[index] = value
                 return value
-            self.error(
-                operator, "Attempted to assign to an unknown property.")
         elif isinstance(target, ast.ArraySet):
             setter_expr = target.expr.accept(self)
             index_expr = target.index.accept(self)
