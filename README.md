@@ -215,27 +215,22 @@ else
 end
 ```
 
-**For-loops** come in three forms: iteration over the elements of an *array*,
-over the key-value pairs of an *object*, and over the outputs of
-an *iterator* (see below). The entire for-loop evaluates to the last evaluated
+**For-loops** iterate over the outputs of an *iterator* (see below). 
+The entire for-loop evaluates to the last evaluated
 expression, i.e. as if the executions of its body are concatenated.
+
 ```
-for v in [1, 2, 3] do
-    print(v)
-end
-
-for [key, value] in {"x": 1, "y": 2, "z": 3} do
-    print("(key, value) = " + str(key, value))
-end
-
-for v in iter do
+for v in iterator do
     print(v)
 end
 ```
 
 An iterator is a "function" of type `Null -> Any` that generates a sequence
 of values. These are typically implemented using closures. The for loop will
-repeatedly call an iterator `iter` as `iter()` until it returns a `null` value.
+repeatedly call `iterator()` until it returns a `null` value.
+
+Iterators can be custom, or created from arrays and dictionaries using the
+`iter(value: Any) -> Null -> Any` built-in function.
 
 In addition, the flow of execution can be modified through
 - `continue( expr )`, which evaluates to `expr` and initiates the next iteration,
