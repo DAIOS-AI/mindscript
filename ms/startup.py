@@ -41,6 +41,7 @@ def interpreter(interactive=False):
     ip.define("match", string.Match(ip=ip))
     ip.define("replace", string.Replace(ip=ip))
 
+    ip.define("iter", collections.Iter(ip=ip))
     ip.define("slice", collections.Slice(ip=ip))
     ip.define("push", collections.Push(ip=ip))
     ip.define("pop", collections.Pop(ip=ip))

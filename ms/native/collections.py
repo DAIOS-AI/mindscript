@@ -8,6 +8,58 @@ import math
 # Dictionaries/Hashes: put, get, remove, keys, values
 # Sets: add, remove, union, intersection
 
+class Iter(MNativeFunction):
+
+    class ArrayIterator(MNativeFunction):
+        def __init__(self, ip: Interpreter, array: list):
+            super().__init__(ip, "fun(_: Null) -> Any?")
+            self.annotation = "An array iterator."
+            self.array = array
+            self.index = 0
+
+        def func(self, args: List[MObject]):
+            index = self.index
+            if index < len(self.array):
+                self.index += 1
+                return self.array[index]
+            return MValue(None, None)
+        
+    class ObjectIterator(MNativeFunction):
+        def __init__(self, ip: Interpreter, obj: dict):
+            super().__init__(ip, "fun(_: Null) -> Any?")
+            self.annotation = "An object iterator."
+            self.array = []
+            for key, value in obj.items():
+                print(key, value, type(key), type(value))
+                keyval = MValue(key, None)
+                pair = [keyval, value]
+                self.array.append(pair)
+            self.index = 0
+
+        def func(self, args: List[MObject]):
+            index = self.index
+            if index < len(self.array):
+                self.index += 1
+                return MValue(self.array[index])
+            return MValue(None, None)
+
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any) -> Any")
+        self.annotation = "Creates an iterator function from the value."
+
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        if type(arg) != MValue:
+            return MValue(None, None)
+        
+        value = arg.value
+        if type(value) == list:
+            return Iter.ArrayIterator(self.interpreter, value)
+        elif type(value) == dict:
+            return Iter.ObjectIterator(self.interpreter, value)
+        return MValue(None, None)
+
+
 
 class Slice(MNativeFunction):
     def __init__(self, ip: Interpreter):
@@ -59,6 +111,8 @@ class Unshift(MNativeFunction):
     def func(self, args: List[MObject]):
         arr = args[0]
         return arr.value.pop(0)
+
+
 
 
 class Map(MNativeFunction):

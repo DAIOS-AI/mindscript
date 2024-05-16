@@ -97,10 +97,10 @@ let range = fun(start: Int, stop: Int) -> (Null -> Int?) do
 end
 
 print("\nLoops over arrays.")
-for let x in ["1", "2", "3"] do print(x) end
+for let x in iter(["1", "2", "3"]) do print(x) end
 
 print("\nLoops over objects.")
-for let x in {"x": 1, "y": 2, "z": 3} do print(x) end
+for let x in iter({"x": 1, "y": 2, "z": 3}) do print(x) end
 
 print("\nLoops over iterators.")
 for let x in range(1, 4) do print(x) end

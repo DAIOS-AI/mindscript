@@ -459,30 +459,7 @@ class Interpreter:
         value = None
         target = node.target
         iterator = node.iterator.accept(self)
-        if type(iterator) == MValue and type(iterator.value) == list:
-            env = Environment(enclosing=self.env)
-            for iter in iterator.value:
-                try:
-                    self.destructure(env, target, node.operator, iter, define=True)
-                    value = self.execute_block(node.expr, env)
-                except ast.Break as e:
-                    value = e.expr
-                    break
-                except ast.Continue as e:
-                    pass
-        elif type(iterator) == MValue and type(iterator.value) == dict:
-            env = Environment(enclosing=self.env)
-            for iter in iterator.value.items():
-                iter = MValue([MValue(iter[0], None), iter[1]], None)
-                try:
-                    self.destructure(env, target, node.operator, iter, define=True)
-                    value = self.execute_block(node.expr, env)
-                except ast.Break as e:
-                    value = e.expr
-                    break
-                except ast.Continue as e:
-                    pass
-        elif isinstance(iterator, MFunction):
+        if isinstance(iterator, MFunction):
             env = Environment(enclosing=self.env)
             iter = iterator.call(node.operator, [MValue(None, None)])
             while type(iter) != MValue or iter.value is not None:
@@ -497,7 +474,7 @@ class Interpreter:
                 iter = iterator.call(node.operator, [MValue(None, None)])
         else:
             self.error(node.operator,
-                       "Can only iterate over array, object, or callable.")
+                       "Can only iterate over an iterator function.")
         return value
 
     def call(self, node: ast.Expr):
