@@ -21,6 +21,16 @@ import ms.startup
 #         return self.checker.check(typedata, data)
 
 
+def flattened_env(env: Environment):
+    fenv = dict()
+    while env is not None:
+        for key, val in env.vars.items():
+            if key not in fenv:
+                fenv[key] = val
+        env = env.enclosing
+    return fenv
+
+
 class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(filename: Str) -> Object")
@@ -35,13 +45,7 @@ class Import(MNativeFunction):
             ip = ms.startup.interpreter()
             ip.env = Environment(enclosing=ip.env)
             ip.eval(code)
-            module = dict()
-            env = ip.env
-            while env is not None:
-                for key, val in env.vars.items():
-                    if key not in module:
-                        module[key] = val
-                env = env.enclosing
+            module = flattened_env(ip.env)
         except FileNotFoundError as e:
             self.error(f"File not found: {filename}")
         except Exception as e:
@@ -112,7 +116,8 @@ class GetEnv(MNativeFunction):
         self.annotation = "Returns the current environment."
 
     def func(self, args: List[MObject]):
-        return MValue(self.interpreter.env.vars, None)
+        env = flattened_env(self.interpreter.env)
+        return MValue(env, None)
 
 
 class TypeOf(MNativeFunction):

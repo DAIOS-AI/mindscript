@@ -41,6 +41,7 @@ def interpreter(interactive=False):
     ip.define("lstrip", string.LStrip(ip=ip))
     ip.define("rstrip", string.RStrip(ip=ip))
     ip.define("split", string.Split(ip=ip))
+    ip.define("join", string.Join(ip=ip))
     ip.define("match", string.Match(ip=ip))
     ip.define("replace", string.Replace(ip=ip))
 
