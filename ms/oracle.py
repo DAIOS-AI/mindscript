@@ -1,5 +1,4 @@
 import requests
-import dotenv
 import os
 import json
 from typing import List, Any
@@ -9,7 +8,6 @@ from ms.objects import MType, MValue, MObject, MFunction
 import ms.ast as ast
 
 
-dotenv.load_dotenv()
 max_tokens = 1000
 
 api_url = "http://localhost:8080/completion"

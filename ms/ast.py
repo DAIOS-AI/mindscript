@@ -265,8 +265,7 @@ class Program(BaseModel):
 
 
 class TypeExpr(Expr):
-    annotation: Optional[str]
-    pass
+    annotation: Optional[str] = None
 
 
 class TypeDefinition(Expr):
