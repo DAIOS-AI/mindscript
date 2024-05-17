@@ -1,4 +1,5 @@
 from typing import List, Any
+from copy import deepcopy
 from ms.objects import MNativeFunction, MValue, MObject
 from ms.interpreter import Interpreter, Environment
 from ms.types import TypeChecker
@@ -204,11 +205,13 @@ class Size(MNativeFunction):
             return MValue(None, None)
         return MValue(len(arg.value), None)
 
-# class Append(MNativeFunction):
-#     def __init__(self, ip: Interpreter):
-#         super().__init__(ip, "fun(array: Array, value: Any) -> Array")
 
-#     def func(self, args: List[MObject]):
-#         array = args[0]
-#         value = args[1]
-#         return MValue(array.value + , None)
+class Clone(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any) -> Any")
+        self.annotation = "Makes a deep clone of a value."
+
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        return deepcopy(arg)
+

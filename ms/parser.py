@@ -499,6 +499,8 @@ class Parser:
 
         if self.match([TokenType.COLON]):
             ptype = self.parse_type_expr()
+            if type(ptype) == ast.TypeBinary:
+                ptype = ast.TypeGrouping(expr=ptype)
         else:
             last_token = self.previous()
             ptype = self.any_type_terminal(last_token.line, last_token.col)

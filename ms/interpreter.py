@@ -219,6 +219,12 @@ class Interpreter:
         elif type(lvalue) == dict and type(rvalue) == dict:
             if operator.ttype == ast.TokenType.PLUS:
                 return MValue(lvalue | rvalue, None)
+            
+        elif lvalue is None or rvalue is None:
+            if operator.ttype == ast.TokenType.EQ:
+                return MValue(lvalue is None and rvalue is None)
+            elif operator.ttype == ast.TokenType.NEQ:
+                return MValue(lvalue is not None or rvalue is not None)
 
         self.error(operator, "Wrong operand types.")
 

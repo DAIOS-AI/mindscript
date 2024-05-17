@@ -4,9 +4,11 @@ from ms.interpreter import Interpreter
 import re
 import math
 
-# Arrays/Lists: push, pop, shift, unshift, map, filter, reduce, find
-# Dictionaries/Hashes: put, get, remove, keys, values
+# Arrays/Objects: iter
+# Arrays: slice, push, pop, shift, unshift, map, filter, reduce, find
+# Objects: delete, keys, values
 # Sets: add, remove, union, intersection
+
 
 class Iter(MNativeFunction):
 
@@ -23,7 +25,7 @@ class Iter(MNativeFunction):
                 self.index += 1
                 return self.array[index]
             return MValue(None, None)
-        
+
     class ObjectIterator(MNativeFunction):
         def __init__(self, ip: Interpreter, obj: dict):
             super().__init__(ip, "fun(_: Null) -> Any?")
@@ -51,14 +53,13 @@ class Iter(MNativeFunction):
         arg = args[0]
         if type(arg) != MValue:
             return MValue(None, None)
-        
+
         value = arg.value
         if type(value) == list:
             return Iter.ArrayIterator(self.interpreter, value)
         elif type(value) == dict:
             return Iter.ObjectIterator(self.interpreter, value)
         return MValue(None, None)
-
 
 
 class Slice(MNativeFunction):
@@ -113,73 +114,74 @@ class Unshift(MNativeFunction):
         return arr.value.pop(0)
 
 
-
-
-class Map(MNativeFunction):
-    def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(string: Str) -> Str")
-        self.annotation = "Converts a string to uppercase."
-
-    def func(self, args: List[MObject]):
-        arg = args[0]
-        return MValue(arg.value.upper(), None)
-
-
-class Reduce(MNativeFunction):
-    def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(string: Str) -> Str")
-        self.annotation = "Converts a string to uppercase."
-
-    def func(self, args: List[MObject]):
-        arg = args[0]
-        return MValue(arg.value.upper(), None)
-
-
-class Find(MNativeFunction):
-    def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(string: Str) -> Str")
-        self.annotation = "Converts a string to uppercase."
-
-    def func(self, args: List[MObject]):
-        arg = args[0]
-        return MValue(arg.value.upper(), None)
-
-
-class Define(MNativeFunction):
-    def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(string: Str) -> Str")
-        self.annotation = "Converts a string to uppercase."
-
-    def func(self, args: List[MObject]):
-        arg = args[0]
-        return MValue(arg.value.upper(), None)
-
-
 class Delete(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(string: Str) -> Str")
-        self.annotation = "Converts a string to uppercase."
+        super().__init__(ip, "fun(obj: Object, prop: Str) -> Object")
+        self.annotation = "Deletes a property from an object."
 
     def func(self, args: List[MObject]):
-        arg = args[0]
-        return MValue(arg.value.upper(), None)
+        obj, prop = args
+        del obj.value[prop.value]
+        return obj
 
 
 class Keys(MNativeFunction):
+    class ObjectKeyIterator(MNativeFunction):
+        def __init__(self, ip: Interpreter, obj: dict):
+            super().__init__(ip, "fun(_: Null) -> Str?")
+            self.annotation = "An object key iterator."
+            self.array = []
+            for key in obj.keys():
+                keyval = MValue(key, None)
+                self.array.append(keyval)
+            self.index = 0
+
+        def func(self, args: List[MObject]):
+            index = self.index
+            if index < len(self.array):
+                self.index += 1
+                return self.array[index]
+            return MValue(None, None)
+            
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(string: Str) -> Str")
-        self.annotation = "Converts a string to uppercase."
+        super().__init__(ip, "fun(obj: Object) -> (Null -> Str?)")
+        self.annotation = "Returns an iterator over an object's keys."
 
     def func(self, args: List[MObject]):
         arg = args[0]
-        return MValue(arg.value.upper(), None)
+        return Keys.ObjectKeyIterator(self.interpreter, arg.value)
 
 
 class Values(MNativeFunction):
+    class ObjectValueIterator(MNativeFunction):
+        def __init__(self, ip: Interpreter, obj: dict):
+            super().__init__(ip, "fun(_: Null) -> Any?")
+            self.annotation = "An object key iterator."
+            self.array = []
+            for value in obj.values():
+                self.array.append(value)
+            self.index = 0
+
+        def func(self, args: List[MObject]):
+            index = self.index
+            if index < len(self.array):
+                self.index += 1
+                return self.array[index]
+            return MValue(None, None)
+            
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(string: Str) -> Str")
-        self.annotation = "Converts a string to uppercase."
+        super().__init__(ip, "fun(obj: Object) -> (Null -> Any?)")
+        self.annotation = "Returns an iterator over an object's values."
 
     def func(self, args: List[MObject]):
         arg = args[0]
-        return MValue(arg.value.upper(), None)
+        return Values.ObjectValueIterator(self.interpreter, arg.value)
+
+class Exists(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(obj: Object, key: Str) -> Bool")
+        self.annotation = "Checks whether a key exists."
+
+    def func(self, args: List[MObject]):
+        obj, key = args
+        return MValue(key.value in obj.value, None)

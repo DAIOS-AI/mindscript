@@ -30,7 +30,9 @@ class Printer():
 
     def shorten(self, string):
         string = string.replace("\n", " ")
-        string = re.sub(" +", " ", string)
+        string = re.sub(r" +", " ", string)
+        string = re.sub(r" (\]|\)|\])", r"\1", string)
+        string = re.sub(r"(\[|\(|\{) ", r"\1", string)
         return string
 
     def shorten_if_possible(self, long):

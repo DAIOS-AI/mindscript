@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Any
 from abc import abstractmethod
 import ms.ast as ast
 from copy import deepcopy
@@ -22,6 +22,38 @@ class MValue(MObject):
         self._value = value
         self._annotation = annotation
 
+    def wrap(val: Any):
+        if type(val) in [type(None), bool, int, float, str]:
+            return MValue(val, None)
+        elif type(val) == list:
+            mval = []
+            for subval in val:
+                mval.append(MValue.wrap(subval))
+            return MValue(mval)
+        elif type(val) == dict:
+            mval = {}
+            for key, subval in val.items():
+                mval[key] = MValue.wrap(subval)
+            return MValue(mval)
+        raise ValueError(f"Cannot pack a value of type {type(val)}.")
+    
+    def unwrap(mval: 'MValue'):
+        if type(mval) != MValue:
+            raise ValueError(f"Cannot unpack a value of type {type(mval)}")
+        elif type(mval.value) in [type(None), bool, int, float, str]:
+            return mval.value
+        elif type(mval.value) == list:
+            val = []
+            for subval in mval.value:
+                val.append(MValue.unwrap(subval))
+            return val
+        elif type(mval.value) == dict:
+            val = {}
+            for key, subval in mval.value.items():
+                val[key] = MValue.unwrap(subval)
+            return val
+        raise ValueError(f"Cannot unpack a value of type {type(mval.value)}")
+    
     @property
     def value(self):
         return self._value

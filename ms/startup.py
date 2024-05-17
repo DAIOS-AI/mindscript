@@ -2,6 +2,8 @@ import ms.native.std as std
 import ms.native.collections as collections
 import ms.native.math as math
 import ms.native.string as string
+import ms.native.http as http
+import ms.native.system as system
 from ms.interpreter import Interpreter
 
 def interpreter(interactive=False):
@@ -21,6 +23,7 @@ def interpreter(interactive=False):
     ip.define("error", std.Error(ip=ip))
     ip.define("exit", std.Exit(ip=ip))
     ip.define("size", std.Size(ip=ip))
+    ip.define("clone", std.Clone(ip=ip))
 
     ip.define("PI", math.PI)
     ip.define("E", math.E)
@@ -47,7 +50,17 @@ def interpreter(interactive=False):
     ip.define("pop", collections.Pop(ip=ip))
     ip.define("shift", collections.Shift(ip=ip))
     ip.define("unshift", collections.Unshift(ip=ip))
+    ip.define("delete", collections.Delete(ip=ip))
+    ip.define("keys", collections.Keys(ip=ip))
+    ip.define("values", collections.Values(ip=ip))
+    ip.define("exists", collections.Exists(ip=ip))
 
+    ip.eval(http.HTTPParams)
+    ip.define("fetch", http.Fetch(ip=ip))
+
+    ip.define("tsNow", system.TsNow(ip=ip))
+    ip.define("dateNow", system.DateNow(ip=ip))
+    ip.define("random", system.Random(ip=ip))
 
     # Clean the lexer's code buffer.
     ip.parser.lexer.reset()
