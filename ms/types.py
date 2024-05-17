@@ -122,7 +122,7 @@ class TypeChecker():
                 for key, item in v.items():
                     subtype = self._typeof_recursion(item)
                     items[key] = subtype
-                valtype = ast.TypeMap(map=items, required=[])
+                valtype = ast.TypeMap(map=items, required={})
         elif isinstance(value, MFunction):
             # print(f"typechecker._typeof_recursion: v.definition.types = {v.definition.types}")
             valtype = value.definition.types
