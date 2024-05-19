@@ -26,6 +26,7 @@ def interpreter(interactive=False):
     ip.define("clone", std.Clone(ip=ip))
     ip.define("bindFun", std.BindFun(ip=ip))
     ip.define("uid", std.UniqueId(ip=ip))
+    ip.define("annotate", std.Annotate(ip=ip))
 
     ip.define("PI", math.PI)
     ip.define("E", math.E)
@@ -72,5 +73,5 @@ def interpreter(interactive=False):
 
     # Clean the lexer's code buffer (disabled now).
     # ip.parser.lexer.reset()
-    
+
     return ip

@@ -220,6 +220,7 @@ class Clone(MNativeFunction):
         arg = args[0]
         return deepcopy(arg)
 
+
 class BindFun(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any, func: Any -> Any) -> Any -> Any")
@@ -230,6 +231,7 @@ class BindFun(MNativeFunction):
         fun._env.define("this", obj)
         return fun
 
+
 class UniqueId(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any) -> Int")
@@ -238,3 +240,14 @@ class UniqueId(MNativeFunction):
     def func(self, args: List[MObject]):
         value = args[0]
         return MValue(id(value), None)
+
+
+class Annotate(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any, annotation: Str) -> Any")
+        self.annotation = "Annotates a value."
+
+    def func(self, args: List[MObject]):
+        value, note = args
+        value.annotation = note.value
+        return value
