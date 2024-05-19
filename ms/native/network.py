@@ -34,9 +34,9 @@ HTTPParams = """let HTTPParams = type {
     body: Object 
 }"""
 
-class Fetch(MNativeFunction):
+class HTTP(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(params: HTTPParams?, method: Str, url: Str) -> Object")
+        super().__init__(ip, "fun(params: HTTPParams?, method: Str?, url: Str) -> Object")
         self.annotation = "Makes an HTTP request."
 
     def func(self, args: List[MObject]):
@@ -45,6 +45,9 @@ class Fetch(MNativeFunction):
         params = MValue.unwrap(wparams)
         if params is None:
             params = {}
+        method = MValue.unwrap(method)
+        if method is None:
+            method = MValue("GET", None)
         try:
             with requests.request(method.value, url.value, **params) as response:
                 result = {

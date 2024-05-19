@@ -2,14 +2,14 @@ import ms.native.std as std
 import ms.native.collections as collections
 import ms.native.math as math
 import ms.native.string as string
-import ms.native.http as http
+import ms.native.network as network
 import ms.native.system as system
 from ms.interpreter import Interpreter
 
 def interpreter(interactive=False):
     ip = Interpreter(interactive=interactive)
 
-    # Register native functions.
+    # Register built-in native symbols.
     ip.define("import", std.Import(ip=ip))
     ip.define("str", std.Str(ip=ip))
     ip.define("print", std.Print(ip=ip))
@@ -24,6 +24,8 @@ def interpreter(interactive=False):
     ip.define("exit", std.Exit(ip=ip))
     ip.define("size", std.Size(ip=ip))
     ip.define("clone", std.Clone(ip=ip))
+    ip.define("bindFun", std.BindFun(ip=ip))
+    ip.define("uid", std.UniqueId(ip=ip))
 
     ip.define("PI", math.PI)
     ip.define("E", math.E)
@@ -56,13 +58,19 @@ def interpreter(interactive=False):
     ip.define("values", collections.Values(ip=ip))
     ip.define("exists", collections.Exists(ip=ip))
 
-    ip.eval(http.HTTPParams)
-    ip.define("fetch", http.Fetch(ip=ip))
+    ip.eval(network.HTTPParams)
+    ip.define("http", network.HTTP(ip=ip))
 
     ip.define("tsNow", system.TsNow(ip=ip))
     ip.define("dateNow", system.DateNow(ip=ip))
     ip.define("random", system.Random(ip=ip))
 
-    # Clean the lexer's code buffer.
-    ip.parser.lexer.reset()
+    # Register built-in symbols.
+    with open("ms/lib/std.ms") as fh:
+        code = fh.read()
+        ip.eval(code)
+
+    # Clean the lexer's code buffer (disabled now).
+    # ip.parser.lexer.reset()
+    
     return ip

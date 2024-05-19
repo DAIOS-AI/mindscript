@@ -174,9 +174,9 @@ class Interpreter:
             elif operator.ttype == ast.TokenType.MOD:
                 return MValue(lvalue % rvalue, None)
             elif operator.ttype == ast.TokenType.GREATER:
-                return MValue(lvalue < rvalue, None)
+                return MValue(lvalue > rvalue, None)
             elif operator.ttype == ast.TokenType.GREATER_EQ:
-                return MValue(lvalue <= rvalue, None)
+                return MValue(lvalue >= rvalue, None)
             elif operator.ttype == ast.TokenType.LESS:
                 return MValue(lvalue < rvalue, None)
             elif operator.ttype == ast.TokenType.LESS_EQ:
