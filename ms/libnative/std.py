@@ -242,12 +242,21 @@ class UniqueId(MNativeFunction):
         return MValue(id(value), None)
 
 
-class Annotate(MNativeFunction):
+class SetAnnotation(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(value: Any, annotation: Str) -> Any")
+        super().__init__(ip, "fun(value: Any, annotation: Str?) -> Any")
         self.annotation = "Annotates a value."
 
     def func(self, args: List[MObject]):
         value, note = args
         value.annotation = note.value
         return value
+
+class GetAnnotation(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any) -> Str?")
+        self.annotation = "Get a value's annotation."
+
+    def func(self, args: List[MObject]):
+        value = args[0]
+        return MValue(value.annotation, None)

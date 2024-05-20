@@ -5,16 +5,36 @@
 
 " null
 
-print("\n# Assigning [let x, let x] = [0, 1].\n# Should print: [0, 1]")
-[let x, let y] = [0, 1]
-print([x, y])
+print("Equality.\n")
+assert(true == true)
+assert(true != false)
+assert(1 == 1)
+assert(1. == 1.)
+assert(1 == 1.)
+assert("a string" == "a string")
+assert("a string" != "another string")
+assert([0, 1] == [0, 1])
+assert([] != [0, 1])
+assert({name: "name", age: 21} == {name: "name", age: 21})
+assert({name: "name", age: 21} != {name: "name", age: 21, hobbies: null})
+assert(let MyType = type [Int, Str] == type [Int, Str])
+let f = fun(n) do n end
+let g = fun(n) do n end
+let h = f 
+assert(f == f)
+assert(f == h)
+assert(f != g)
 
-print("\n# Distinguishing calls from bracket expressions.\n# Should print: true")
+print("Assignments.\n")
+[let x, let y] = [0, 1]
+assert(x == 0 and y == 1)
+
+print("Distinguish parenthesized expressions from calls.\n")
 let x = false
 (let x = true)
-print(x)
+assert(x == true)
 
-print("\n# Closure test.\n # Should print: outer")
+print("Testing closures 1.\n")
 let x = "global"
 let outer = fun() do
   let x = "outer"
@@ -24,10 +44,9 @@ let outer = fun() do
   inner()
 end
 
-outer()
+assert(outer() == "outer")
 
-
-print("\n# Closure test.\n# Should print: local")
+print("Testing closures 2.\n")
 let makeClosure = fun() do
     let local = "local"
     let closure = fun() do print(local) end
@@ -35,45 +54,40 @@ let makeClosure = fun() do
 end
 
 let closure = makeClosure()
-closure()
+assert(closure() == "local")
 
-
-print("\n# Closure test and callback: Creating an adder fun.\n# Should print: 8")
+print("Testing closures 3.\n")
 let createAdder = fun(n: Int) -> Int -> Int do
     fun(m: Int) -> Int do (n + m) end
 end
 
 let adder = createAdder(5)
-print(adder(3))
+assert(adder(3) == 8)
 
-print("\n# Creating a point structure and adder fun.\n")
+print("Point objects and point adding functions.\n")
 let Point = type {"x": Num, "y": Num}
 print(Point)
 
-let point = fun(point: [Num, Num]) -> Point do
-  {"x": point[0], "y": point[1]}
+let point = fun(x: Num, y: Num) -> Point do
+  {"x": x, "y": y}
 end
-print(point)
 
-let point_add = fun(points: [Point, Point]) -> Point do
-  [let p, let q] = points
-  {"x": p.x + q.x, "y": p.y + q.y}
+let point_add = fun(p: Point, q: Point) -> Point do
+  point(p.x + q.x, p.y + q.y)
 end
-print(point_add)
 
-[let p, let q] = [point([1., -1.]), point([-1., 1.])]
-print(p)
-print(q)
+[let p, let q] = [point(1., -1.), point(-1., 1.)]
+assert(p == {x: 1., y: -1.})
+assert(q == {x: -1., y: 1.})
 
-let r = point_add([p, q])
-print(r)
+let r = point_add(p, q)
+assert(r == {x: 0., y: 0.})
 
-print("Should be [0, 0]")
-
-print("\n# Testing annotations.")
+print("Annotations.\n")
 # "The speed of light in m/s"
 let speed = 300000000
 print(speed)
+
 
 # "computes the factorial of a given integer."
 let factorial = fun(n: Int) -> Int do
@@ -127,12 +141,10 @@ end
 let age = show_age({"age": 45, "name": "something"})
 print("Should print '45': " + str(age))
 
-print("# Trying oracle funs.")
+print("# Trying oracle functions.")
 # "Determine the distance of the planet to the sun in astronomical units."
 let au = oracle(planet: Str) -> Num
 
-print("AU Mercury      : " + str(au("Mercury")))
-print("AU Venus        : " + str(au("Venus")))
 print("AU Earth        : " + str(au("Earth")))
 
 print("# Testing for subtypes.")
@@ -142,3 +154,4 @@ assert(issubtype(type [], type Array))
 
 assert(issubtype(type Object, type Object))
 assert(issubtype(type {}, type Object))
+

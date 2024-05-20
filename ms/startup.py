@@ -1,9 +1,9 @@
-import ms.native.std as std
-import ms.native.collections as collections
-import ms.native.math as math
-import ms.native.string as string
-import ms.native.network as network
-import ms.native.system as system
+import ms.libnative.std as std
+import ms.libnative.collections as collections
+import ms.libnative.math as math
+import ms.libnative.string as string
+import ms.libnative.network as network
+import ms.libnative.system as system
 from ms.interpreter import Interpreter
 
 def interpreter(interactive=False):
@@ -26,7 +26,8 @@ def interpreter(interactive=False):
     ip.define("clone", std.Clone(ip=ip))
     ip.define("bindFun", std.BindFun(ip=ip))
     ip.define("uid", std.UniqueId(ip=ip))
-    ip.define("annotate", std.Annotate(ip=ip))
+    ip.define("setAnnotation", std.SetAnnotation(ip=ip))
+    ip.define("getAnnotation", std.GetAnnotation(ip=ip))
 
     ip.define("PI", math.PI)
     ip.define("E", math.E)

@@ -122,6 +122,34 @@ class Interpreter:
         value.annotation = annotation
         return value
 
+    def compare(self, lvalue: MObject, rvalue: MObject):
+        if type(lvalue) == MValue and type(rvalue) == MValue:
+            x = lvalue.value
+            y = rvalue.value
+            if x is None and y is None:
+                return True
+            elif type(x) == bool and type(y) == bool:
+                return x == y
+            elif (type(x) == int or type(x) == float) and (type(y) == int or type(y) == float):
+                return x == y
+            elif type(x) == str and type(y) == str: 
+                return x == y
+            elif type(x) == list and type(y) == list:
+                if len(x) == len(y):
+                    return all(self.compare(subx, suby) for subx, suby in zip(x, y))
+                else:
+                    return False
+            elif type(x) == dict and type(y) == dict:
+                if len(x) == len(y):
+                    return all(self.compare(x[key], y[key]) for key in x.keys())
+                else:
+                    return False
+        elif type(lvalue) == MType and type(lvalue) == MType:
+            return self.issubtype(lvalue, rvalue) and self.issubtype(rvalue, lvalue)
+        elif isinstance(lvalue, MFunction) and isinstance(rvalue, MFunction):
+            return id(lvalue) == id(rvalue)
+        return False
+
     def binary(self, node: ast.Expr):
 
         operator = node.operator
@@ -152,6 +180,12 @@ class Interpreter:
         # Standard operators.
         lexpr = node.left.accept(self)
         rexpr = node.right.accept(self)
+
+        if operator.ttype == ast.TokenType.EQ:
+            return MValue(self.compare(lexpr, rexpr), None)
+        if operator.ttype == ast.TokenType.NEQ:
+            return MValue(not self.compare(lexpr, rexpr), None)
+
         if type(lexpr) != MValue or type(rexpr) != MValue:
             self.error(operator, "Wrong operand types.")
 
@@ -181,19 +215,8 @@ class Interpreter:
                 return MValue(lvalue < rvalue, None)
             elif operator.ttype == ast.TokenType.LESS_EQ:
                 return MValue(lvalue <= rvalue, None)
-            elif operator.ttype == ast.TokenType.EQ:
-                return MValue(lvalue == rvalue, None)
-            elif operator.ttype == ast.TokenType.NEQ:
-                return MValue(lvalue != rvalue, None)
             self.error(
                 operator, "Unexpected operator for integer/number operands.")
-
-        elif type(lvalue) == bool and type(rvalue) == bool:
-            if operator.ttype == ast.TokenType.EQ:
-                return MValue(lvalue == rvalue, None)
-            elif operator.ttype == ast.TokenType.NEQ:
-                return MValue(lvalue != rvalue, None)
-            self.error(operator, "Unexpected operator for boolean operands.")
 
         elif type(rvalue) == str and type(lvalue) == str:
             if operator.ttype == ast.TokenType.PLUS:
@@ -206,10 +229,6 @@ class Interpreter:
                 return MValue(lvalue < rvalue, None)
             elif operator.ttype == ast.TokenType.LESS_EQ:
                 return MValue(lvalue <= rvalue, None)
-            elif operator.ttype == ast.TokenType.EQ:
-                return MValue(lvalue == rvalue, None)
-            elif operator.ttype == ast.TokenType.NEQ:
-                return MValue(lvalue != rvalue, None)
             self.error(operator, "Unexpected operator for string operands.")
         
         elif type(lvalue) == list and type(rvalue) == list:
@@ -220,12 +239,6 @@ class Interpreter:
             if operator.ttype == ast.TokenType.PLUS:
                 return MValue(lvalue | rvalue, None)
             
-        elif lvalue is None or rvalue is None:
-            if operator.ttype == ast.TokenType.EQ:
-                return MValue(lvalue is None and rvalue is None)
-            elif operator.ttype == ast.TokenType.NEQ:
-                return MValue(lvalue is not None or rvalue is not None)
-
         self.error(operator, "Wrong operand types.")
 
     def unary(self, node: ast.Expr):
