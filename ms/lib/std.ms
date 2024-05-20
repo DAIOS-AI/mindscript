@@ -60,7 +60,7 @@ let natural = fun(_: Null) -> (Null -> Int?) do
 end
 
 # "The positive integers."
-let positive = fun(_: Null) -> (Null -> Int?) do
+let natural0 = fun(_: Null) -> (Null -> Int?) do
     range(0, null)
 end
 
@@ -69,5 +69,4 @@ let www = fun(url: Str) -> Str do
     http(null, "GET", url).text
 end
 
-# "Extract the requested information from the text."
-let extract = oracle(text: Str, request: Str) -> {result: Str}
+

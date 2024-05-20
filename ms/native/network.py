@@ -45,8 +45,7 @@ class HTTP(MNativeFunction):
         params = MValue.unwrap(wparams)
         if params is None:
             params = {}
-        method = MValue.unwrap(method)
-        if method is None:
+        if method.value is None:
             method = MValue("GET", None)
         try:
             with requests.request(method.value, url.value, **params) as response:

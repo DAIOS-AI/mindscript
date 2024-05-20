@@ -185,3 +185,4 @@ class Exists(MNativeFunction):
     def func(self, args: List[MObject]):
         obj, key = args
         return MValue(key.value in obj.value, None)
+    
