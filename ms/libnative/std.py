@@ -63,6 +63,52 @@ class Str(MNativeFunction):
         repr = self.interpreter.print(arg)
         return MValue(repr, None)
 
+class Bool(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any) -> Bool?")
+        self.annotation = "Converts a value into a boolean."
+
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        try:
+            if type(arg) == MValue:
+                repr = bool(arg.value)
+                return MValue(repr, None)
+        except ValueError:
+            pass
+        return MValue(None, None)
+
+class Int(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any) -> Int?")
+        self.annotation = "Converts a value into an integer."
+
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        try:
+            if type(arg) == MValue:
+                repr = int(arg.value)
+                return MValue(repr, None)
+        except ValueError:
+            pass
+        return MValue(None, None)
+
+class Num(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any) -> Num?")
+        self.annotation = "Converts a value into a string."
+
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        try:
+            if type(arg) == MValue:
+                repr = float(arg.value)
+                return MValue(repr, None)
+        except ValueError:
+            pass
+        return MValue(None, None)
+
+
 
 class Print(MNativeFunction):
     def __init__(self, ip: Interpreter):

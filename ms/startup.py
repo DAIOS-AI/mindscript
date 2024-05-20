@@ -12,6 +12,9 @@ def interpreter(interactive=False):
     # Register built-in native symbols.
     ip.define("import", std.Import(ip=ip))
     ip.define("str", std.Str(ip=ip))
+    ip.define("bool", std.Bool(ip=ip))
+    ip.define("int", std.Int(ip=ip))
+    ip.define("num", std.Num(ip=ip))
     ip.define("print", std.Print(ip=ip))
     ip.define("dump", std.Dump(ip=ip))
     ip.define("getEnv", std.GetEnv(ip=ip))
