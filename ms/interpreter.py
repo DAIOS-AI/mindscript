@@ -62,7 +62,7 @@ class Interpreter:
     def __init__(self, interactive=False):
         self.printer = Printer()
         self.parser = Parser(interactive=interactive)
-        self.checker = TypeChecker()
+        self.checker = TypeChecker(self)
         self.reset()
 
     def reset(self):
@@ -92,8 +92,7 @@ class Interpreter:
         return res
 
     def checktype(self, value: MObject, required: MType) -> bool:
-        value_type = self.typeof(value)
-        return self.issubtype(value_type, required)
+        return self.checker.checktype(value, required)
 
     def define(self, name: str, value: MObject):
         self.env.define(name, value)
@@ -553,12 +552,23 @@ class Interpreter:
             self.error(node.token, "Variable must be a type.")
         return node
 
+    def type_enum(self, node: ast.Expr):
+        operator = node.operator
+        type_expr = node.type_expr.accept(self)
+        values_expr = node.values_expr
+        values = node.values_expr.accept(self)
+        if type(values) != MValue and type(values.value) != list:
+            self.error(operator, "Expected an array of possible values.")
+        typeobj = MType(ip=self, definition=type_expr)
+        for v in values.value:
+            if not self.checktype(v, typeobj):
+                vrepr = self.printer.print(v)
+                self.error(operator, f"Found a value ({v}) that is inconsistent with the enum type.")
+        return ast.TypeEnum(operator=operator, type_expr=type_expr, values_expr=values_expr, values=values)
+
     def type_array(self, node: ast.Expr):
-        array = []
-        for expr in node.array:
-            new_node = expr.accept(self)
-            array.append(new_node)
-        return ast.TypeArray(array=array)
+        expr = node.expr.accept(self)
+        return ast.TypeArray(expr=expr)
 
     def type_map(self, node: ast.Expr):
         dictionary = {}

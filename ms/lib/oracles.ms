@@ -1,4 +1,4 @@
-# Core Text Analysis Functions
+# "Core Text Analysis Functions
 # 1. Named Entity Recognition (NER)
 # Identify and classify named entities: identify_entities(text)
 # 2. Part-of-Speech Tagging (POS)
@@ -32,5 +32,11 @@
 # 14. Information Extraction
 # Extract structured information: extract_information(text, schema)
 # 15. Text Generation
-# Generate text: generate_text(prompt, model)
+# Generate text: generate_text(prompt, model)"
+null
+
+# "Named entity recognition." null
+
+# "Determine the sentiment of given text." 
+let sentiment = oracle(text: Str) -> {"sentiment": Str}
 

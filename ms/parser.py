@@ -40,7 +40,7 @@ from ms.lexer import Lexer
 #     for         ::= "for" expression "in" expression block
 #     target      ::= ID | declaration
 #     declaration ::= "let" ID
-#     function    ::= "fun" "~(" parameter* ")" 
+#     function    ::= "fun" "~(" parameter* ")"
 #                       ("->" type_expr)? block
 #     oracle      ::= "oracle" "~(" parameter* ")"
 #                       ("->" type_expr)? ("from" array)?
@@ -50,8 +50,9 @@ from ms.lexer import Lexer
 #     type_expr   ::= ("#" STRING)? type_expr
 #     type_binary ::= type_unary "->" type_expr | type_unary
 #     type_unary  ::= type_prim "?" | type_prim
-#     type_prim   ::= ID | TYPE | type_arr | type_map | "(" type_expr ")"
-#     type_arr    ::= "[" ((type_expr ",")* "]"
+#     type_prim   ::= ID | TYPE | type_enum | type_arr | type_map | "(" type_expr ")"
+#     type_enum   ::= "Enum" "(" type_expr "," expression ")"
+#     type_arr    ::= "[" type_expr "]"
 #     type_map    ::= "{" (type_item ("," type_item)*)? "}"
 #     type_item   ::= ("#" STRING)? key "!"? ":" type_expr
 # ```
@@ -279,7 +280,8 @@ class Parser:
                 self.consume(TokenType.RROUND,
                              "Expected closing ')'.")
                 if len(arguments) == 0:
-                    arguments.append(self.null_terminal(operator.line, operator.col))
+                    arguments.append(self.null_terminal(
+                        operator.line, operator.col))
                 primary = ast.Call(expr=primary, operator=operator,
                                    arguments=arguments)
             elif operator.ttype == TokenType.CLSQUARE:
@@ -304,7 +306,7 @@ class Parser:
         if self.match([TokenType.ID, TokenType.INTEGER, TokenType.NUMBER, TokenType.STRING, TokenType.BOOLEAN, TokenType.NULL]):
             token = self.previous()
             return ast.Terminal(token=token)
-        if self.match([TokenType.TYPE]):
+        if self.match([TokenType.TYPE, TokenType.ENUM]):
             self.error(self.previous(),
                        "Type atom without type constructor.")
         if self.check(TokenType.LSQUARE) or self.check(TokenType.CLSQUARE):
@@ -464,11 +466,12 @@ class Parser:
                 TokenType.RROUND, "Expected closing ')' after function parameters.")
             if len(params) == 0:
                 params.append(Token(
-                    ttype=TokenType.ID, 
-                    literal="_", 
-                    line=operator.line, 
+                    ttype=TokenType.ID,
+                    literal="_",
+                    line=operator.line,
                     col=operator.col))
-                ptypes.append(self.null_type_terminal(operator.line, operator.col))
+                ptypes.append(self.null_type_terminal(
+                    operator.line, operator.col))
 
             if self.match([TokenType.ARROW]):
                 types = self.parse_type_expr()
@@ -476,7 +479,8 @@ class Parser:
                 types = self.any_type_terminal(operator.line, operator.col)
 
             for ptype in reversed(ptypes):
-                types = ast.TypeBinary(operator=operator, left=ptype, right=types)
+                types = ast.TypeBinary(
+                    operator=operator, left=ptype, right=types)
 
             expr = None
             if operator.ttype == TokenType.FUNCTION:
@@ -491,9 +495,10 @@ class Parser:
         annotation = None
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            self.consume(TokenType.STRING, "Expected a string annotation after '#'.")
+            self.consume(TokenType.STRING,
+                         "Expected a string annotation after '#'.")
             annotation = self.previous()
-        
+
         self.consume(TokenType.ID, "Expected a parameter name.")
         param = self.previous()
 
@@ -504,12 +509,12 @@ class Parser:
         else:
             last_token = self.previous()
             ptype = self.any_type_terminal(last_token.line, last_token.col)
-        
+
         if annotation is not None:
-            ptype = ast.TypeAnnotation(operator=operator, annotation=annotation, expr=ptype)
+            ptype = ast.TypeAnnotation(
+                operator=operator, annotation=annotation, expr=ptype)
 
-        return [param, ptype]   
-
+        return [param, ptype]
 
     def parse_target(self):
         if self.match([TokenType.ID]):
@@ -563,6 +568,8 @@ class Parser:
         if self.match([TokenType.ID, TokenType.TYPE]):
             token = self.previous()
             return ast.TypeTerminal(token=token)
+        if self.check(TokenType.ENUM):
+            return self.parse_type_enum()
         if self.check(TokenType.LSQUARE) or self.check(TokenType.CLSQUARE):
             return self.parse_type_arr()
         if self.check(TokenType.LCURLY):
@@ -577,19 +584,30 @@ class Parser:
             raise ast.IncompleteExpression()
         self.error(self.peek(), "Expected a type expression.")
 
+    def parse_type_enum(self):
+        if self.match([TokenType.ENUM]):
+            operator = self.previous()
+            if not self.match([TokenType.LROUND, TokenType.CLROUND]):
+                self.error(self.peek(), "Expected an opening '('.")
+            type_expr = self.parse_type_expr()
+            self.consume(TokenType.COMMA, "Expected a comma.")
+            values_expr = self.parse_expression()
+            self.consume(TokenType.RROUND, "Expected a closing ')'.")
+            return ast.TypeEnum(operator=operator, type_expr=type_expr, values_expr=values_expr)
+        self.error(self.peek(), "Expected an Enum expression.")
+
     def parse_type_arr(self):
-        array = []
         if self.match([TokenType.LSQUARE, TokenType.CLSQUARE]):
-            if self.match([TokenType.RSQUARE]):
-                return ast.TypeArray(array=[])
+            # if self.match([TokenType.RSQUARE]):
+            #     return ast.TypeArray(array=[])
             expr = self.parse_type_expr()
-            array.append(expr)
-            while self.match([TokenType.COMMA]):
-                expr = self.parse_type_expr()
-                array.append(expr)
+            # array.append(expr)
+            # while self.match([TokenType.COMMA]):
+            #     expr = self.parse_type_expr()
+            #     array.append(expr)
             self.consume(TokenType.RSQUARE,
-                         "Expected closing ']' after list of type expressions.")
-            return ast.TypeArray(array=array)
+                         "Expected closing ']' after type expression.")
+            return ast.TypeArray(expr=expr)
 
     def parse_type_map(self):
         dictionary = {}
@@ -599,11 +617,13 @@ class Parser:
             return ast.TypeMap(map={}, required={})
         [key, req, expr] = self.parse_type_item()
         dictionary[key.literal] = expr
-        if req: required[key.literal] = True 
+        if req:
+            required[key.literal] = True
         while self.match([TokenType.COMMA]):
             [key, req, expr] = self.parse_type_item()
             dictionary[key.literal] = expr
-            if req: required[key.literal] = True 
+            if req:
+                required[key.literal] = True
         self.consume(TokenType.RCURLY,
                      "Expected closing '}' after list of members.")
         return ast.TypeMap(map=dictionary, required=required)

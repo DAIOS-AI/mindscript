@@ -33,7 +33,8 @@ Keywords = {
     "Bool": TokenType.TYPE,
     "Array": TokenType.TYPE,
     "Object": TokenType.TYPE,
-    "Any": TokenType.TYPE
+    "Any": TokenType.TYPE,
+    "Enum": TokenType.ENUM
 }
 
 

@@ -31,7 +31,7 @@ class Printer():
     def shorten(self, string):
         string = string.replace("\n", " ")
         string = re.sub(r" +", " ", string)
-        string = re.sub(r" (\]|\)|\])", r"\1", string)
+        string = re.sub(r" (\]|\)|\})", r"\1", string)
         string = re.sub(r"(\[|\(|\{) ", r"\1", string)
         return string
 
@@ -233,16 +233,18 @@ class Printer():
         self.indent_decr()
         return self.shorten_if_possible(content)
 
+    def type_enum(self, node):
+        if self.is_max_depth():
+            return "Enum(...)"
+        typetxt = node.type_expr.accept(self)
+        valuestxt = self.print_value(node.values)
+        return f"Enum({typetxt}, {valuestxt})"
+
     def type_array(self, node):
         if self.is_max_depth():
             return "[...]"
-        self.indent_incr()
-        items = []
-        for expr in node.array:
-            txt = self.prefix + expr.accept(self)
-            items.append(txt)
-        self.indent_decr()
-        return "[\n" + ",\n".join(items) + "\n" + self.prefix + "]"
+        expr = node.expr.accept(self)
+        return f"[{expr}]"
 
     def type_map(self, node):
         if self.is_max_depth():
@@ -297,10 +299,10 @@ class Printer():
         elif isinstance(value, MFunction):
             txt = value.definition.types.accept(self) + " " + str(value)
         elif isinstance(value, MType):
-            txt = value.definition.accept(self)
+            txt = "type " + value.definition.accept(self)
         else:
             "print_value: Unknown value type!"
-        return txt
+        return self.shorten_if_possible(txt)
 
     def print(self, value):
         txt = ""

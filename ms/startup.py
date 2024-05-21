@@ -19,6 +19,7 @@ def interpreter(interactive=False):
     ip.define("dump", std.Dump(ip=ip))
     ip.define("getEnv", std.GetEnv(ip=ip))
     ip.define("typeof", std.TypeOf(ip=ip))
+    ip.define("istype", std.IsType(ip=ip))
     ip.define("issubtype", std.IsSubtype(ip=ip))
     ip.define("schema", std.Schema(ip=ip))
     ip.define("assert", std.Assert(ip=ip))

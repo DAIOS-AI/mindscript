@@ -9,17 +9,6 @@ import ms.startup
 
 # Native functions.
 
-# class IsType(NativeFunction):
-#     def __init__(self, ip: Interpreter):
-#         super(IsType, self).__init__(ip)
-#         self.ip = ip
-#         self.checker = ValueAsType()
-
-#     def call(self, args: List[Any]):
-#         data = args[0]
-#         typedata = args[1]
-#         return self.checker.check(typedata, data)
-
 
 def flattened_env(env: Environment):
     fenv = dict()
@@ -63,6 +52,7 @@ class Str(MNativeFunction):
         repr = self.interpreter.print(arg)
         return MValue(repr, None)
 
+
 class Bool(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any) -> Bool?")
@@ -77,6 +67,7 @@ class Bool(MNativeFunction):
         except ValueError:
             pass
         return MValue(None, None)
+
 
 class Int(MNativeFunction):
     def __init__(self, ip: Interpreter):
@@ -93,6 +84,7 @@ class Int(MNativeFunction):
             pass
         return MValue(None, None)
 
+
 class Num(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any) -> Num?")
@@ -107,7 +99,6 @@ class Num(MNativeFunction):
         except ValueError:
             pass
         return MValue(None, None)
-
 
 
 class Print(MNativeFunction):
@@ -166,16 +157,6 @@ class GetEnv(MNativeFunction):
         return MValue(env, None)
 
 
-class TypeOf(MNativeFunction):
-    def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(value: Any) -> Type")
-        self.annotation = "Returns the type of the value."
-
-    def func(self, args: List[MObject]):
-        arg = args[0]
-        return self.interpreter.typeof(arg)
-
-
 class Assert(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(condition: Bool) -> Bool")
@@ -200,6 +181,30 @@ class Error(MNativeFunction):
         else:
             self.error(arg.value)
         return MValue(None, None)
+
+
+class TypeOf(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any) -> Type")
+        self.annotation = "Returns the type of the value."
+
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        return self.interpreter.typeof(arg)
+
+
+class IsType(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(value: Any, ttype: Type) -> Bool")
+        self.annotation = "Checks whether a value conforms to a given type."
+
+    def func(self, args: List[MObject]):
+        val, ttype = args
+        try:
+            confirmed = self.interpreter.checktype(val, ttype)
+        except Exception as e:
+            self.error(str(e))
+        return MValue(confirmed, None)
 
 
 class IsSubtype(MNativeFunction):
@@ -297,6 +302,7 @@ class SetAnnotation(MNativeFunction):
         value, note = args
         value.annotation = note.value
         return value
+
 
 class GetAnnotation(MNativeFunction):
     def __init__(self, ip: Interpreter):

@@ -22,6 +22,7 @@ TokenType = Enum(
         "TYPECONS",
         "TYPETYPE",
         "TYPE",
+        "ENUM",
         "LROUND",
         "CLROUND",
         "RROUND",
@@ -286,14 +287,14 @@ class TypeAnnotation(TypeExpr):
 
 
 class TypeTerminal(TypeExpr):
-    token: Optional[Token]
+    token: Token
 
     def accept(self, visitor, **kwargs):
         return visitor.type_terminal(self, **kwargs)
 
 
 class TypeUnary(TypeExpr):
-    operator: Optional[Token]
+    operator: Optional[Token] = None
     expr: TypeExpr
 
     def accept(self, visitor, **kwargs):
@@ -309,8 +310,18 @@ class TypeBinary(TypeExpr):
         return visitor.type_binary(self, **kwargs)
 
 
+class TypeEnum(TypeExpr):
+    operator: Optional[Token]
+    type_expr: TypeExpr
+    values_expr: Expr
+    values: Optional[Any] = None
+
+    def accept(self, visitor, **kwargs):
+        return visitor.type_enum(self, **kwargs)
+
+
 class TypeArray(TypeExpr):
-    array: List[TypeExpr]
+    expr: TypeExpr
 
     def accept(self, visitor, **kwargs):
         return visitor.type_array(self, **kwargs)
@@ -368,5 +379,3 @@ class Continue(Control):
 class Exit(Control):
     def __init__(self):
         pass
-
-
