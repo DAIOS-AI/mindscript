@@ -73,20 +73,32 @@ a MindScript runtime in C.
 
 ## Installation
 
+Install MindScript into a directory of your choice by cloning the Git repo:
+```
+git clone https://github.com/DAIOS-AI/mindscript/
+cd mindscript
+```
+
 ### Local with llama.cpp:
 
-Get the code and build the executables (follow the llama.cpp guide for special builds):
+1. Follow the `llama.cpp` instructions for installing it. For instance:
 ```
 git clone https://github.com/ggerganov/llama.cpp
 cd llama.cpp
 make
-```
-Download model weights:
 
+```
+
+2. Then run the llama.cpp server. 
+```
+
+```
 
 ### Remote with ChatGPT:
 
-
+1. Set the OpenAI API key in a configuration file:
+```
+```
 
 ## Quickstart
 
