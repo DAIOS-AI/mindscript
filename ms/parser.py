@@ -415,7 +415,7 @@ class Parser:
             operators.append(self.previous())
             cond = self.parse_expression()
             conds.append(cond)
-            self.consume(TokenType.THEN, "Expected 'then' after condition.")
+            self.consume(TokenType.DO, "Expected 'do' after condition.")
             chunk = self.parse_chunk_until(
                 [TokenType.END, TokenType.ELIF, TokenType.ELSE])
             exprs.append(chunk)
@@ -423,8 +423,8 @@ class Parser:
                 operators.append(self.previous())
                 cond = self.parse_expression()
                 conds.append(cond)
-                self.consume(TokenType.THEN,
-                             "Expected 'then' after condition.")
+                self.consume(TokenType.DO,
+                             "Expected 'do' after condition.")
                 chunk = self.parse_chunk_until(
                     [TokenType.END, TokenType.ELIF, TokenType.ELSE])
                 exprs.append(chunk)
@@ -590,13 +590,7 @@ class Parser:
 
     def parse_type_arr(self):
         if self.match([TokenType.LSQUARE, TokenType.CLSQUARE]):
-            # if self.match([TokenType.RSQUARE]):
-            #     return ast.TypeArray(array=[])
             expr = self.parse_type_expr()
-            # array.append(expr)
-            # while self.match([TokenType.COMMA]):
-            #     expr = self.parse_type_expr()
-            #     array.append(expr)
             self.consume(TokenType.RSQUARE,
                          "Expected closing ']' after type expression.")
             return ast.TypeArray(expr=expr)

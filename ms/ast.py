@@ -58,7 +58,6 @@ TokenType = Enum(
         "DO",
         "END",
         "IF",
-        "THEN",
         "ELIF",
         "ELSE",
         "FOR",

@@ -16,7 +16,6 @@ Keywords = {
     "break": TokenType.BREAK,
     "continue": TokenType.CONTINUE,
     "if": TokenType.IF,
-    "then": TokenType.THEN,
     "elif": TokenType.ELIF,
     "else": TokenType.ELSE,
     "fun": TokenType.FUNCTION,
