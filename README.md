@@ -87,12 +87,14 @@ cd mindscript
 git clone https://github.com/ggerganov/llama.cpp
 cd llama.cpp
 make
-
+mkdir models
+cd models
+wget https://huggingface.co/QuantFactory/Meta-Llama-3-8B-GGUF/resolve/main/Meta-Llama-3-8B.Q8_0.gguf
 ```
 
 2. Then run the llama.cpp server. 
 ```
-
+./server -m Meta-Llama-3-8B.Q8_0.gguf
 ```
 
 ### Remote with ChatGPT:
