@@ -1,3 +1,9 @@
+################################################################################
+# MindScript Lang library
+# (c) 2024 DAIOS Technologies Ltd.
+################################################################################
+
+
 # Core Text Analysis Functions
 # 1. Named Entity Recognition (NER)
 # Identify and classify named entities: identify_entities(text)

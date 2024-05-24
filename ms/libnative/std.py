@@ -33,9 +33,11 @@ class Import(MNativeFunction):
 
             ip = ms.startup.interpreter()
             startup_env = ip.env
-            module_env = Environment(enclosing=ip.env)
+            module_env = Environment(enclosing=startup_env)
+
             ip.env = module_env
             ip.eval(code)
+
             module_env.enclosing = None
             module = flattened_env(ip.env)
             module_env.enclosing = startup_env
