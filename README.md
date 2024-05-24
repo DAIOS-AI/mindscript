@@ -91,7 +91,7 @@ mkdir models
 wget https://huggingface.co/QuantFactory/Meta-Llama-3-8B-GGUF/resolve/main/Meta-Llama-3-8B.Q8_0.gguf models/Meta-Llama-3-8B.Q8_0.gguf
 ```
 
-2. Then run the llama.cpp server. For instance: 
+2. Run the llama.cpp server. For instance: 
 ```
 ./server -m models/Meta-Llama-3-8B.Q8_0.gguf
 ```
@@ -181,7 +181,7 @@ As an example, consider the factorial function:
 
 ```
 let factorial = fun(n: Int) -> Int do
-    if n==0 then 
+    if n==0 do
         0
     else
         n * factorial(n - 1)
@@ -225,7 +225,7 @@ fun(m: Int) -> Int
 
 There are only three control structures in MindScript:
 - logical expressions
-- if-then expressions
+- conditional expressions
 - for-loop expressions
 - (there are no while loops)
 
@@ -239,9 +239,9 @@ will only evaluate up to `(2/2 == 1)`, omitting the evaluation of `(2/3 == 2)`.
 **If-then** expressions have a simple `if ... then` block structure with the
 familiar semantics:
 ```
-if n == 1 then
+if n == 1 do
     print("The value is 1.")
-elif n == 2 then
+elif n == 2 do
     print("The value is 2.")
 else
     print("The value is unknown.")
