@@ -91,7 +91,7 @@ mkdir models
 wget https://huggingface.co/QuantFactory/Meta-Llama-3-8B-GGUF/resolve/main/Meta-Llama-3-8B.Q8_0.gguf models/Meta-Llama-3-8B.Q8_0.gguf
 ```
 
-2. Then run the llama.cpp server. 
+2. Then run the llama.cpp server. For instance: 
 ```
 ./server -m models/Meta-Llama-3-8B.Q8_0.gguf
 ```
