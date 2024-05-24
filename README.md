@@ -272,6 +272,11 @@ In addition, there are container types:
 - `Fun`: function objects;
 - `Any`: an arbitrary type.
 
+There are also enums, which are created by specifying the type and an exhaustive list of permitted values:
+```
+let TwoOutOfThree = type Enum([Int], [[1, 2], [1, 3], [2, 3]]) 
+```
+
 The `typeof` function returns the type of a given expression:
 
 ```
@@ -326,19 +331,19 @@ Notes:
 
 A value can be annotated with an explanatory comment, which becomes its informal
 type. Informal types do not have well-defined semantics, but they influence their
-evaluation by the oracle (see the section on oracles). Comments are created by
+evaluation by an oracle (see the section on oracles). Comments are created by
 the annotation operator `#` which attaches a string to the value of the following
 expression: 
 
 ```
-# "The speed of light in meters per second."
+# The speed of light in meters per second.
 let c = 299792458
 ```
 
 Since the annotation gets attached to the value of the expression, the following
 code will produce a function of informal type "Computes the sum of two integers."
 ```
-# "Computes the sum of two integers."
+# Computes the sum of two integers.
 let sum = fun(n: Int, m: Int) -> Int do
     n + m
 end
@@ -347,10 +352,10 @@ end
 Likewise, this allows annotating type expressions:
 ```
 let Person = {
-    # "The name of the person."
+    # The name of the person.
     name!: Str,
     
-    # "The age of the person."
+    # The age of the person.
     age: Int
 }
 ```
@@ -361,7 +366,7 @@ Like functions, oracles produce outputs from inputs, but they do so using induct
 Oracles are defined using the `oracle` keyword. For instance:
 
 ```
-# "Write the name of an important researcher in the given field."
+# Write the name of an important researcher in the given field.
 let researcher = oracle(field: Str) -> {name: Str}
 ```
 
