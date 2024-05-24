@@ -70,11 +70,6 @@ class MValue(MObject):
     def annotation(self, val):
         self._annotation = val
 
-    def __repr__(self):
-        if self.annotation is None:
-            return str(self.value)
-        return "# '{self.annotation}' " + self.value
-
 
 
 # Types.

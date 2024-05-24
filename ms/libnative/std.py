@@ -32,9 +32,13 @@ class Import(MNativeFunction):
                 code = fh.read()
 
             ip = ms.startup.interpreter()
-            ip.env = Environment(enclosing=ip.env)
+            startup_env = ip.env
+            module_env = Environment(enclosing=ip.env)
+            ip.env = module_env
             ip.eval(code)
+            module_env.enclosing = None
             module = flattened_env(ip.env)
+            module_env.enclosing = startup_env
         except FileNotFoundError as e:
             self.error(f"File not found: {filename}")
         except Exception as e:
@@ -224,7 +228,7 @@ class Schema(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Type) -> Str")
         self.annotation = "Returns the JSON schema of a type."
-        self.printer = JSONSchema()
+        self.printer = JSONSchema(ip)
 
     def func(self, args: List[MObject]):
         arg = args[0]
@@ -239,7 +243,7 @@ class BNF(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Type) -> Str")
         self.annotation = "Returns the BNF grammar of a type."
-        self.formatter = BNFFormatter()
+        self.formatter = BNFFormatter(ip)
 
     def func(self, args: List[MObject]):
         arg = args[0]

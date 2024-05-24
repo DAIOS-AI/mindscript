@@ -1,3 +1,4 @@
+import re
 import ms.ast as ast
 from ms.objects import MType
 from pydantic import BaseModel
@@ -120,8 +121,9 @@ class BNFRule(BaseModel):
 
 class BNFFormatter():
 
-    def __init__(self):
+    def __init__(self, interpreter):
         self.reset()
+        self.interpreter = interpreter
 
     def reset(self):
         self.prefix = ""
@@ -209,28 +211,29 @@ class BNFFormatter():
         head = f'binary{self.tag(node)}'
         if id(node) in ids: return BNFRule(id=head, rule='')
         else: ids[id(node)] = True
-
-        # print(f"schema.type_binary: node = {node}")
-        self.indent_incr()
-        left = node.left.accept(self, env=env, ids=ids)
-        right = node.right.accept(self, env=env, ids=ids)
-        content = left + "\n"
-        content += self.prefix + " -> " + right + "\n"
-        self.indent_decr()
-        return content
+        raise NotImplementedError("BNF grammars for function types are not implemented yet.")
     
+    def type_enum(self, node, env=None, ids=None):
+        head = f'enum{self.tag(node)}'
+        if id(node) in ids: return BNFRule(id=head, rule='')
+        else: ids[id(node)] = True
+
+        subs = []
+        for expr in node.values.value:
+            txt = self.interpreter.printer.print(expr)
+            txt = self.interpreter.printer.shorten(txt)
+            txt = r'"' + re.sub(r'"', r'\"', txt) + r'"'
+            subs.append(txt)
+        body = f'{head} ::= ' + '| '.join(subs)
+        return BNFRule(id=head, rule=body)
+
     def type_array(self, node, env=None, ids=None):
         head = f'array{self.tag(node)}'
         if id(node) in ids: return BNFRule(id=head, rule='')
         else: ids[id(node)] = True
 
-        subs = []
-        for expr in node.array:
-            subs.append(expr.accept(self, env=env, ids=ids))
-        
-        nonterms = ' ws "," ws '.join([sub.id for sub in subs])
-        subrules = ''.join([sub.rule for sub in subs])
-        body = f'{head} ::= "[" ws {nonterms} ws "]"\n' + subrules
+        sub = node.expr.accept(self, env=env, ids=ids)
+        body = f'{head} ::= "[" ws ({sub.id})? (ws "," ws {sub.id})* ws "]"\n' + sub.rule
         return BNFRule(id=head, rule=body)
 
     def type_map(self, node, env=None, ids=None):
@@ -245,9 +248,9 @@ class BNFFormatter():
             subs.append(expr.accept(self, env=env, ids=ids))
         
         key, sub = keys[0], subs[0]
-        items = r'"{" ws "' + key + r'" ws ":" ws ' + sub.id
+        items = r'"{" ws "\"' + key + r'\"" ws ":" ws ' + sub.id
         for key, sub in zip(keys[1:], subs[1:]):
-            items += r' ws "," ws "' + key + r'" ws ":" ws ' + sub.id
+            items += r' ws "," ws "\"' + key + r'\"" ws ":" ws ' + sub.id
         items += r' ws "}"'
 
         body = head + ' ::= ( ' + items + ' )\n' 

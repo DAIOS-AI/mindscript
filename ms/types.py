@@ -8,33 +8,26 @@ class TypeChecker():
     def __init__(self, ip):
         self.interpreter = ip
 
-    def _resolve_type(self, t, env):
-        resolving = True
-        while resolving:
-            if isinstance(t, ast.TypeAnnotation):
-                t = t.expr
-            elif isinstance(t, ast.TypeGrouping):
-                t = t.expr
-            elif isinstance(t, ast.TypeTerminal) and t.token.ttype == ast.TokenType.ID:
-                key = t.token.literal
-                value = env.get(key)
-                if type(value) != MType:
-                    raise ValueError(f"Referencing '{key}', which is not a type.")
-                t = value.definition
-                env = value.environment
-            else:
-                resolving = False
-        return [t, env]
-
     def _checktype_recursion(self, value, target, env):
 
         # Check if both types are the same primitive type
+        if type(target) == ast.TypeTerminal and target.token.literal == "Any":
+            return True
+
+        if type(target) == ast.TypeTerminal and target.token.ttype == ast.TokenType.ID:
+            name = target.token.literal
+            try:
+                new_target = env.get(name)
+            except KeyError:
+                raise KeyError(f"Unknown type '{name}'.")
+            if type(new_target) != MType:
+                raise ValueError(f"Referencing '{name}', which is not a type.")
+            return self._checktype_recursion(value, new_target.definition, new_target.environment)
+
         if type(value) == MValue:
             v = value.value
-            if type(target) == ast.TypeTerminal:
-                if target.token.literal == "Any":
-                    return True
-                elif v is None and target.token.literal == "Null":
+            if type(target) == ast.TypeTerminal and target.token.ttype == ast.TokenType.TYPE:
+                if v is None and target.token.literal == "Null":
                     return True
                 elif type(v) == bool and target.token.literal == "Bool":
                     return True
@@ -83,6 +76,24 @@ class TypeChecker():
             fenv = value.interpreter.env
             return self._subtype_recursion(t1=fdef, t2=target, env1=fenv, env2=env)
         return False
+    
+    def _resolve_type(self, t, env):
+        resolving = True
+        while resolving:
+            if isinstance(t, ast.TypeAnnotation):
+                t = t.expr
+            elif isinstance(t, ast.TypeGrouping):
+                t = t.expr
+            elif isinstance(t, ast.TypeTerminal) and t.token.ttype == ast.TokenType.ID:
+                key = t.token.literal
+                value = env.get(key)
+                if type(value) != MType:
+                    raise ValueError(f"Referencing '{key}', which is not a type.")
+                t = value.definition
+                env = value.environment
+            else:
+                resolving = False
+        return [t, env]
 
     def _subtype_recursion(self, t1, t2, env1, env2, visited=None):
         if visited is None:
@@ -118,15 +129,30 @@ class TypeChecker():
         elif type1 == ast.TypeMap and type2 == ast.TypeMap:
             if not set(t1.map.keys()).issubset(set(t2.map.keys())):
                 return False
-            if set(t1.required.keys()) != set(t2.required.keys()):
+            if not set(t2.required.keys()).issubset(set(t1.required.keys())):
                 return False
             for key in t1.map.keys():
                 if not self._subtype_recursion(t1.map[key], t2.map[key], env1, env2):
                     return False
-
-        elif type1 == ast.TypeEnum and type2 != ast.TypeEnum:
-            return self._subtype_recursion(type1.type_expr, type2, env1, env2)
+            return True
         
+        elif type1 == ast.TypeEnum and type2 != ast.TypeEnum:
+            return self._subtype_recursion(t1.type_expr, t2, env1, env2)
+        elif type1 == ast.TypeEnum and type2 == ast.TypeEnum:
+            if not self._subtype_recursion(t1.type_expr, t2.type_expr, env1, env2):
+                return False
+            # TODO: Proper comparison of Enums requires comparing their contents,
+            # which in the ideal, efficient case would require additional machinery
+            # (e.g. recurisve value hashing). We'll brute-force here.
+            for val1 in t1.values.value:
+                found = False
+                for val2 in t2.values.value:
+                    if self.interpreter.compare(val1, val2):
+                        found = True
+                        break
+                if not found:
+                    return False
+            return True
 
         elif type2 == ast.TypeUnary:
             if type1 == ast.TypeUnary:
@@ -148,6 +174,9 @@ class TypeChecker():
             if v is None:
                 valtype = ast.TypeTerminal(token=ast.Token(
                     ttype=ast.TokenType.TYPE, literal="Null"))
+            elif type(v) == bool:
+                valtype = ast.TypeTerminal(token=ast.Token(
+                    ttype=ast.TokenType.TYPE, literal="Bool"))
             elif type(v) == str:
                 valtype = ast.TypeTerminal(token=ast.Token(
                     ttype=ast.TokenType.TYPE, literal="Str"))
@@ -157,9 +186,6 @@ class TypeChecker():
             elif type(v) == float:
                 valtype = ast.TypeTerminal(token=ast.Token(
                     ttype=ast.TokenType.TYPE, literal="Num"))
-            elif type(v) == bool:
-                valtype = ast.TypeTerminal(token=ast.Token(
-                    ttype=ast.TokenType.TYPE, literal="Bool"))
             elif type(v) == list:
                 # We need to find a representative type for the list. The correct way of doing this
                 # is using Unification. But here we follow a simple approach.
@@ -175,7 +201,7 @@ class TypeChecker():
                 if len(v) == 0:
                     valtype = ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Array"))
                 else:
-                    gtype = None #self._typeof_recursion(v[0])
+                    gtype = None 
                     for item in v:
                         subtype = self._typeof_recursion(item)
                         if type(subtype) == ast.TypeTerminal and subtype.token.literal == "Null":
@@ -192,6 +218,8 @@ class TypeChecker():
                                 break
                     if anytype:
                         gtype = ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Any"))
+                    elif gtype is None:
+                        gtype = ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Null"))
                     elif nullable:
                         gtype = ast.TypeUnary(expr=gtype)
                     valtype = ast.TypeArray(expr=gtype)
@@ -200,7 +228,10 @@ class TypeChecker():
                 for key, item in v.items():
                     subtype = self._typeof_recursion(item)
                     items[key] = subtype
-                valtype = ast.TypeMap(map=items, required={})
+                if len(items) == 0:
+                    valtype = ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Object"))
+                else:
+                    valtype = ast.TypeMap(map=items, required={})
         elif isinstance(value, MFunction):
             valtype = value.definition.types
         elif isinstance(value, MType):
@@ -216,13 +247,13 @@ class TypeChecker():
     def checktype(self, value: MObject, target: MType) -> bool:
         if type(target) != MType:
             return False
-        return self._checktype_recursion(value, target.definition, target.interpreter.env)
+        return self._checktype_recursion(value, target.definition, target.environment)
 
     def issubtype(self, subtype: MObject, supertype: MObject) -> bool:
         if type(subtype) != MType or type(supertype) != MType:
             return False
         t1 = subtype.definition
-        env1 = subtype.interpreter.env
+        env1 = subtype.environment
         t2 = supertype.definition
-        env2 = supertype.interpreter.env
+        env2 = supertype.environment
         return self._subtype_recursion(t1=t1, t2=t2, env1=env1, env2=env2)

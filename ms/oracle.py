@@ -68,8 +68,9 @@ class MOracleFunction(MFunction):
     def __init__(self, ip: 'Interpreter', definition: ast.Function, examples: MValue):  # type: ignore
         super().__init__(ip, definition)
 
-        schema_printer = JSONSchema()
-        bnf_printer = BNFFormatter()
+
+        schema_printer = JSONSchema(ip)
+        bnf_printer = BNFFormatter(ip)
 
         # Build input schemas.
         in_annotation = self.definition.types.annotation
@@ -81,11 +82,17 @@ class MOracleFunction(MFunction):
         self.input_schema = schema_printer.print_schema(MType(ip, in_types))
 
         # Build output schema and BNF grammar.
-        out_type = self.outtype.definition
-        self.output_schema = schema_printer.print_schema(MType(ip, out_type))
-        self.output_schema_obj = bnf_printer.format(MType(ip, out_type))
-        # self.output_schema_obj = self.output_schema #json.loads(self.output_schema)
-
+        try:
+            # print(f"MOracleFunction.__init__: Part 1")
+            out_type = self.outtype.definition
+            # print(f"MOracleFunction.__init__: Part 2")
+            self.output_schema = schema_printer.print_schema(MType(ip, out_type))
+            # print(f"MOracleFunction.__init__: Part 3")
+            self.output_schema_obj = bnf_printer.format(MType(ip, out_type))
+            # print(f"MOracleFunction.__init__: Part 4")
+            # self.output_schema_obj = self.output_schema #json.loads(self.output_schema)
+        except Exception as e:
+            print("Exception:" + str(e))
         self.examples = self.validate_examples(examples)
 
     def prepare_input(self, args: List[MObject]):
@@ -122,12 +129,12 @@ class MOracleFunction(MFunction):
                 typestr = self.interpreter.print(self.intypes[n])
                 valuestr = self.interpreter.print(example.value[n])
                 if not self.interpreter.checktype(example.value[n], self.intypes[n]):
-                    self.error(f"Expected value of type {typestr} but found: {valuestr}.")
+                    self.error(f"Expected value of type '{typestr}' but found: {valuestr}.")
 
             if not self.interpreter.checktype(example.value[-1], self.outtype):
                 typestr = self.interpreter.print(self.outtype)
                 valuestr = self.interpreter.print(example.value[-1])
-                self.error(f"Expected output value of type {typestr} but found: {valuestr}.")
+                self.error(f"Expected output value of type '{typestr}' but found: {valuestr}.")
         return examples
 
     def func(self, args: List[MObject]):

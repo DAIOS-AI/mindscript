@@ -13,7 +13,7 @@ from ms.lexer import Lexer
 #                     "break" "~(" expression ")" |
 #                     "continue" "~(" expression ")" |
 #                     expression
-#     expression  ::= "#" STRING expression | assignment
+#     expression  ::= ANNOTATION expression | assignment
 #     assignment  ::= disjunction "=" expression | disjunction
 #     disjunction ::= conjunction ("or" conjunction)*
 #     conjunction ::= equality ("and" equality)*
@@ -29,7 +29,7 @@ from ms.lexer import Lexer
 #                     block | conditional | for
 #     array       ::= "[" (expression ("," expression)*)? "]"
 #     map         ::= "{" (item ("," item)*)? "}"
-#     item        ::= ("#" STRING)? key ":" expression
+#     item        ::= ANNOTATION? key ":" expression
 #     key         ::= STRING | IDENTIFIER
 #
 #     block       ::= "do" chunk "end"
@@ -44,17 +44,17 @@ from ms.lexer import Lexer
 #                       ("->" type_expr)? block
 #     oracle      ::= "oracle" "~(" parameter* ")"
 #                       ("->" type_expr)? ("from" array)?
-#     parameter   ::= ("#" STRING)? ID (":" type_expr)?
+#     parameter   ::= ANNOTATION? ID (":" type_expr)?
 #
 #     type        ::= "type" type_expr
-#     type_expr   ::= ("#" STRING)? type_expr
+#     type_expr   ::= ANNOTATION? type_expr
 #     type_binary ::= type_unary "->" type_expr | type_unary
 #     type_unary  ::= type_prim "?" | type_prim
 #     type_prim   ::= ID | TYPE | type_enum | type_arr | type_map | "(" type_expr ")"
 #     type_enum   ::= "Enum" "(" type_expr "," expression ")"
 #     type_arr    ::= "[" type_expr "]"
 #     type_map    ::= "{" (type_item ("," type_item)*)? "}"
-#     type_item   ::= ("#" STRING)? key "!"? ":" type_expr
+#     type_item   ::= ANNOTATION? key "!"? ":" type_expr
 # ```
 ###
 
@@ -176,9 +176,7 @@ class Parser:
     def parse_expression(self):
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            self.consume(TokenType.STRING,
-                         "Expected a string annotation after '#'.")
-            annotation = self.previous()
+            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
             expr = self.parse_expression()
             return ast.Annotation(operator=operator, annotation=annotation, expr=expr)
         return self.parse_assignment()
@@ -368,9 +366,7 @@ class Parser:
     def parse_item(self):
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            self.consume(TokenType.STRING,
-                         "Expected a string annotation after '#'.")
-            annotation = self.previous()
+            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
             key = self.parse_key()
             self.consume(TokenType.COLON, "Expected ':' after member key.")
             expr = self.parse_expression()
@@ -495,9 +491,7 @@ class Parser:
         annotation = None
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            self.consume(TokenType.STRING,
-                         "Expected a string annotation after '#'.")
-            annotation = self.previous()
+            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
 
         self.consume(TokenType.ID, "Expected a parameter name.")
         param = self.previous()
@@ -539,9 +533,7 @@ class Parser:
     def parse_type_expr(self):
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            self.consume(TokenType.STRING,
-                         "Expected a string annotation after '#'.")
-            annotation = self.previous()
+            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
             expr = self.parse_type_expr()
             return ast.TypeAnnotation(operator=operator, annotation=annotation, expr=expr)
         expr = self.parse_type_binary()
@@ -632,9 +624,7 @@ class Parser:
         required = False
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            self.consume(TokenType.STRING,
-                         "Expected a string annotation after '#'.")
-            annotation = self.previous()
+            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
             key = self.parse_key()
             required = True if self.match([TokenType.BANG]) else False
             self.consume(TokenType.COLON, "Expected ':' after member key.")

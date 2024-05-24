@@ -557,8 +557,8 @@ class Interpreter:
         type_expr = node.type_expr.accept(self)
         values_expr = node.values_expr
         values = node.values_expr.accept(self)
-        if type(values) != MValue and type(values.value) != list:
-            self.error(operator, "Expected an array of possible values.")
+        if type(values) != MValue and type(values.value) != list and len(values.value) > 0:
+            self.error(operator, "Expected a non-empty array of possible values.")
         typeobj = MType(ip=self, definition=type_expr)
         for v in values.value:
             if not self.checktype(v, typeobj):

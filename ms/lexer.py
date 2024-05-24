@@ -1,5 +1,5 @@
 from typing import Any
-from ms.ast import TokenType, Token, LexicalError
+from ms.ast import TokenType, Token, LexicalError, IncompleteExpression
 
 
 Keywords = {
@@ -183,6 +183,28 @@ class Lexer:
                 lexeme += self.advance()
         return lexeme
 
+    def scan_annotation(self):
+        lexeme = ""
+        line = ""
+        while not self.is_at_end():
+            c = self.advance()
+            line += c
+            if c == "\n":
+                lexeme += line.strip() + "\n"
+                line = ""
+                while not self.is_at_end() and self.peek() in "\r\t ":
+                    self.advance()
+                if self.is_at_end():
+                    return IncompleteExpression()
+                if self.peek() == "#":
+                    self.advance()
+                elif self.peek() == "\n":
+                    # Quit annotation.
+                    return None
+                else:
+                    return lexeme.strip()
+        raise IncompleteExpression()
+
     def scan_id(self):
         lexeme = self.advance()
         while not self.is_at_end() and self.is_id(self.peek()):
@@ -263,8 +285,6 @@ class Lexer:
         if c == "." and not self.is_digit(self.peek()):
             return self.add_token(TokenType.PERIOD, ".")
 
-        if c == "#":
-            return self.add_token(TokenType.HASH, "#")
 
         # Double characters.
 
@@ -299,6 +319,12 @@ class Lexer:
             return self.add_token(TokenType.GREATER, ">")
 
         # Multi-characters.
+
+        if c == "#":
+            lexeme = self.scan_annotation()
+            if lexeme is None:
+                return self.add_token(TokenType.NULL, None)
+            return self.add_token(TokenType.HASH, lexeme)
 
         if c == '"' or c == "'":
             self.rewind()
