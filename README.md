@@ -62,12 +62,31 @@ as a large language model (&Psi;).
 **Requirements:**
 
 - Tested with Python 3.9
+- [llama.cpp](https://github.com/ggerganov/llama.cpp/) for a local LLM
+- OpenAI API key for ChatGPT
 
 **Disclaimer:**
 
 This is a strictly experimental programming language. The implementation is not guaranteed
 to be correct, nor does it aim to be efficient. If there's enough interest, I will write
 a MindScript runtime in C.
+
+## Installation
+
+### Local with llama.cpp:
+
+Get the code and build the executables (follow the llama.cpp guide for special builds):
+```
+git clone https://github.com/ggerganov/llama.cpp
+cd llama.cpp
+make
+```
+Download model weights:
+
+
+### Remote with ChatGPT:
+
+
 
 ## Quickstart
 
