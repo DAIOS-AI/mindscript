@@ -81,7 +81,8 @@ cd mindscript
 
 ### Local with llama.cpp:
 
-1. Follow the `llama.cpp` instructions for installing it. For instance:
+1. Follow the instructions to install [llama.cpp](https://github.com/ggerganov/llama.cpp/)
+   and download your favorite model weights. For instance:
 ```
 git clone https://github.com/ggerganov/llama.cpp
 cd llama.cpp
