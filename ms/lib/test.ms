@@ -3,6 +3,6 @@
 #
 
 # Say hello.
-let sayHello = fun() -> null do
+let sayHello = fun() -> Str do
     print("Hello, world!")
 end

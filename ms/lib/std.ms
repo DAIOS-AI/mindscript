@@ -72,15 +72,20 @@ let natural0 = fun(_: Null) -> (Null -> Int?) do
 end
 
 # Retrieve a web page.
-let www = fun(url: Str) -> Str do
-    http(null, "GET", url).text
+let www = fun(url: Str) -> Str? do
+    let page = http(null, "GET", url)
+    if not exists(page, "error") do
+        return(page.text)
+    else
+        return(null)
+    end
 end
 
 # Import a remote module.
-let netImport = fun(url: Str) -> Object do
-    let page = www(url)
-    if page != null and exists(page, "text") do
-        return(codeImport(page.text))
+let netImport = fun(url: Str) -> {} do
+    let code = www(url)
+    if code != null do
+        return(codeImport(code))
     else
         return(null)
     end

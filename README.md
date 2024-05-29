@@ -349,8 +349,7 @@ true
 Notes:
 - Primitive type atoms: The primitive types are `Bool`, `Int`, `Num`, and `String`.
 - The container types are built using delimiters `[...]` (arrays) or `{...}` (objects) 
-  and then further specifying the types of their members. If the members are arbitrary,
-  use `Array` and `Object` instead.
+  and then further specifying the types of their members. 
 - Similarly, function types are indicated by an arrow `->` as in `(Int -> Str) -> Str`.
   To indicate an arbiraty functional structure, use `Fun`.
 - You can omit the quotes/double-quotes of keys if they follow the naming convention

@@ -28,10 +28,10 @@ HTTPParams = """let HTTPParams = type {
     mode: Str?,
     cache: Str?,
     credentials: Str?,
-    headers: Object?,
+    headers: {}?,
     redirect: Str?,
     referrerPolicy: Str?,
-    body: Object 
+    body: {} 
 }"""
 
 class HTTP(MNativeFunction):

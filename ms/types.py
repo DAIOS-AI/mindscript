@@ -224,8 +224,6 @@ class TypeChecker():
                 for key, item in v.items():
                     subtype = self._typeof_recursion(item)
                     items[key] = subtype
-                if len(items) == 0:
-                    valtype = ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Object"))
                 else:
                     valtype = ast.TypeMap(map=items, required={})
         elif isinstance(value, MFunction):

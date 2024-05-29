@@ -62,7 +62,7 @@ typeunary   ::= typeprim ("?")?
 typeprim    ::= identifier | typeterm | typearr | typemap | "(" ws typeexpr ws ")"
 typearr     ::= "[" ws (typeexpr (ws "," ws typeexpr)*)? ws "]"
 typemap     ::= "{" ws (identifier ws ":" ws typeexpr (ws "," ws identifier ws ":" ws typeexpr)*)? ws "}"
-typeterm    ::= "Null" | "Bool" | "Int" | "Num" | "Str" | "Any" | "Array" | "Object"
+typeterm    ::= "Null" | "Bool" | "Int" | "Num" | "Str" | "Any"
 boolean     ::= "true" | "false"
 string      ::=
   "\"" (
@@ -177,10 +177,6 @@ class BNFFormatter():
                 term = 'boolean'
             elif node.token.literal == "Null":
                 term = '"null"'
-            elif node.token.literal == "Array":
-                term = 'array'
-            elif node.token.literal == "Object":
-                term = 'object'
             elif node.token.literal == "Any":
                 term = '("null" | boolean | integer | number | string | array | object)'
             else:

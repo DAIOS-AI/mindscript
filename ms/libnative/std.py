@@ -17,9 +17,9 @@ class CodeImport(MNativeFunction):
         self.annotation = "Imports code as a module."
 
     def func(self, args: List[MObject]):
-        code =args[0]
+        code = args[0]
         try:
-            module = import_code(code)
+            module = import_code(code.value)
         except Exception as e:
             self.error(str(e))
         return MValue(module, None)
