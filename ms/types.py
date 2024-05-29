@@ -37,10 +37,6 @@ class TypeChecker():
                     return True
                 elif type(v) == str and target.token.literal == "Str":
                     return True
-                elif type(v) == list and target.token.literal == "Array":
-                    return True
-                elif type(v) == dict and target.token.literal == "Object":
-                    return True
             elif type(v) == list and type(target) == ast.TypeArray:
                 starget = target.expr
                 if all(self._checktype_recursion(svalue, starget, env) for svalue in value.value):
@@ -120,13 +116,9 @@ class TypeChecker():
             if t1.token.literal == t2.token.literal:
                 return True
 
-        elif type1 == ast.TypeArray and type2 == ast.TypeTerminal and t2.token.literal == "Array":
-            return True
         elif type1 == ast.TypeArray and type2 == ast.TypeArray:
             return self._subtype_recursion(type1.expr, type2.expr, env1, env2, visited)
 
-        elif type1 == ast.TypeMap and type2 == ast.TypeTerminal and t2.token.literal == "Object":
-            return True
         elif type1 == ast.TypeMap and type2 == ast.TypeMap:
             if not set(t1.map.keys()).issubset(set(t2.map.keys())):
                 return False
@@ -200,7 +192,10 @@ class TypeChecker():
                 nullable = False
                 anytype = False
                 if len(v) == 0:
-                    valtype = ast.TypeTerminal(token=ast.Token(ttype=ast.TokenType.TYPE, literal="Array"))
+                    valtype = ast.TypeArray(
+                        expr=ast.TypeTerminal(
+                            token=ast.Token(
+                                ttype=ast.TokenType.TYPE, literal="Any")))
                 else:
                     gtype = None 
                     for item in v:

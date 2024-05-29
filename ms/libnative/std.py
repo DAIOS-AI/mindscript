@@ -6,23 +6,28 @@ from ms.types import TypeChecker
 from ms.schema import JSONSchema
 from ms.bnf import BNFFormatter
 import ms.startup
+from ms.libnative.auxiliary import import_code, flattened_env
+
 
 # Native functions.
 
+class CodeImport(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(code: Str) -> {}")
+        self.annotation = "Imports code as a module."
 
-def flattened_env(env: Environment):
-    fenv = dict()
-    while env is not None:
-        for key, val in env.vars.items():
-            if key not in fenv:
-                fenv[key] = val
-        env = env.enclosing
-    return fenv
+    def func(self, args: List[MObject]):
+        code =args[0]
+        try:
+            module = import_code(code)
+        except Exception as e:
+            self.error(str(e))
+        return MValue(module, None)
 
 
 class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(filename: Str) -> Object")
+        super().__init__(ip, "fun(filename: Str) -> {}")
         self.annotation = "Imports a module located at a given filename."
 
     def func(self, args: List[MObject]):
@@ -30,17 +35,7 @@ class Import(MNativeFunction):
         try:
             with open(filename, "r") as fh:
                 code = fh.read()
-
-            ip = ms.startup.interpreter()
-            startup_env = ip.env
-            module_env = Environment(enclosing=startup_env)
-
-            ip.env = module_env
-            ip.eval(code)
-
-            module_env.enclosing = None
-            module = flattened_env(ip.env)
-            module_env.enclosing = startup_env
+            module = import_code(code)
         except FileNotFoundError as e:
             self.error(f"File not found: {filename}")
         except Exception as e:
@@ -155,7 +150,7 @@ class Dump(MNativeFunction):
 
 class GetEnv(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun() -> Object")
+        super().__init__(ip, "fun() -> {}")
         self.annotation = "Returns the current environment."
 
     def func(self, args: List[MObject]):

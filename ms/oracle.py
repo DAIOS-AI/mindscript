@@ -117,7 +117,7 @@ class MOracleFunction(MFunction):
 
     def validate_examples(self, examples: MValue):
         if type(examples) != MValue or type(examples.value) != list:
-            self.error("The examples must be of type Array[Array].")
+            self.error("The examples must be of type [[Any]].")
 
         length = len(self.params) + 1
         for example in examples.value:

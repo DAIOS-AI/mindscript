@@ -53,10 +53,6 @@ class JSONSchema():
                 obj["type"] = "boolean"
             elif node.token.literal == "Null":
                 obj["type"] = "null"
-            elif node.token.literal == "Array":
-                obj["type"] = "array"
-            elif node.token.literal == "Object":
-                obj["type"] = "object"
             elif node.token.literal == "Any":
                 obj["type"] = ["array", "boolean", "number", "null", "object", "string"]
             if node.annotation is not None:

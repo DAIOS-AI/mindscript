@@ -36,7 +36,7 @@ HTTPParams = """let HTTPParams = type {
 
 class HTTP(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(params: HTTPParams?, method: Str?, url: Str) -> Object")
+        super().__init__(ip, "fun(params: HTTPParams?, method: Str?, url: Str) -> {}")
         self.annotation = "Makes an HTTP request."
 
     def func(self, args: List[MObject]):
@@ -93,3 +93,5 @@ class HTTP(MNativeFunction):
                 "detail": str(e)
             }
             return MValue.wrap(result)
+
+

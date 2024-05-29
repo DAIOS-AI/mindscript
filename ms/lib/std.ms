@@ -76,4 +76,12 @@ let www = fun(url: Str) -> Str do
     http(null, "GET", url).text
 end
 
-
+# Import a remote module.
+let netImport = fun(url: Str) -> Object do
+    let page = www(url)
+    if page != null and exists(page, "text") do
+        return(codeImport(page.text))
+    else
+        return(null)
+    end
+end

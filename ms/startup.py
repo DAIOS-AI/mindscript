@@ -10,6 +10,7 @@ def interpreter(interactive=False):
     ip = Interpreter(interactive=interactive)
 
     # Register built-in native symbols.
+    ip.define("codeImport", std.CodeImport(ip=ip))
     ip.define("import", std.Import(ip=ip))
     ip.define("str", std.Str(ip=ip))
     ip.define("bool", std.Bool(ip=ip))

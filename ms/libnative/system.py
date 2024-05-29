@@ -22,7 +22,7 @@ class TsNow(MNativeFunction):
 
 class DateNow(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(_: Null) -> Object")
+        super().__init__(ip, "fun(_: Null) -> {}")
         self.annotation = "Returns a the current date."
 
     def func(self, args: List[MObject]):

@@ -64,7 +64,7 @@ class Iter(MNativeFunction):
 
 class Slice(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(array: Array, s: Int, e: Int) -> Array")
+        super().__init__(ip, "fun(array: [Any], s: Int, e: Int) -> [Any]")
         self.annotation = "Slices an array between two indexes."
 
     def func(self, args: List[MObject]):
@@ -74,7 +74,7 @@ class Slice(MNativeFunction):
 
 class Push(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(array: Array, value: Any) -> Array")
+        super().__init__(ip, "fun(array: [Any], value: Any) -> [Any]")
         self.annotation = "Adds a value to the end of an array."
 
     def func(self, args: List[MObject]):
@@ -85,7 +85,7 @@ class Push(MNativeFunction):
 
 class Pop(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(array: Array) -> Any")
+        super().__init__(ip, "fun(array: [Any]) -> Any")
         self.annotation = "Pops the last value from the array."
 
     def func(self, args: List[MObject]):
@@ -95,7 +95,7 @@ class Pop(MNativeFunction):
 
 class Shift(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(array: Array, value: Any) -> Array")
+        super().__init__(ip, "fun(array: [Any], value: Any) -> [Any]")
         self.annotation = "Inserts a value at the front of an array."
 
     def func(self, args: List[MObject]):
@@ -106,7 +106,7 @@ class Shift(MNativeFunction):
 
 class Unshift(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(array: Array) -> Any")
+        super().__init__(ip, "fun(array: [Any]) -> Any")
         self.annotation = "Pops the first value from the array."
 
     def func(self, args: List[MObject]):
@@ -116,7 +116,7 @@ class Unshift(MNativeFunction):
 
 class Delete(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(obj: Object, prop: Str) -> Object")
+        super().__init__(ip, "fun(obj: {}, prop: Str) -> {}")
         self.annotation = "Deletes a property from an object."
 
     def func(self, args: List[MObject]):
@@ -144,7 +144,7 @@ class Keys(MNativeFunction):
             return MValue(None, None)
             
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(obj: Object) -> (Null -> Str?)")
+        super().__init__(ip, "fun(obj: {}) -> (Null -> Str?)")
         self.annotation = "Returns an iterator over an object's keys."
 
     def func(self, args: List[MObject]):
@@ -170,7 +170,7 @@ class Values(MNativeFunction):
             return MValue(None, None)
             
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(obj: Object) -> (Null -> Any?)")
+        super().__init__(ip, "fun(obj: {}) -> (Null -> Any?)")
         self.annotation = "Returns an iterator over an object's values."
 
     def func(self, args: List[MObject]):
@@ -179,7 +179,7 @@ class Values(MNativeFunction):
 
 class Exists(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(obj: Object, key: Str) -> Bool")
+        super().__init__(ip, "fun(obj: {}, key: Str) -> Bool")
         self.annotation = "Checks whether a key exists."
 
     def func(self, args: List[MObject]):

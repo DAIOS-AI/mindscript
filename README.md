@@ -300,9 +300,9 @@ The primitive built-in data types are:
 - `Type`: the type of a type.
 
 In addition, there are container types:
-- `Array`: arrays, as in `[1, 2, 3]`;
-- `Object`: objects or dictionaries, as in `{name: "Albert Einstein", age: 76}`;
-- `Fun`: function objects;
+- Arrays, as in `[1, 2, 3]` of type `[Int]`;
+- Objects (or dictionaries), as in `{name: "Albert Einstein", age: 76}` of type `{name: Str, age: Int}`;
+- Function objects, e.g. `cos(x: Num) -> Num` of type `Num -> Num`;
 - `Any`: an arbitrary type.
 
 There are also enums, which are created by specifying the type and an exhaustive list of permitted values:
