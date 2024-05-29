@@ -1,6 +1,7 @@
 import sys
 import ms
 import readline
+import argparse
 from ms.ast import IncompleteExpression, Return, Exit
 import traceback
 
@@ -67,8 +68,13 @@ def repl():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', nargs='?', type=str, help='an optional filename to process', default=None)
+    parser.add_argument('--openai', action='store_true', help="use OpenAI's LLM as oracle provider")
+    args = parser.parse_args()
+
     # Check if filename is provided as command-line argument
-    if len(sys.argv) == 2:
-        execute_file(sys.argv[1])
+    if args.filename:
+        execute_file(args.filename)
     else:
         repl()

@@ -39,11 +39,13 @@ class Tan(MNativeFunction):
 
 class Log(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(value: Num) -> Num")
+        super().__init__(ip, "fun(value: Num) -> Num?")
         self.annotation = "Logarithm function"
 
     def func(self, args: List[MObject]):
         arg = args[0]
+        if arg.value <= 0.0:
+            return MValue(None, None)
         return MValue(math.log(arg.value), None)
 
 class Sqrt(MNativeFunction):

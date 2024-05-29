@@ -48,13 +48,14 @@ class TypeChecker():
                 return False
             elif type(v) == dict and type(target) == ast.TypeMap:
                 required = list(target.required.keys())
-                for key in v.keys():
-                    if key not in target.map:
+                for key in target.map.keys():
+                    if key in v:
+                        if not self._checktype_recursion(v[key], target.map[key], env):
+                            return False
+                    elif key not in v and key in required:
                         return False
-                    if key in required:
+                    if key in v and key in required:
                         required.remove(key)
-                    if not self._checktype_recursion(v[key], target.map[key], env):
-                        return False
                 if len(required) > 0:
                     return False
                 return True

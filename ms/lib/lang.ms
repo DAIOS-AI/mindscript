@@ -56,7 +56,7 @@ let languages = ["English", "Mandarin", "Spanish", "Hindi", "German", "Arabic", 
 
 # Returns a language detector for the given languages.
 let makeLanguageDetector = fun(langs: [Str]?) -> Str -> Str do
-    if langs == null then
+    if langs == null do
         langs = languages
     end
     # Detect the language the text is written in.
@@ -102,3 +102,5 @@ let topicExamples = [
 
 # Produce a list of topics covered by the text.
 let topics = oracle(text: Str) -> [Str] from topicExamples
+
+let test = import("ms/lib/test.ms")

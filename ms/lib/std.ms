@@ -36,6 +36,10 @@ let filter = fun(cond: Any -> Bool, iterator: Null -> Any) -> (Null -> Any) do
 end
 
 # Reduces an iterator using a binary function.
+#
+# Example: calculate the sum from 1 to 100.
+# let sum = fun(n, m) do n+m end
+# reduce(sum, range(1, 101))
 let reduce = fun(f: Any -> Any -> Any, iterator: Null -> Any) -> Any do
     let accum = iterator()
     if accum == null do [] end
@@ -71,4 +75,5 @@ end
 let www = fun(url: Str) -> Str do
     http(null, "GET", url).text
 end
+
 

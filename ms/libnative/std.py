@@ -278,10 +278,10 @@ class Clone(MNativeFunction):
         return deepcopy(arg)
 
 
-class BindFun(MNativeFunction):
+class BindMethod(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any, func: Any -> Any) -> Any -> Any")
-        self.annotation = "Binds a function to a value."
+        self.annotation = "Binds a function to a value as a method."
 
     def func(self, args: List[MObject]):
         obj, fun = args
