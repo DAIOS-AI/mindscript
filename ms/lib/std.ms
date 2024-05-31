@@ -90,3 +90,8 @@ let netImport = fun(url: Str) -> {} do
         return(null)
     end
 end
+
+# Returns a list of keys for a given object.
+let dir = fun(obj: {}) -> [Str] do
+    list(keys(obj))
+end

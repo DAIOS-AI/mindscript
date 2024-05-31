@@ -28,7 +28,7 @@ class CodeImport(MNativeFunction):
 class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(filename: Str) -> {}")
-        self.annotation = "Imports a module located at a given filename."
+        self.annotation = "Imports a file at a given path as a module."
 
     def func(self, args: List[MObject]):
         filename = args[0].value
@@ -294,7 +294,7 @@ class UniqueId(MNativeFunction):
         return MValue(id(value), None)
 
 
-class SetAnnotation(MNativeFunction):
+class SetNote(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any, annotation: Str?) -> Any")
         self.annotation = "Annotates a value."
@@ -305,7 +305,7 @@ class SetAnnotation(MNativeFunction):
         return value
 
 
-class GetAnnotation(MNativeFunction):
+class GetNote(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(value: Any) -> Str?")
         self.annotation = "Get a value's annotation."

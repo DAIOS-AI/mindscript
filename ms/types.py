@@ -33,7 +33,7 @@ class TypeChecker():
                     return True
                 elif type(v) == int and target.token.literal == "Int":
                     return True
-                elif type(v) == float and target.token.literal == "Num":
+                elif (type(v) == int or type(v) == float) and target.token.literal == "Num":
                     return True
                 elif type(v) == str and target.token.literal == "Str":
                     return True

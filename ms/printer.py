@@ -297,7 +297,15 @@ class Printer():
                 raise ValueError(
                     "print_value received an MValue that is not recognized.")
         elif isinstance(value, MFunction):
-            txt = value.definition.types.accept(self) + " " + str(value)
+            items = []
+            for param, ptype in zip(value.params, value.intypes):
+                txt = param.literal + ":" +  ptype.definition.accept(self)
+                items.append(txt)
+            self.indent_incr()
+            prefix = "\n" + self.prefix + " -> "
+            self.indent_decr()
+            txt = prefix.join(items)
+            txt += prefix + value.outtype.definition.accept(self)
         elif isinstance(value, MType):
             txt = "type " + value.definition.accept(self)
         else:

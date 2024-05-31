@@ -59,10 +59,11 @@ class MUserFunction(MFunction):
 
 class Interpreter:
 
-    def __init__(self, interactive=False):
+    def __init__(self, interactive=False, backend=None):
         self.printer = Printer()
         self.parser = Parser(interactive=interactive)
         self.checker = TypeChecker(self)
+        self.backend = backend
         self.reset()
 
     def reset(self):

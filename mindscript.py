@@ -3,6 +3,7 @@ import ms
 import readline
 import argparse
 from ms.ast import IncompleteExpression, Return, Exit
+import ms.backend
 import traceback
 
 GREEN = "\033[32m"
@@ -10,14 +11,19 @@ BLUE = "\033[94m"
 RED = "\x1B[31m"
 RESET = "\033[0m"
 WELCOME = """
-MindScript Version 0.1
+MindScript Version 0.1 ({backend})
 (C) 2024 DAIOS Technologies Limited
 Use Control-D to exit.
 """
 
+backends = [
+    "llamacpp",
+    "gpt35turbo",
+    "gpt4turbo"
+]
 
-def execute_file(filename: str):
-    ip = ms.interpreter()
+def execute_file(filename: str, backend: ms.backend.Backend):
+    ip = ms.interpreter(backend=backend)
     code = ""
 
     try:
@@ -30,9 +36,10 @@ def execute_file(filename: str):
     exit(0)
 
 
-def repl():
+def repl(backend: ms.backend.Backend):
     print(WELCOME)
-    ip = ms.interpreter(interactive=True)
+
+    ip = ms.interpreter(interactive=True, backend=backend)
 
     prompt = "> "
     lines = ""
@@ -70,11 +77,26 @@ def repl():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', nargs='?', type=str, help='an optional filename to process', default=None)
-    parser.add_argument('--openai', action='store_true', help="use OpenAI's LLM as oracle provider")
+    parser.add_argument('--backend', help=f"choose backend from {backends}")
     args = parser.parse_args()
+
+    if args.backend is not None and args.backend not in backends:
+        print(f"Unknown backend: {args.backend}")
+        exit(2)
+    
+    if args.backend is None or args.backend == "llamacpp":
+        args.backend = "llamacpp"
+        backend = ms.backend.LlamaCPP()
+    elif args.backend == "gpt35turbo":
+        backend = ms.backend.GPT3Turbo()
+    elif args.backend == "gpt4turbo":
+        backend = ms.backend.GPT4Turbo()
+    else:
+        backend = ms.backend.LlamaCPP()
+    WELCOME = WELCOME.format(backend=args.backend)
 
     # Check if filename is provided as command-line argument
     if args.filename:
-        execute_file(args.filename)
+        execute_file(args.filename, backend)
     else:
-        repl()
+        repl(backend)

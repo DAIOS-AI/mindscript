@@ -6,8 +6,8 @@ import ms.libnative.network as network
 import ms.libnative.system as system
 from ms.interpreter import Interpreter
 
-def interpreter(interactive=False):
-    ip = Interpreter(interactive=interactive)
+def interpreter(interactive=False, backend:str=None):
+    ip = Interpreter(interactive=interactive, backend=backend)
 
     # Register built-in native symbols.
     ip.define("codeImport", std.CodeImport(ip=ip))
@@ -19,9 +19,9 @@ def interpreter(interactive=False):
     ip.define("print", std.Print(ip=ip))
     ip.define("dump", std.Dump(ip=ip))
     ip.define("getEnv", std.GetEnv(ip=ip))
-    ip.define("typeof", std.TypeOf(ip=ip))
-    ip.define("istype", std.IsType(ip=ip))
-    ip.define("issubtype", std.IsSubtype(ip=ip))
+    ip.define("typeOf", std.TypeOf(ip=ip))
+    ip.define("isType", std.IsType(ip=ip))
+    ip.define("isSubtype", std.IsSubtype(ip=ip))
     ip.define("schema", std.Schema(ip=ip))
     ip.define("assert", std.Assert(ip=ip))
     ip.define("bnf", std.BNF(ip=ip))
@@ -31,8 +31,8 @@ def interpreter(interactive=False):
     ip.define("clone", std.Clone(ip=ip))
     ip.define("bindMethod", std.BindMethod(ip=ip))
     ip.define("uid", std.UniqueId(ip=ip))
-    ip.define("setAnnotation", std.SetAnnotation(ip=ip))
-    ip.define("getAnnotation", std.GetAnnotation(ip=ip))
+    ip.define("setNote", std.SetNote(ip=ip))
+    ip.define("getNote", std.GetNote(ip=ip))
 
     ip.define("PI", math.PI)
     ip.define("E", math.E)
@@ -44,8 +44,8 @@ def interpreter(interactive=False):
     ip.define("pow", math.Pow(ip=ip))
 
     ip.define("substr", string.SubStr(ip=ip))
-    ip.define("tolower", string.ToLower(ip=ip))
-    ip.define("toupper", string.ToUpper(ip=ip))
+    ip.define("toLower", string.ToLower(ip=ip))
+    ip.define("toUpper", string.ToUpper(ip=ip))
     ip.define("strip", string.Strip(ip=ip))
     ip.define("lstrip", string.LStrip(ip=ip))
     ip.define("rstrip", string.RStrip(ip=ip))

@@ -8,57 +8,43 @@ from ms.objects import MType, MValue, MObject, MFunction
 import ms.ast as ast
 
 
-max_tokens = 1000
-
-api_url = "http://localhost:8080/completion"
-headers = {"Content-Type": "application/json"}
-
-
 HEADER = """
 You are a helpful assistant, and your task is to provide answers
 respecting the formatting instructions.
 
-INPUT SCHEMA (JSON)
-===================
+INPUT JSON SCHEMA:
 
 {input_schema}
 
-OUTPUT SCHEMA (JSON)
-====================
+OUTPUT JSON SCHEMA:
 
 {output_schema}
 """
 
 EXAMPLE = """
-TASK
-====
+TASK:
 
 {task}
 
-INPUT
-=====
+INPUT:
 
 {input}
 
-OUTPUT
-======
+OUTPUT:
 
 {output}
 """
 
 QUERY = """
-TASK
-====
+TASK:
 
 {task}
 
-INPUT
-=====
+INPUT:
 
 {input}
 
-OUTPUT
-======
+OUTPUT:
 
 """
 
@@ -69,8 +55,8 @@ class MOracleFunction(MFunction):
         super().__init__(ip, definition)
 
 
-        schema_printer = JSONSchema(ip)
-        bnf_printer = BNFFormatter(ip)
+        jsonschema = JSONSchema(ip)
+        bnf = BNFFormatter(ip)
 
         # Build input schemas.
         in_annotation = self.definition.types.annotation
@@ -79,18 +65,13 @@ class MOracleFunction(MFunction):
         in_required = {param.literal: True for param in self.params}
         in_types = ast.TypeMap(annotation=in_annotation,
                                map=in_type_map, required=in_required)
-        self.input_schema = schema_printer.print_schema(MType(ip, in_types))
+        self.input_schema = jsonschema.print_schema(MType(ip, in_types))
 
         # Build output schema and BNF grammar.
         try:
-            # print(f"MOracleFunction.__init__: Part 1")
             out_type = self.outtype.definition
-            # print(f"MOracleFunction.__init__: Part 2")
-            self.output_schema = schema_printer.print_schema(MType(ip, out_type))
-            # print(f"MOracleFunction.__init__: Part 3")
-            self.output_schema_obj = bnf_printer.format(MType(ip, out_type))
-            # print(f"MOracleFunction.__init__: Part 4")
-            # self.output_schema_obj = self.output_schema #json.loads(self.output_schema)
+            self.output_schema = jsonschema.print_schema(MType(ip, out_type))
+            self.output_grammar = bnf.format(MType(ip, out_type))
         except Exception as e:
             print("Exception:" + str(e))
         self.examples = self.validate_examples(examples)
@@ -147,29 +128,15 @@ class MOracleFunction(MFunction):
         prompt += self.prepare_examples()
         prompt += QUERY.format(task=task, input=input_example)
 
-        # print(f"oracle: prompt = {prompt}")
-        with requests.post(
-            api_url, headers=headers,
-            json={
-                "prompt": prompt,
-                # "json_schema": self.output_schema_obj,
-                "grammar": self.output_schema_obj,
-                "n_predit": max_tokens,
-                "repeat_penalty": 1.5
-            }
-        ) as response:
-            response_obj = response.json()
-            # print(f"\noracle: response = {response_obj}")
-            response_txt = response_obj["content"]
-            output = self.interpreter.eval(response_txt)
-
-        # print(prompt + response_txt)
+        try:
+            reply = self.interpreter.backend.consult(prompt, self.output_grammar)
+            output = self.interpreter.eval(reply)
+        except Exception as e:
+            return MValue(None, str(e))
         return output
 
     def __repr__(self):
-        # print(f"UserFunction.repr: definition = {self.definition}")
         return "<oracle>"
 
     def __str__(self):
-        # print(f"UserFunction.str: definition = {self.definition}")
         return "<oracle>"

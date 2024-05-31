@@ -1,5 +1,5 @@
 ################################################################################
-# MindScript Lang library
+# MindScript Language library
 # (c) 2024 DAIOS Technologies Ltd.
 ################################################################################
 
@@ -39,6 +39,128 @@
 # Extract structured information: extract_information(text, schema)
 # 15. Text Generation
 # Generate text: generate_text(prompt, model)
+
+# Named entity reconignition.
+
+let nerExamples = [
+    [
+        "Apple Inc. announced a new iPhone model at their headquarters in Cupertino on September 14, 2021.",
+        [
+            {text: "Apple Inc.", entity: "Organization"},
+            {text: "iPhone", entity: "Product"},
+            {text: "Cupertino", entity: "Location"},
+            {text: "September 14, 2021", entity: "Date"}
+        ]
+    ],
+    [
+        "The research conducted by Dr. Jane Smith at Stanford University focuses on the impact of climate change on marine biodiversity.",
+        [
+            {text: "Dr. Jane Smith", entity: "Person"},
+            {text: "Stanford University", entity: "Organization"},
+            {text: "climate change", entity: "Concept"},
+            {text: "marine biodiversity", entity: "Concept"}
+        ]
+    ],
+    [
+        "Had an amazing time visiting the Eiffel Tower in Paris last summer!",
+        [
+            {text: "Eiffel Tower", entity: "Location"},
+            {text: "Paris", entity: "Location"},
+            {text: "last summer", entity: "Date"}
+        ]
+    ],
+    [
+        "In Q1 2022, Google reported a 25% increase in revenue, largely driven by growth in their cloud computing division.",
+        [
+            {text: "Q1 2022", entity: "Date"},
+            {text: "Google", entity: "Organization"},
+            {text: "25%", entity: "Percentage"},
+            {text: "cloud computing division", entity: "Service"}
+        ]
+    ],
+    [
+        "The Treaty of Versailles was signed on June 28, 1919, marking the end of World War I.",
+        [
+            {text: "Treaty of Versailles", entity: "Event"},
+            {text: "June 28, 1919", entity: "Date"},
+            {text: "World War I",  entity: "Event"}
+
+        ]
+    ]
+]
+
+# Identify and classify various entities such as persons, organizations, locations, 
+# dates, products, and concepts within the text.
+let ner = oracle(text: Str) -> [{text: Str, entity: Str}] from nerExamples
+
+
+# PoS - Part of Speech Tagging.
+
+let posExamples = [
+    [
+        "The quick brown fox jumps over the lazy dog.",
+        [
+            ["The", "Determiner"],
+            ["quick", "Adjective"],
+            ["brown", "Adjective"],
+            ["fox", "Noun"],
+            ["jumps", "Verb"],
+            ["over", "Preposition"],
+            ["the", "Determiner"],
+            ["lazy", "Adjective"],
+            ["dog", "Noun"]
+        ]
+    ],
+    [
+        "She sells seashells by the seashore.",
+        [
+            ["She", "Pronoun"],
+            ["sells", "Verb"],
+            ["seashells", "Noun"],
+            ["by", "Preposition"],
+            ["the", "Determiner"],
+            ["seashore", "Noun"]
+        ]
+    ],
+    [
+        "He quickly ran to the store.",
+        [
+            ["He", "Pronoun"],
+            ["quickly", "Adverb"],
+            ["ran", "Verb"],
+            ["to", "Preposition"],
+            ["the", "Determiner"],
+            ["store", "Noun"]
+        ]
+    ],
+    [
+        "They are planning a big surprise party.",
+        [
+            ["They", "Pronoun"],
+            ["are", "Verb"],
+            ["planning", "Verb"],
+            ["a", "Determiner"],
+            ["big", "Adjective"],
+            ["surprise", "Adjective"],
+            ["party", "Noun"]
+        ]
+    ],
+    [
+        "Reading books can expand your knowledge.",
+        [
+            ["Reading", "Verb"],
+            ["books", "Noun"],
+            ["can", "Modal"],
+            ["expand", "Verb"],
+            ["your", "Pronoun"],
+            ["knowledge", "Noun"]
+        ]
+    ]
+]
+
+# Assign a part-of-speech label to each word in a sentence, where each label
+# indicates the grammatical category of each word, such as noun, verb, etc.
+let tagPOS = oracle(text: Str) -> [[Str]] from posExamples
 
 
 # Sentiment analysis.
@@ -104,3 +226,4 @@ let topicExamples = [
 let topics = oracle(text: Str) -> [Str] from topicExamples
 
 let test = import("ms/lib/test.ms")
+
