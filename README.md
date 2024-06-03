@@ -364,7 +364,7 @@ Notes:
 - The container types are built using delimiters `[...]` (arrays) or `{...}` (objects) 
   and then further specifying the types of their members. 
 - Similarly, function types are indicated by an arrow `->` as in `(Int -> Str) -> Str`.
-  To indicate an arbiraty functional structure, use `Fun`.
+  To indicate an arbiraty functional structure, use `Any -> Any`.
 - You can omit the quotes/double-quotes of keys if they follow the naming convention
   of variable names.
 - Mandatory object properties are indicated using `!`. Hence, `name!: Str` is a required
