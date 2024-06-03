@@ -26,26 +26,26 @@ An experimental programming language combining formal and informal computation.
 
 ## Description
 
-MindScript is a programming language that elevates both formal and 
-informal computation to first-class status, seamlessly integrating 
+MindScript is a programming language that gives both formal and 
+informal computation first-class status, seamlessly integrating 
 them. This approach allows developers to tailor the precision level 
-of their coding based on the clarity of their initial concept.
+of their coding based on the clarity about the solution.
 
-MindScript empowers programmers to code directly when the method for 
-accomplishing a task is clear—by writing the code. Conversely, when 
-they know what they want but not how to do it, developers can simply 
+MindScript lets programmers code directly when the method for 
+accomplishing a task is clear. Conversely, when they know what 
+they want but not how to achieve it, developers can simply 
 describe their intent. For example, initially, one might outline the 
-steps of a program, allowing MindScript to generate a preliminary, 
-though possibly imperfect, implementation. This can later be refined 
-with precise coding as the solution becomes clearer. Additionally, 
-certain functions, such as analyzing the sentiment of a sentence, 
-might not need a concrete implementation at all. The syntax is designed 
-to make such specifications straightforward, providing simple yet 
-powerful tools to express such concepts.
+steps of a program, allowing MindScript simulate a preliminary, 
+though possibly imperfect, implementation. As solutions become clearer,
+this can later be refined with precise code. Additionally, 
+for certain functions, such as analyzing the sentiment of a sentence, 
+there might not exist a concrete implementation at all. 
+The syntax is designed to make such specifications straightforward, 
+providing simple yet powerful tools to express such concepts.
 
 A distinctive feature of MindScript is its dual support for both 
 formal and informal types. While formal types set hard constraints 
-that can be algorithmically verified, informal types offer more flexible, 
+that can be algorithmically verified, informal types offer flexible 
 inductive constraints, similar to how our observations guide our own thought 
 processes.
 
@@ -53,8 +53,7 @@ In practice, formal computation within MindScript is realized through
 a Turing-complete language (&lambda;), ensuring rigorous programmability. 
 Meanwhile, informal computations are handled by an oracle, realized through 
 a language model (&Psi;) which interprets and processes less structured inputs. 
-This dual approach allows MindScript to blend precision and flexibility, 
-catering to a wide range of programming needs and styles.
+This dual approach allows MindScript to blend precision and flexibility.
 
 **Features:**
 
@@ -147,7 +146,6 @@ MindScript is dynamically typed: only the values have a type, not the variables.
 
 ```
 let greeting = "Hello, world!"
-
 ```
 
 This defines a variable named `greeting` containing a value `Hello, world!` of type `Str`.
@@ -218,8 +216,8 @@ end
 
 Note that:
 - The arguments and the output can have a type annotation. Omitted types are assumed
-  to be equal to `Any`.
-- If no argument is provided in the function declaration, the a `null` argument
+  to be equal to `Any`, which is the universal type.
+- If no argument is provided in the function declaration, the `null` argument
   is added automatically.
 - The body of the function is enclosed in a `do ... end` block containing
   expressions. The function returns the value of the last expression,
@@ -263,7 +261,7 @@ known, the remaining subexpressions are not evaluated. For instance:
 ```
 will only evaluate up to `(2/2 == 1)`, omitting the evaluation of `(2/3 == 2)`.
 
-**If-then** expressions have a simple `if ... then` block structure with the
+**Conditional** expressions have a simple `if ... do ... else ... end` block structure with the
 familiar semantics:
 ```
 if n == 1 do
@@ -274,10 +272,11 @@ else
     print("The value is unknown.")
 end
 ```
+These evaluate to the condition which is fulfilled, or to `null` otherwise.
 
 **For-loops** iterate over the outputs of an *iterator* (see below). 
 The entire for-loop evaluates to the last evaluated
-expression, i.e. as if the executions of its body are concatenated.
+expression, i.e. as if the executions of its body were concatenated.
 
 ```
 for v in iterator do
@@ -321,7 +320,7 @@ These can be arbitrarily nested.
 The primitive built-in data types are:
 - `Null`: the `null` value;
 - `Bool`: booleans, either `true` or `false`;
-- `Int`: integers like `42`;
+- `Int`: integers like `42` and `101`;
 - `Num`: floating-point numbers like `3.1459`;
 - `Str`: strings, enclosed in double- or single quotes as in `"hello, world!"` or `'hello, world!'`;
 - `Type`: the type of a type.
@@ -337,18 +336,18 @@ There are also enums, which are created by specifying the type and an exhaustive
 let TwoOutOfThree = type Enum([Int], [[1, 2], [1, 3], [2, 3]]) 
 ```
 
-The `typeof` function returns the type of a given expression:
+The `typeOf` function returns the type of a given expression:
 
 ```
-> typeof({name: "Albert Einstein", age: 76})
+> typeOf({name: "Albert Einstein", age: 76})
 
 { name: Str, age: Int }
 
-> typeof(print)
+> typeOf(print)
 
 Any -> Any
 
-> typeof(typeof)
+> typeOf(typeOf)
 
 Any -> Type
 ```
@@ -364,12 +363,15 @@ let Person = type {
     hobbies: [Str]
 }
 ```
+These types are aliases of the underlying structure, hence two types with different
+names are equal if their structures match. 
+
 Once created, they can be used as a normal MindScript values of type `Type`:
 ```
-> typeof(Person)
+> typeOf(Person)
 Type
 
-> issubtype({name: "Albert", email: null}, Person)
+> isSubtype({name: "Albert", email: null}, Person)
 true
 ```
 
@@ -382,8 +384,8 @@ Notes:
 - You can omit the quotes/double-quotes of keys if they follow the naming convention
   of variable names.
 - Mandatory object properties are indicated using `!`. Hence, `name!: Str` is a required
-  property, whereas `name: Str` isn't.
-- Optional elements (i.e. can have `null`) are indicated using `?`. Thus, `Str?` is
+  property, whereas `name: Str` isn't and can be omitted.
+- Nullable elements are indicated using `?`. Thus, `Str?` is
   either equal to a string or `null`, whereas `Str` can only be a valid string.
 
 ## Informal types
@@ -399,7 +401,7 @@ expression:
 let c = 299792458
 ```
 
-Since the annotation gets attached to the value of the expression, the following
+Since the annotation gets attached to the value of the following expression, the next
 code will produce a function of informal type "Computes the sum of two integers."
 ```
 # Computes the sum of two integers.
@@ -428,13 +430,12 @@ Oracles are defined using the `oracle` keyword. For instance:
 # Write the name of an important researcher in the given field.
 let researcher = oracle(field: Str) -> {name: Str}
 ```
-
+That's it!
 This creates an anonymous oracle with formal type `Str -> {name: Str}` and informal
-type `Write the name of an important researcher in the given field.` guiding the
+type "Write the name of an important researcher in the given field." guiding the
 generation of the output (i.e. informal types get added to the LLM prompt).
 
 We can then use the oracle as if it were a function:
-
 ```
 > researcher("physics")
 
@@ -444,7 +445,6 @@ We can then use the oracle as if it were a function:
 
 {"name": "Charles Darwin"}
 ```
-
 where the inputs and outputs should conform to the given formal type.
 
 ### Examples
@@ -454,23 +454,23 @@ with examples. These are given using the `from` keyword plus an
 array containing the examples.
 
 ```
-let examples = [[0, 1], [1, 1], [2, 2], [3, 6], [4, 24], [5, 120]]
-let factorial = oracle(number: Int) -> Int from examples
+let examples = [[0, "zero"], [1, "one"], [2, "two"], [3, "three"], [4, "four"], [5, "five"]]
+let number2lang = oracle(number: Int) -> Str from examples
 ```
+This time we did not provide a description of the task.
 
 Then we can induce the output for a new input.
-
 ```
-> factorial(6)
+> number2lang(42)
 
-720
+"forty-two"
 
-> factorial(7)
+> number2lang(7)
 
-5042
+"one thousand twenty-four"
 ```
-Notice in the previous example the oracle did not induce the factorial function
-(as 7! = 5040).
+Obviously, since oracles perform inductive inference, they are not guaranteed 
+to produce the correct output as in the previous case.
 
 Each example must have the format `[arg_1, arg_2, ..., arg_n, output]`. For instance,
 `[3, 2, "five"]` is a valid example for a function of type `Int -> Int -> Str`.
@@ -480,7 +480,6 @@ Each example must have the format `[arg_1, arg_2, ..., arg_n, output]`. For inst
 MindScript fires up with a set of pre-loaded functions. 
 
 To obtain an object that shows all the variables defined, use `getEnv`:
-
 ```
 > getEnv()
 
@@ -544,7 +543,7 @@ Now let's try keyword extractor:
 
 ```
 
-To explore the standard library, just type its name - the informal type annotation will
+To explore the standard library, just type the name of an object - the informal type annotation will
 provide information about what it does.
 ```
 > unshift
