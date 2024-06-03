@@ -30,7 +30,9 @@ MindScript is a programming language with both formal and informal
 computation as first class citizens. 
 
 MindScript's value proposition is to allow programmers to allocate the right 
-level of precision for expressing their thoughts. 
+level of precision for expressing their thoughts. If the programmer knows **how**
+to accomplish a task, they can write the code. If they know **what** they want
+but not **how** to do it, they can describe it.
 
 Its unique feature is its support 
 of both formal and informal types. Types constrain the values that an expression 
