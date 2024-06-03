@@ -75,12 +75,6 @@ interest, I will write a runtime in C.
 
 ## Installation
 
-Install MindScript into a directory of your choice by cloning the Git repo:
-```
-git clone https://github.com/DAIOS-AI/mindscript/
-cd mindscript
-```
-
 MindScript requires access to an LLM, which is either local or remote.
 
 ### Running localy with llama.cpp:
@@ -103,11 +97,6 @@ Run the llama.cpp server. For instance:
 
 Mindscript expects the llama.cpp server to run at `http://localhost:8080/completion`.
 
-Then run the MindScript REPL as:
-```
-python mindscript.py
-```
-
 ### Running remote with an OpenAI model:
 
 Set the OpenAI API key as an environment variable:
@@ -115,21 +104,22 @@ Set the OpenAI API key as an environment variable:
 export OPENAI_API_KEY=[YOUR API KEY]
 ```
 
-Run MindScript with e.g. the GPT 3.5 turbo backend: 
+## Installing and running MindScript
+
+Install MindScript into a directory of your choice by cloning the Git repo:
+```
+git clone https://github.com/DAIOS-AI/mindscript/
+cd mindscript
+```
+
+To run the REPL with e.g. GPT 3.5 turbo, enter
 ```
 python mindscript.py --backend gpt35turbo
 ```
 
-## Running MindScript
-
-To run the REPL, enter
+To run a program `myprogram.ms` with e.g. Llama.cpp, enter
 ```
-python mindscript.py 
-```
-
-To run a program `myprogram.ms`, enter
-```
-python mindscript.py myprogram.ms
+python mindscript.py myprogram.ms --backend llamacpp
 ```
 
 If you need help, enter
