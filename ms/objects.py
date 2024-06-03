@@ -205,8 +205,10 @@ class MPartialFunction(MFunction):
 
     def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
         if type(definition) == str:
+            buffer = ip.get_buffer()
             definition = ip.parser.parse(
-                definition + " do null end").program[0]
+                definition + " do null end\n", "<native def>").program[0]
+            ip.set_buffer(buffer)
         super().__init__(ip, definition)
 
     @abstractmethod
@@ -218,8 +220,10 @@ class MNativeFunction(MFunction):
 
     def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
         if type(definition) == str:
+            buffer = ip.buffer
             definition = ip.parser.parse(
-                definition + " do null end").program[0]
+                definition + " do null end\n", "<native def>").program[0]
+            ip.set_buffer(buffer)
         super().__init__(ip, definition)
 
     @abstractmethod

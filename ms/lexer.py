@@ -38,23 +38,25 @@ Keywords = {
 class Lexer:
 
     def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.start = 0        # Start of testing lexeme.
-        self.current = 0      # Current scanning position.
-        self.line = 0         # Line of testing lexeme.
-        self.col = 0          # Column of testing lexeme.
-        self.stream = ""
-        self.whitespace = True
+        self.stream_id = "std"
+        self.stream = {self.stream_id: ""}
+        self.set_stream(self.stream_id)
         self.tokens = []
 
+    def set_stream(self, stream_id: str):
+        if stream_id not in self.stream:
+            self.stream[stream_id] = ""
+        self.stream_id = stream_id
+        self.start = len(self.stream[stream_id])
+        self.current = self.start
+        self.whitespace = True
+
     def peek(self):
-        c = self.stream[self.current]
+        c = self.stream[self.stream_id][self.current]
         return c
 
     def advance(self):
-        c = self.stream[self.current]
+        c = self.stream[self.stream_id][self.current]
         # print(f"Scanning {c}")
         self.current += 1
         return c
@@ -63,24 +65,18 @@ class Lexer:
         self.current = self.start
 
     def forward(self):
-        while self.start < self.current:
-            if self.stream[self.start] == "\n":
-                self.line += 1
-                self.col = 0
-            else:
-                self.col += 1
-            self.start += 1
+        self.start = self.current
 
     def is_at_end(self):
-        return self.current >= len(self.stream)
+        return self.current >= len(self.stream[self.stream_id])
 
     def add_token(self, ttype: TokenType, literal: Any = None):
         self.whitespace = False
         token = Token(
             ttype=ttype,
             literal=literal,
-            col=self.col,
-            line=self.line
+            index=self.start,
+            buffer=self.stream_id
         )
         self.tokens.append(token)
         self.forward()
@@ -214,10 +210,27 @@ class Lexer:
     #         lexeme += self.advance()
     #     return lexeme
 
-    def report_error(self, line: int, col: int, errtype: str, msg: str):
-        lines = self.stream.splitlines()
+    def linecol(self, buffer: str, index: int):
+        lines = self.stream[buffer].splitlines()
         lines.append("")
-        print(f"\033[31m{errtype}: In line {line+1}, near")
+
+        # Determine line, col.
+        line, col = 0, 0
+        for l in lines:
+            if index + 1 > len(l):
+                index -= len(l) + 1
+                line += 1
+            else:
+                col = index
+                break
+        return line, col
+
+    def report_error(self, buffer: str, index: int, errtype: str, msg: str):
+        line, col = self.linecol(buffer, index)
+        lines = self.stream[buffer].splitlines()
+        lines.append("")
+
+        print(f"\033[31m{errtype}: In {buffer}, line {line+1}, near")
         if line > 0:
             print(lines[line-1])
         print(lines[line])
@@ -225,7 +238,7 @@ class Lexer:
         print(msg + "\033[0m")
 
     def error(self, msg: str):
-        self.report_error(self.line, self.col, "LEXICAL ERROR", msg)
+        self.report_error(self.stream_id, self.start, "LEXICAL ERROR", msg)
         raise LexicalError(msg)
 
     def scan_token(self):
@@ -376,9 +389,10 @@ class Lexer:
 
         return self.add_token(TokenType.EOF)  # Change this for error handling!
 
-    def scan(self, code: str):
+    def scan(self, code: str, buffer: str):
+        self.set_stream(buffer)
         self.tokens = []
-        self.stream += code.replace("\t", "    ")
+        self.stream[self.stream_id] += code.replace("\t", "    ")
         while self.scan_token().ttype != TokenType.EOF:
             pass
         return self.tokens

@@ -1,9 +1,9 @@
 
-# "
-
-  TEST SCRIPT.
-
-" null
+###############################################################################
+#
+#  TEST SCRIPT.
+#
+###############################################################################
 
 print("Equality.\n")
 assert(true == true)
@@ -17,7 +17,7 @@ assert([0, 1] == [0, 1])
 assert([] != [0, 1])
 assert({name: "name", age: 21} == {name: "name", age: 21})
 assert({name: "name", age: 21} != {name: "name", age: 21, hobbies: null})
-assert(let MyType = type [Int, Str] == type [Int, Str])
+assert(let MyType = type [Int] == type [Int])
 let f = fun(n) do n end
 let g = fun(n) do n end
 let h = f 
@@ -91,7 +91,7 @@ print(speed)
 
 # "computes the factorial of a given integer."
 let factorial = fun(n: Int) -> Int do
-  if n==0 or n==1 then 1
+  if n==0 or n==1 do 1
   else n*factorial(n-1)
   end
 end
@@ -100,7 +100,7 @@ print(factorial)
 print("\n# Testing for loops.")
 let range = fun(start: Int, stop: Int) -> (Null -> Int?) do
   fun() -> Int? do
-    if start<stop then
+    if start<stop do
       let value = start
       start = start + 1
       return(value)
@@ -131,7 +131,7 @@ print("Should print the object.")
 print(obj)
 
 print("Should print the type of the object.")
-let ObjType = typeof(obj)
+let ObjType = typeOf(obj)
 print(ObjType)
 
 let show_age = fun(arg: {"name": Str, "age": Int}) -> Int do
@@ -146,12 +146,12 @@ print("# Trying oracle functions.")
 let au = oracle(planet: Str) -> Num
 
 print("AU Earth        : " + str(au("Earth")))
+print("AU Jupiter      : " + str(au("Jupiter")))
 
 print("# Testing for subtypes.")
-assert(issubtype(type [Int], type Array))
-assert(issubtype(type Array, type Array))
-assert(issubtype(type [], type Array))
+assert(isSubtype(type [Int], type [Any]))
+assert(isSubtype(type [Any], type [Any]))
 
-assert(issubtype(type Object, type Object))
-assert(issubtype(type {}, type Object))
+assert(isSubtype(type {name: Str}, type {}))
+assert(isSubtype(type {}, type {}))
 

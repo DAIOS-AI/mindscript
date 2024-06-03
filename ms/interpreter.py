@@ -63,16 +63,26 @@ class Interpreter:
         self.printer = Printer()
         self.parser = Parser(interactive=interactive)
         self.checker = TypeChecker(self)
+        if backend is None:
+            raise ValueError("The interpreter must be started with an oracle backend.")
         self.backend = backend
+        self.buffer = "<interpreter>"
         self.reset()
 
     def reset(self):
         self.parser.reset()
         self.env = Environment()
 
-    def eval(self, instr: str):
+    def set_buffer(self, buffer: str):
+        self.parser.lexer.set_stream(buffer)
+        self.buffer = buffer
+
+    def eval(self, instr: str, buffer: str = None):
+        if buffer is None:
+            buffer = self.buffer
+        self.buffer = buffer
         val = MValue(None, None)
-        tree = self.parser.parse(instr)
+        tree = self.parser.parse(instr, buffer)
         if tree is None:
             return val
         try:
@@ -103,7 +113,7 @@ class Interpreter:
 
     def error(self, token: ast.Token, msg):
         self.parser.lexer.report_error(
-            token.line, token.col, "RUNTIME ERROR", msg)
+            token.buffer, token.index, "RUNTIME ERROR", msg)
         raise ast.RuntimeError(msg)
 
     def exit(self):

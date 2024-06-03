@@ -9,6 +9,8 @@ from ms.interpreter import Interpreter
 def interpreter(interactive=False, backend:str=None):
     ip = Interpreter(interactive=interactive, backend=backend)
 
+    ip.set_buffer("<preamble>")
+
     # Register built-in native symbols.
     ip.define("codeImport", std.CodeImport(ip=ip))
     ip.define("import", std.Import(ip=ip))
@@ -64,6 +66,8 @@ def interpreter(interactive=False, backend:str=None):
     ip.define("keys", collections.Keys(ip=ip))
     ip.define("values", collections.Values(ip=ip))
     ip.define("exists", collections.Exists(ip=ip))
+    ip.define("get", collections.Get(ip=ip))
+    ip.define("set", collections.Set(ip=ip))
 
     ip.eval(network.HTTPParams)
     ip.define("http", network.HTTP(ip=ip))
@@ -75,7 +79,7 @@ def interpreter(interactive=False, backend:str=None):
     # Register built-in symbols.
     with open("ms/lib/std.ms") as fh:
         code = fh.read()
-        ip.eval(code)
+        ip.eval(code, "ms/lib/std.ms")
 
     # Clean the lexer's code buffer (disabled now).
     # ip.parser.lexer.reset()

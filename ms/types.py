@@ -117,7 +117,7 @@ class TypeChecker():
                 return True
 
         elif type1 == ast.TypeArray and type2 == ast.TypeArray:
-            return self._subtype_recursion(type1.expr, type2.expr, env1, env2, visited)
+            return self._subtype_recursion(t1.expr, t2.expr, env1, env2, visited)
 
         elif type1 == ast.TypeMap and type2 == ast.TypeMap:
             if not set(t1.map.keys()).issubset(set(t2.map.keys())):

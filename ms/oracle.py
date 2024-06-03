@@ -54,7 +54,6 @@ class MOracleFunction(MFunction):
     def __init__(self, ip: 'Interpreter', definition: ast.Function, examples: MValue):  # type: ignore
         super().__init__(ip, definition)
 
-
         jsonschema = JSONSchema(ip)
         bnf = BNFFormatter(ip)
 
@@ -75,6 +74,10 @@ class MOracleFunction(MFunction):
         except Exception as e:
             print("Exception:" + str(e))
         self.examples = self.validate_examples(examples)
+
+        # Add null return.
+        if type(self.outtype.definition) != ast.TypeUnary:
+            self._outtype._definition = ast.TypeUnary(expr=self.outtype.definition)
 
     def prepare_input(self, args: List[MObject]):
         data = {}
@@ -129,9 +132,9 @@ class MOracleFunction(MFunction):
         prompt += QUERY.format(task=task, input=input_example)
 
         try:
-            reply = self.interpreter.backend.consult(prompt, self.output_grammar)
-            output = self.interpreter.eval(reply)
-        except Exception as e:
+            code = self.interpreter.backend.consult(prompt, self.output_grammar)
+            output = self.interpreter.eval(code)
+        except ValueError as e:
             return MValue(None, str(e))
         return output
 

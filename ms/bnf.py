@@ -122,12 +122,7 @@ class BNFRule(BaseModel):
 class BNFFormatter():
 
     def __init__(self, interpreter):
-        self.reset()
         self.interpreter = interpreter
-
-    def reset(self):
-        self.prefix = ""
-        self.indent = 0
 
     # TODO: Rewrites memory addresses as 5 digit hexadecimals - it won't guarantee uniqueness.
     def tag(self, obj):

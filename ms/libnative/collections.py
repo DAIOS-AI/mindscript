@@ -186,3 +186,21 @@ class Exists(MNativeFunction):
         obj, key = args
         return MValue(key.value in obj.value, None)
     
+class Get(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(obj: {}, key: Str) -> Any")
+        self.annotation = "Returns a property."
+
+    def func(self, args: List[MObject]):
+        obj, key = args
+        return obj.value[key.value]
+
+class Set(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        super().__init__(ip, "fun(obj: {}, key: Str, value: Any) -> Any")
+        self.annotation = "Set a property to a given value."
+
+    def func(self, args: List[MObject]):
+        obj, key, value = args
+        obj.value[key.value] = value
+        return value

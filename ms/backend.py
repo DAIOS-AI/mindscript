@@ -1,8 +1,11 @@
 import os
 import requests
+import json
 from abc import abstractmethod
 from ms.objects import MValue
 
+
+TIMEOUT = 20
 
 class Backend:
     # Must return a dict {"headers": dict, "json": dict}
@@ -20,10 +23,23 @@ class Backend:
         # print(f"Backend.consult: prompt = {prompt}")
         url = self.url
         data = self.preprocess(prompt, output_grammar)
-        with requests.post(url, **data) as response:
-            res = response.json()
-            # print(f"Backend.consult: res = {res}")
-            code = self.postprocess(res)
+        try:
+            with requests.post(url, timeout=TIMEOUT, **data) as response:
+                res = response.json()
+                # print(f"Backend.consult: res = {res}")
+                code = self.postprocess(res)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Error: JSON decode failure of {response.text}")
+        except requests.ConnectionError as e:
+            raise ValueError(f"Error: Connection for {url}")
+        except requests.Timeout as e:
+            raise ValueError(f"Error: Timeout for {url}")
+        except requests.HTTPError as e:
+            raise ValueError(f"Error: HTTP error for {url}")
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error: Unknown request error for {url}")
+        except KeyError as e:
+            raise ValueError(f"Error: Unexpected reply: {res}")
         return code
 
 

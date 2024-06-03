@@ -85,7 +85,7 @@ end
 let netImport = fun(url: Str) -> {} do
     let code = www(url)
     if code != null do
-        return(codeImport(code))
+        return(codeImport(code, url))
     else
         return(null)
     end
@@ -94,4 +94,18 @@ end
 # Returns a list of keys for a given object.
 let dir = fun(obj: {}) -> [Str] do
     list(keys(obj))
+end
+
+# Return null given any input.
+let mute = fun(_: Any) -> Null do null end
+
+# Return the methods of an object.
+let dirFun = fun(obj: {}) -> [Str] do
+    let m = []
+    for key in keys(obj) do
+        if isType(get(obj, key), type Any -> Any) do
+            push(m, key)
+        end
+    end
+    return(m)
 end

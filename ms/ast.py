@@ -73,12 +73,12 @@ Literal = Any
 
 class Token(BaseModel):
     ttype: TokenType
-    col: Optional[int] = 0
-    line: Optional[int] = 0
+    buffer: Optional[str] = ""
+    index: Optional[int] = 0
     literal: Literal = None
 
     def __repr__(self):
-        return f"{self.ttype.name}({self.line},{self.col}):{self.literal}"
+        return f"{self.ttype.name}({self.buffer},{self.index}):{self.literal}"
 
     def __str__(self):
         return self.__repr__()

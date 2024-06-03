@@ -13,13 +13,13 @@ from ms.libnative.auxiliary import import_code, flattened_env
 
 class CodeImport(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(code: Str) -> {}")
+        super().__init__(ip, "fun(code: Str, name: Str) -> {}")
         self.annotation = "Imports code as a module."
 
     def func(self, args: List[MObject]):
-        code = args[0]
+        code, name = args
         try:
-            module = import_code(code.value)
+            module = import_code(code.value, self.interpreter.backend, name.value)
         except Exception as e:
             self.error(str(e))
         return MValue(module, None)
@@ -35,7 +35,7 @@ class Import(MNativeFunction):
         try:
             with open(filename, "r") as fh:
                 code = fh.read()
-            module = import_code(code)
+            module = import_code(code, self.interpreter.backend, filename)
         except FileNotFoundError as e:
             self.error(f"File not found: {filename}")
         except Exception as e:

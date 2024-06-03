@@ -98,7 +98,7 @@ class Parser:
         return False
 
     def error(self, token: Token, msg: str) -> None:
-        self.lexer.report_error(token.line, token.col, "SYNTAX ERROR", msg)
+        self.lexer.report_error(token.buffer, token.index, "SYNTAX ERROR", msg)
         raise ast.SyntaxError(msg)
 
     def consume(self, ttype: TokenType, fail_msg: str) -> bool:
@@ -109,40 +109,42 @@ class Parser:
         return self.advance()
 
     def synchronize(self):
-        line_before = self.peek().line
+        token = self.peek()
+        line_before, _ = self.lexer.linecol(token.buffer, token.index)
         while not self.is_at_end():
             self.advance()
-            line_current = self.peek().line
+            token = self.peek()
+            line_current, _ = self.lexer.linecol(token.buffer, token.index)
             if not self.is_at_end() and line_before < line_current:
                 return
 
-    def any_type_terminal(self, line: int, col: int):
+    def any_type_terminal(self, buffer: str, index: int):
         return ast.TypeTerminal(
             token=Token(
                 ttype=TokenType.TYPE,
                 literal="Any",
-                line=line,
-                col=col
+                buffer=buffer,
+                index=index
             )
         )
 
-    def null_type_terminal(self, line: int, col: int):
+    def null_type_terminal(self, buffer: str, index: int):
         return ast.TypeTerminal(
             token=Token(
                 ttype=TokenType.TYPE,
                 literal="Null",
-                line=line,
-                col=col
+                buffer=buffer,
+                index=index
             )
         )
 
-    def null_terminal(self, line: int, col: int):
+    def null_terminal(self, buffer: str, index: int):
         return ast.Terminal(
             token=Token(
                 ttype=TokenType.NULL,
                 literal=None,
-                line=line,
-                col=col
+                buffer=buffer,
+                index=index
             )
         )
 
@@ -176,7 +178,12 @@ class Parser:
     def parse_expression(self):
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
+            annotation = Token(
+                ttype=TokenType.STRING, 
+                buffer=operator.buffer, 
+                index=operator.index, 
+                literal=operator.literal
+            )
             expr = self.parse_expression()
             return ast.Annotation(operator=operator, annotation=annotation, expr=expr)
         return self.parse_assignment()
@@ -279,7 +286,7 @@ class Parser:
                              "Expected closing ')'.")
                 if len(arguments) == 0:
                     arguments.append(self.null_terminal(
-                        operator.line, operator.col))
+                        operator.buffer, operator.index))
                 primary = ast.Call(expr=primary, operator=operator,
                                    arguments=arguments)
             elif operator.ttype == TokenType.CLSQUARE:
@@ -366,7 +373,12 @@ class Parser:
     def parse_item(self):
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
+            annotation = Token(
+                ttype=TokenType.STRING, 
+                buffer=operator.buffer, 
+                index=operator.index, 
+                literal=operator.literal
+            )
             key = self.parse_key()
             self.consume(TokenType.COLON, "Expected ':' after member key.")
             expr = self.parse_expression()
@@ -381,8 +393,8 @@ class Parser:
             key = self.previous()
             new_key = Token(
                 ttype=TokenType.STRING,
-                line=key.line,
-                col=key.col,
+                buffer=key.buffer,
+                index=key.index,
                 literal=key.literal)
             return new_key
         elif self.match([TokenType.STRING]):
@@ -464,15 +476,15 @@ class Parser:
                 params.append(Token(
                     ttype=TokenType.ID,
                     literal="_",
-                    line=operator.line,
-                    col=operator.col))
+                    buffer=operator.buffer,
+                    index=operator.index))
                 ptypes.append(self.null_type_terminal(
-                    operator.line, operator.col))
+                    operator.buffer, operator.index))
 
             if self.match([TokenType.ARROW]):
                 types = self.parse_type_expr()
             else:
-                types = self.any_type_terminal(operator.line, operator.col)
+                types = self.any_type_terminal(operator.buffer, operator.index)
 
             for ptype in reversed(ptypes):
                 types = ast.TypeBinary(
@@ -491,7 +503,12 @@ class Parser:
         annotation = None
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
+            annotation = Token(
+                ttype=TokenType.STRING, 
+                buffer=operator.buffer, 
+                index=operator.index,
+                literal=operator.literal
+            )
 
         self.consume(TokenType.ID, "Expected a parameter name.")
         param = self.previous()
@@ -502,7 +519,7 @@ class Parser:
                 ptype = ast.TypeGrouping(expr=ptype)
         else:
             last_token = self.previous()
-            ptype = self.any_type_terminal(last_token.line, last_token.col)
+            ptype = self.any_type_terminal(last_token.buffer, last_token.index)
 
         if annotation is not None:
             ptype = ast.TypeAnnotation(
@@ -533,7 +550,12 @@ class Parser:
     def parse_type_expr(self):
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
+            annotation = Token(
+                ttype=TokenType.STRING, 
+                buffer=operator.buffer, 
+                index=operator.index, 
+                literal=operator.literal
+            )
             expr = self.parse_type_expr()
             return ast.TypeAnnotation(operator=operator, annotation=annotation, expr=expr)
         expr = self.parse_type_binary()
@@ -618,7 +640,12 @@ class Parser:
         required = False
         if self.match([TokenType.HASH]):
             operator = self.previous()
-            annotation = Token(ttype=TokenType.STRING, col=operator.col, line=operator.line, literal=operator.literal)
+            annotation = Token(
+                ttype=TokenType.STRING, 
+                buffer=operator.buffer, 
+                index=operator.index, 
+                literal=operator.literal
+            )
             key = self.parse_key()
             required = True if self.match([TokenType.BANG]) else False
             self.consume(TokenType.COLON, "Expected ':' after member key.")
@@ -630,7 +657,7 @@ class Parser:
         expr = self.parse_type_expr()
         return [key, required, expr]
 
-    def parse(self, code: str):
+    def parse(self, code: str, buffer: str):
         self.reset()
 
         # Scan and parse.
@@ -638,7 +665,7 @@ class Parser:
         previous_lexer = copy.deepcopy(self.lexer)
 
         try:
-            tokens = self.lexer.scan(code)
+            tokens = self.lexer.scan(code, buffer)
             if tokens is None:
                 return None
             self.tokens = tokens

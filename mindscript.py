@@ -27,11 +27,11 @@ def execute_file(filename: str, backend: ms.backend.Backend):
     code = ""
 
     try:
-        with open(sys.argv[1], "r") as fh:
+        with open(filename, "r") as fh:
             code = fh.read()
-        ip.eval(code)
+        ip.eval(code, filename)
     except Exception as e:
-        print(e)
+        print(f"{RED}{traceback.format_exc()}{RESET}")
     
     exit(0)
 
@@ -47,7 +47,7 @@ def repl(backend: ms.backend.Backend):
         try:
             line = input(prompt)
             lines += "\n" + line
-            res = ip.eval(lines)
+            res = ip.eval(lines, "<repl>")
             if res is None:
                 continue
             repr = ip.printer.print(res)
