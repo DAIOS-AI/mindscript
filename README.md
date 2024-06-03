@@ -65,14 +65,13 @@ as a large language model (&Psi;).
 **Requirements:**
 
 - Tested with Python 3.9
-- [llama.cpp](https://github.com/ggerganov/llama.cpp/) for a local LLM
-- OpenAI API key for ChatGPT
+- [llama.cpp](https://github.com/ggerganov/llama.cpp/) to run the system locally, **or** an OpenAI API key to use a remote LLM.
 
 **Disclaimer:**
 
-This is a strictly experimental programming language. The implementation is not guaranteed
-to be correct, nor does it aim to be efficient. If there's enough interest, I will write
-a MindScript runtime in C.
+This is a strictly experimental programming language. The Python implementation has likely bugs
+and is does not aim to be efficient, only to demonstrate the concept. But if there's enough 
+interest, I will write a runtime in C.
 
 ## Installation
 
@@ -82,10 +81,13 @@ git clone https://github.com/DAIOS-AI/mindscript/
 cd mindscript
 ```
 
-### Local with llama.cpp:
+MindScript requires access to an LLM, which is either local or remote.
 
-1. Follow the instructions to install [llama.cpp](https://github.com/ggerganov/llama.cpp/)
-   and download your favorite model weights. For instance:
+### Running localy with llama.cpp:
+
+Follow the instructions to install [llama.cpp](https://github.com/ggerganov/llama.cpp/)
+and download your favorite model weights. For instance:
+
 ```
 git clone https://github.com/ggerganov/llama.cpp
 cd llama.cpp
@@ -94,27 +96,45 @@ mkdir models
 wget https://huggingface.co/QuantFactory/Meta-Llama-3-8B-GGUF/resolve/main/Meta-Llama-3-8B.Q8_0.gguf models/Meta-Llama-3-8B.Q8_0.gguf
 ```
 
-2. Run the llama.cpp server. For instance: 
+Run the llama.cpp server. For instance: 
 ```
 ./server -m models/Meta-Llama-3-8B.Q8_0.gguf
 ```
 
-### Remote with ChatGPT:
+Mindscript expects the llama.cpp server to run at `http://localhost:8080/completion`.
 
-1. Set the OpenAI API key in a configuration file:
+Then run the MindScript REPL as:
 ```
+python mindscript.py
 ```
 
-## Quickstart
+### Running remote with an OpenAI model:
+
+Set the OpenAI API key as an environment variable:
+```
+export OPENAI_API_KEY=[YOUR API KEY]
+```
+
+Run MindScript with e.g. the GPT 3.5 turbo backend: 
+```
+python mindscript.py --backend gpt35turbo
+```
+
+## Running MindScript
 
 To run the REPL, enter
 ```
-> python mindscript.py
+python mindscript.py 
 ```
 
 To run a program `myprogram.ms`, enter
 ```
-> python mindscript.py myprogram.ms
+python mindscript.py myprogram.ms
+```
+
+If you need help, enter
+```
+python mindscript.py -h
 ```
 
 ## Basics
