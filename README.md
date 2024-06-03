@@ -39,7 +39,7 @@ steps of a program, allowing MindScript to generate a preliminary,
 though possibly imperfect, implementation. This can later be refined 
 with precise coding as the solution becomes clearer. Additionally, 
 certain functions, such as analyzing the sentiment of a sentence, 
-might not need a concrete implementation at all. Its syntax is designed 
+might not need a concrete implementation at all. The syntax is designed 
 to make such specifications straightforward, providing simple yet 
 powerful tools to express such concepts.
 
@@ -47,12 +47,12 @@ A distinctive feature of MindScript is its dual support for both
 formal and informal types. While formal types set hard constraints 
 that can be algorithmically verified, informal types offer more flexible, 
 inductive constraints, similar to how our observations guide our own thought 
-processes are shaped by our observations.
+processes.
 
 In practice, formal computation within MindScript is realized through 
 a Turing-complete language (&lambda;), ensuring rigorous programmability. 
 Meanwhile, informal computations are handled by an oracle, realized through 
-a language model (&Psi;), which interprets and processes less structured inputs. 
+a language model (&Psi;) which interprets and processes less structured inputs. 
 This dual approach allows MindScript to blend precision and flexibility, 
 catering to a wide range of programming needs and styles.
 
