@@ -11,7 +11,7 @@ An experimental programming language combining formal and informal computation.
 ## Table of Contents
 <ul>
 <li><a href="#description">Description</a></li>
-<li><a href="#quickstart">Quickstart</a></li>
+<li><a href="#installataion">Installation</a></li>
 <li><a href="#basics">Basics</a></li>
 <li><a href="#operators">Operators</a></li>
 <li><a href="#functions">Functions</a></li>
@@ -21,6 +21,7 @@ An experimental programming language combining formal and informal computation.
 <li><a href="#formal-types">Formal types</a></li>
 <li><a href="#informal-types">Informal types</a></li>
 <li><a href="#oracles">Oracles</a></li>
+<li><a href="#standard-library">Standard Library</li>
 </ul>
 
 ## Description
@@ -461,7 +462,9 @@ Notice in the previous example the oracle did not induce the factorial function
 Each example must have the format `[arg_1, arg_2, ..., arg_n, output]`. For instance,
 `[3, 2, "five"]` is a valid example for a function of type `Int -> Int -> Str`.
 
+## Standard Library
 
+MindScript fires up with a set of pre-loaded functions. 
 
 
 
