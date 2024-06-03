@@ -572,8 +572,13 @@ type {
 }
 ```
 
+## Explore
 
-
+Explore the code of the library:
+- [std.ms](https://github.com/DAIOS-AI/mindscript/blob/main/ms/lib/std.ms) the standard library,
+  providing examples of function implementations.
+- [lang.ms](https://github.com/DAIOS-AI/mindscript/blob/main/ms/lib/lang.ms) the language library,
+  which contains many examples of oracles created with and without examples.
 
 
 
