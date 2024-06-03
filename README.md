@@ -47,7 +47,10 @@ as a large language model (&Psi;).
 - Implements an [oracle machine](https://en.wikipedia.org/wiki/Oracle_machine).
 - Minimal C-like/JavaScript/Lua syntax on top of JSON data types.
 - Everything is an expression.
-- Dynamic (runtime-checked), structural, and strong type system for formal types.
+- The formal type system is:
+   - dynamic (runtime-checked),
+   - structural (based on the properties, not on names or object hierarchies),
+   - and strong (type rules are strictly enforced).
 - Code comments are informal type annotations.
 - (Current version) interpreter implemented in Python.
 
