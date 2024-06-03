@@ -120,12 +120,10 @@ class TypeChecker():
             return self._subtype_recursion(t1.expr, t2.expr, env1, env2, visited)
 
         elif type1 == ast.TypeMap and type2 == ast.TypeMap:
-            if not set(t1.map.keys()).issubset(set(t2.map.keys())):
-                return False
             if not set(t2.required.keys()).issubset(set(t1.required.keys())):
                 return False
             for key in t1.map.keys():
-                if not self._subtype_recursion(t1.map[key], t2.map[key], env1, env2):
+                if key in t2.map.keys() and not self._subtype_recursion(t1.map[key], t2.map[key], env1, env2):
                     return False
             return True
         

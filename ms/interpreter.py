@@ -574,7 +574,7 @@ class Interpreter:
         for v in values.value:
             if not self.checktype(v, typeobj):
                 vrepr = self.printer.print(v)
-                self.error(operator, f"Found a value ({v}) that is inconsistent with the enum type.")
+                self.error(operator, f"Found a value ({vrepr}) that is inconsistent with the enum type.")
         return ast.TypeEnum(operator=operator, type_expr=type_expr, values_expr=values_expr, values=values)
 
     def type_array(self, node: ast.Expr):
