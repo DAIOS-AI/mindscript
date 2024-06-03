@@ -466,7 +466,99 @@ Each example must have the format `[arg_1, arg_2, ..., arg_n, output]`. For inst
 
 MindScript fires up with a set of pre-loaded functions. 
 
+To obtain an object that shows all the variables defined, use `getEnv`:
 
+```
+> getEnv()
+
+{
+    "dirFun": obj:{} -> [Str],
+    "mute": _:Any -> Null,
+    "dir": obj:{} -> [Str],
+    "netImport": url:Str -> {},
+    "www": url:Str -> Str?,
+    "natural0": _:Null -> (Null -> Int?),
+    "natural": _:Null -> (Null -> Int?),
+    "range": start:Int -> stop:Int? -> (Null -> Int?),
+    "reduce": f:(Any -> Any -> Any) -> iterator:(Null -> Any) -> Any,
+    "filter": cond:(Any -> Bool) -> iterator:(Null -> Any) -> (Null -> Any),
+    "map": f:(Any -> Any) -> iterator:(Null -> Any) -> (Null -> Any),
+    "http": params:HTTPParams? -> method:Str? -> url:Str -> {},
+    ...
+```
+
+You can import modules using `import` (local filesystem) or `netImport` (remote modules).
+For instance, try importing the language module provided with the standard library.
+```
+> let lang = import("ms/lib/lang.ms")
+
+{
+    "write": instruction:Str -> {result: Str}?,
+    "similarity": text1:Str -> text2:Str -> Similarity?,
+    "similarityExamples": [
+    ...
+```
+
+The functions become available through the object `lang`. First we list its properties:
+```
+> dir(lang)
+
+[
+    "write",
+    "similarity",
+    "similarityExamples",
+    "Similarity",
+    "keywordsExamples",
+    "keywords",
+    "coref",
+    ...
+```
+
+Now let's try keyword extractor:
+```
+> lang.keywords("JavaScript is a high-level, often just-in-time compiled language that conforms
+  to the ECMAScript standard.")
+
+{
+    "keywords": [
+        "JavaScript",
+        "high-level",
+        "just-in-time compiled",
+        "language",
+        "ECMAScript standard"
+    ]
+}
+
+```
+
+To explore the standard library, just type its name - the informal type annotation will
+provide information about what it does.
+```
+> unshift
+
+Pops the first value from the array.
+array:[Any] -> Any
+
+> http
+
+Makes an HTTP request.
+params:HTTPParams? -> method:Str? -> url:Str -> {}
+
+> HTTPParams
+type {
+    mode: Str?,
+    cache: Str?,
+    credentials: Str?,
+    headers: {
+
+    }?,
+    redirect: Str?,
+    referrerPolicy: Str?,
+    body: {
+
+    }
+}
+```
 
 
 
