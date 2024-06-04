@@ -465,7 +465,7 @@ Then we can induce the output for a new input.
 
 "forty-two"
 
-> number2lang(7)
+> number2lang(1024)
 
 "one thousand twenty-four"
 ```
