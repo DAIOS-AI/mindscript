@@ -207,7 +207,7 @@ As an example, consider the factorial function:
 ```
 let factorial = fun(n: Int) -> Int do
     if n==0 do
-        0
+        1
     else
         n * factorial(n - 1)
     end
