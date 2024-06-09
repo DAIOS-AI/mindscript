@@ -164,12 +164,20 @@ class MFunction(MObject):
             return self.partial(args)
         for arg, typeobj in zip(args, self.intypes):
             if not self.interpreter.checktype(arg, typeobj):
-                self.error(f"Wrong type of function argument.")
+                reqtype_str = self.interpreter.printer.print(typeobj)
+                val_str = self.interpreter.printer.print(arg)
+                valtype_str = self.interpreter.printer.print(self.interpreter.typeof(arg))
+                self.error(f"Wrong type of function argument: "
+                           f"Expected {reqtype_str} but got value {val_str} of {valtype_str}.")
 
         value = self.func(args)
 
         if not self.interpreter.checktype(value, self.outtype):
-            self.error(f"Wrong type of function output.")
+            reqtype_str = self.interpreter.printer.print(typeobj)
+            val_str = self.interpreter.printer.print(arg)
+            valtype_str = self.interpreter.printer.print(self.interpreter.typeof(arg))
+            self.error(f"Wrong type of function output: "
+                       f"Expected {reqtype_str} but got value {val_str} of {valtype_str}.")
 
         return value
 
