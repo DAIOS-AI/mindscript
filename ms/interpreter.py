@@ -202,9 +202,32 @@ class Interpreter:
         lvalue = lexpr.value
         rvalue = rexpr.value
 
+        if (type(lvalue) == int and type(rvalue) == int):
+            if operator.ttype == ast.TokenType.PLUS:
+                return MValue(int(lvalue + rvalue), None)
+            elif operator.ttype == ast.TokenType.MINUS:
+                return MValue(int(lvalue - rvalue), None)
+            elif operator.ttype == ast.TokenType.MULT:
+                return MValue(int(lvalue * rvalue), None)
+            elif operator.ttype == ast.TokenType.DIV:
+                if rvalue == 0:
+                    self.error(operator, "Division by zero.")
+                return MValue(int(lvalue / rvalue), None)
+            elif operator.ttype == ast.TokenType.MOD:
+                return MValue(int(lvalue % rvalue), None)
+            elif operator.ttype == ast.TokenType.GREATER:
+                return MValue(lvalue > rvalue, None)
+            elif operator.ttype == ast.TokenType.GREATER_EQ:
+                return MValue(lvalue >= rvalue, None)
+            elif operator.ttype == ast.TokenType.LESS:
+                return MValue(lvalue < rvalue, None)
+            elif operator.ttype == ast.TokenType.LESS_EQ:
+                return MValue(lvalue <= rvalue, None)
+            self.error(
+                operator, "Unexpected operator for integer/number operands.")
+
         if ((type(lvalue) == int or type(lvalue) == float)
                 and (type(rvalue) == int or type(rvalue) == float)):
-
             if operator.ttype == ast.TokenType.PLUS:
                 return MValue(lvalue + rvalue, None)
             elif operator.ttype == ast.TokenType.MINUS:
