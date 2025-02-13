@@ -4,7 +4,7 @@
 
 An experimental programming language combining formal and informal computation.
 
-&copy; 2024 DAIOS Technologies Limited
+&copy; 2024, 2025 DAIOS Technologies Limited
 
 ![preview](media/mindscript-demo.gif)
 
@@ -78,7 +78,11 @@ This dual approach allows MindScript to blend precision and flexibility.
 **Requirements:**
 
 - Tested with Python 3.9
-- [llama.cpp](https://github.com/ggerganov/llama.cpp/) to run the system locally, **or** an OpenAI API key to use a remote LLM.
+
+One of the following:
+- [llama.cpp](https://github.com/ggerganov/llama.cpp/),
+- [Ollama](https://ollama.com/),
+- OpenAI API key.
 
 **Disclaimer:**
 
