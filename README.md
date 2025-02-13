@@ -1,4 +1,4 @@
-<img src="media/mindscript-logo.svg" width="500px">
+<img src="media/mindscript-logo-lambda-psi.svg" width="500px">
 
 # MindScript
 
