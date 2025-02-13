@@ -1,12 +1,12 @@
 from typing import List, Any
 from copy import deepcopy
-from ms.objects import MNativeFunction, MValue, MObject
-from ms.interpreter import Interpreter, Environment
-from ms.types import TypeChecker
-from ms.schema import JSONSchema
-from ms.bnf import BNFFormatter
-import ms.startup
-from ms.libnative.auxiliary import import_code, flattened_env
+from mindscript.objects import MNativeFunction, MValue, MObject
+from mindscript.interpreter import Interpreter, Environment
+from mindscript.types import TypeChecker
+from mindscript.schema import JSONSchema
+from mindscript.bnf import BNFFormatter
+import mindscript.startup
+from mindscript.libnative.auxiliary import import_code, flattened_env
 
 
 # Native functions.

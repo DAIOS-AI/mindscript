@@ -2,27 +2,28 @@ import os
 import requests
 import json
 from abc import abstractmethod
-from ms.objects import MValue
+from mindscript.objects import MValue
 
 
 TIMEOUT = 20
+
 
 class Backend:
     # Must return a dict {"headers": dict, "json": dict}
     # to be submitted as an HTTP request.
     @abstractmethod
-    def preprocess(self, prompt: str, output_grammar: str):
+    def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
         pass
 
     # Must return a string ready to be parsed by the interpreter.
     @abstractmethod
-    def postprocess(self, jsonobj: dict):
+    def postprocess(self, jsonobj: dict) -> str:
         pass
 
-    def consult(self, prompt: str, output_grammar: str):
+    def consult(self, prompt: str, output_grammar: str|None, output_schema: dict|None):
         # print(f"Backend.consult: prompt = {prompt}")
         url = self.url
-        data = self.preprocess(prompt, output_grammar)
+        data = self.preprocess(prompt, output_grammar, output_schema)
         try:
             with requests.post(url, timeout=TIMEOUT, **data) as response:
                 res = response.json()
@@ -43,23 +44,32 @@ class Backend:
         return code
 
 
-class GPT3Turbo(Backend):
-    def __init__(self):
-        self.url = "https://api.openai.com/v1/chat/completions"
+class OpenAI(Backend):
+    def __init__(self, url=None, model=None):
         if "OPENAI_API_KEY" not in os.environ:
-            raise ValueError(
-                "The environment variable 'OPENAI_API_KEY' is not set.")
+            raise ValueError("The environment variable 'OPENAI_API_KEY' is not set.")
+
+        if url is not None:
+            self.url = url
+        else:
+            self.url = "https://api.openai.com/v1/chat/completions" 
+
+        if model is None:
+            raise ValueError("The OpenAI backend requires a model name.")
+        else:
+            self.model = model
+
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + os.environ["OPENAI_API_KEY"]
         }
         self.temperature = 0.7
 
-    def preprocess(self, prompt: str, output_grammar: str):
+    def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
         return {
             "headers": self.headers,
             "json": {
-                "model": "gpt-3.5-turbo",
+                "model": self.model,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature
             }
@@ -69,40 +79,47 @@ class GPT3Turbo(Backend):
         return res["choices"][0]["message"]["content"]
 
 
-class GPT4Turbo(Backend):
-    def __init__(self):
-        self.url = "https://api.openai.com/v1/chat/completions"
-        if "OPENAI_API_KEY" not in os.environ:
-            raise ValueError(
-                "The environment variable 'OPENAI_API_KEY' is not set.")
-        self.headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + os.environ["OPENAI_API_KEY"]
-        }
-        self.temperature = 0.7
+class Ollama(Backend):
+    def __init__(self, url=None, model=None):
+        if url is None:
+            self.url = "http://localhost:11434/api/generate"
+        else:
+            self.url = url
 
-    def preprocess(self, prompt: str, output_grammar: str):
+        if model is None:
+            raise ValueError("The Ollama backend requires a model name.")
+        else:
+            self.model = model
+
+        self.headers = {"Content-Type": "application/json"}
+
+    def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
         return {
             "headers": self.headers,
             "json": {
-                "model": "gpt-4-turbo",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": self.temperature
+                "model": self.model,
+                "prompt": prompt,
+                "stream": False,
+                "format": output_schema,
             }
         }
 
     def postprocess(self, res: dict):
-        return res["choices"][0]["message"]["content"]
+        return res["response"]
 
 
 class LlamaCPP(Backend):
-    def __init__(self):
-        self.url = "http://localhost:8080/completion"
+    def __init__(self, url=None):
+        if url is None:
+            self.url = "http://localhost:8080/completion"
+        else:
+            self.url = url
+
         self.headers = {"Content-Type": "application/json"}
         self.max_tokens = 1000
         self.repeat_penalty = 1.5
 
-    def preprocess(self, prompt: str, output_grammar: str):
+    def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
         return {
             "headers": self.headers,
             "json": {

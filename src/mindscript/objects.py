@@ -1,6 +1,6 @@
 from typing import Optional, List, Union, Any
 from abc import abstractmethod
-import ms.ast as ast
+import mindscript.ast as ast
 from copy import deepcopy
 from functools import partialmethod
 

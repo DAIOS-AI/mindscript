@@ -1,7 +1,7 @@
 from typing import Optional, Any, List
 import copy
-import ms.ast as ast
-from ms.objects import MObject, MValue, MFunction, MType
+import mindscript.ast as ast
+from mindscript.objects import MObject, MValue, MFunction, MType
 
 class TypeChecker():
 

@@ -1,6 +1,6 @@
-import ms.backend
-from ms.interpreter import Environment
-import ms.startup
+import mindscript.backend
+from mindscript.interpreter import Environment
+import mindscript.startup
 
 def flattened_env(env: Environment):
     fenv = dict()
@@ -11,8 +11,8 @@ def flattened_env(env: Environment):
         env = env.enclosing
     return fenv
 
-def import_code(code: str, backend: ms.backend.Backend, buffer: str = None):
-    ip = ms.startup.interpreter(backend=backend)
+def import_code(code: str, backend: mindscript.backend.Backend, buffer: str = None):
+    ip = mindscript.startup.interpreter(backend=backend)
     startup_env = ip.env
     module_env = Environment(enclosing=startup_env)
 

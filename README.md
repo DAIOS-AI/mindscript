@@ -88,27 +88,17 @@ interest, I will write a runtime in C.
 
 ## Installation
 
+### Prerequisites
+
 MindScript requires access to an LLM, which is either local or remote.
+Right now it supports [llama.cpp](https://github.com/ggerganov/llama.cpp/),
+[Ollama](https://ollama.com/), and OpenAI models.
 
-### Running localy with llama.cpp:
+### Running localy with llama.cpp or Ollama:
 
-Follow the instructions to install [llama.cpp](https://github.com/ggerganov/llama.cpp/)
-and download your favorite model weights. For instance:
-
-```
-git clone https://github.com/ggerganov/llama.cpp
-cd llama.cpp
-make
-mkdir models
-wget https://huggingface.co/QuantFactory/Meta-Llama-3-8B-GGUF/resolve/main/Meta-Llama-3-8B.Q8_0.gguf models/Meta-Llama-3-8B.Q8_0.gguf
-```
-
-Run the llama.cpp server. For instance: 
-```
-./server -m models/Meta-Llama-3-8B.Q8_0.gguf
-```
-
-Mindscript expects the llama.cpp server to run at `http://localhost:8080/completion`.
+Follow the instructions to install the backend, download your favorite model,
+and launch a server from either [llama.cpp](https://github.com/ggerganov/llama.cpp/)
+or [Ollama](https://ollama.com/) (V0.5 or higher).
 
 ### Running remote with an OpenAI model:
 
@@ -119,25 +109,24 @@ export OPENAI_API_KEY=[YOUR API KEY]
 
 ## Installing and running MindScript
 
-Install MindScript into a directory of your choice by cloning the Git repo:
+Install MindScript using pip:
 ```
-git clone https://github.com/DAIOS-AI/mindscript/
-cd mindscript
+pip install mindscript
 ```
 
-To run the REPL with e.g. GPT 3.5 turbo, enter
+To run the REPL with Ollama using Phi4, enter
 ```
-python mindscript.py --backend gpt35turbo
+mindscript -b ollama -m phi4
 ```
 
 To run a program `myprogram.ms` with e.g. Llama.cpp, enter
 ```
-python mindscript.py myprogram.ms --backend llamacpp
+mindscript myprogram.ms -b llamacpp
 ```
 
 If you need help, enter
 ```
-python mindscript.py -h
+mindscript -h
 ```
 
 ## Basics

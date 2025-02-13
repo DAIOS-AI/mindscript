@@ -1,6 +1,6 @@
 from typing import List
-from ms.objects import MNativeFunction, MValue, MObject
-from ms.interpreter import Interpreter
+from mindscript.objects import MNativeFunction, MValue, MObject
+from mindscript.interpreter import Interpreter
 import re
 import math
 

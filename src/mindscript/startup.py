@@ -1,12 +1,19 @@
-import ms.libnative.std as std
-import ms.libnative.collections as collections
-import ms.libnative.math as math
-import ms.libnative.string as string
-import ms.libnative.network as network
-import ms.libnative.system as system
-from ms.interpreter import Interpreter
+from importlib.resources import files
 
-def interpreter(interactive=False, backend:str=None):
+import mindscript.libnative.std as std
+import mindscript.libnative.collections as collections
+import mindscript.libnative.math as math
+import mindscript.libnative.string as string
+import mindscript.libnative.network as network
+import mindscript.libnative.system as system
+from mindscript.interpreter import Interpreter
+
+
+def read_lib_script(filename: str):
+    return files('mindscript.lib').joinpath(filename).read_text()
+
+
+def interpreter(interactive=False, backend: str = None):
     ip = Interpreter(interactive=interactive, backend=backend)
 
     ip.set_buffer("<preamble>")
@@ -43,6 +50,7 @@ def interpreter(interactive=False, backend:str=None):
     ip.define("tan", math.Tan(ip=ip))
     ip.define("sqrt", math.Sqrt(ip=ip))
     ip.define("log", math.Log(ip=ip))
+    ip.define("exp", math.Exp(ip=ip))
     ip.define("pow", math.Pow(ip=ip))
 
     ip.define("substr", string.SubStr(ip=ip))
@@ -77,9 +85,8 @@ def interpreter(interactive=False, backend:str=None):
     ip.define("random", system.Random(ip=ip))
 
     # Register built-in symbols.
-    with open("ms/lib/std.ms") as fh:
-        code = fh.read()
-        ip.eval(code, "ms/lib/std.ms")
+    code = read_lib_script("std.ms")
+    ip.eval(code, "lib/std.ms")
 
     # Clean the lexer's code buffer (disabled now).
     # ip.parser.lexer.reset()

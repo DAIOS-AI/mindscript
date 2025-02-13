@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+
+import mindscript
+import argparse
+from mindscript.ast import IncompleteExpression, Return, Exit
+import mindscript.backend
+import traceback
+
+GREEN = "\033[32m"
+BLUE = "\033[94m"
+RED = "\x1B[31m"
+RESET = "\033[0m"
+
+WELCOME = """
+MindScript Version 0.2 ({backend})
+(C) 2024, 2025 DAIOS Technologies Limited
+Use Control-D to exit.
+"""
+
+backends = [
+    "llamacpp",
+    "openai",
+    "ollama"
+]
+
+
+def execute_file(filename: str, backend: mindscript.backend.Backend):
+    ip = mindscript.interpreter(backend=backend)
+    code = ""
+
+    try:
+        with open(filename, "r") as fh:
+            code = fh.read()
+        ip.eval(code, filename)
+    except Exception as e:
+        print(f"{RED}{traceback.format_exc()}{RESET}")
+
+    exit(0)
+
+
+def repl(backend: mindscript.backend.Backend, welcome):
+    print(welcome)
+
+    ip = mindscript.interpreter(interactive=True, backend=backend)
+
+    prompt = "> "
+    lines = ""
+    while True:
+        try:
+            line = input(prompt)
+            lines += "\n" + line
+            res = ip.eval(lines, "<repl>")
+            if res is None:
+                continue
+            repr = ip.printer.print(res)
+            if res.annotation is not None:
+                print(f"{GREEN}{res.annotation}")
+            print(f"{BLUE}{repr}{RESET}")
+            prompt = "> "
+            lines = ""
+        except IncompleteExpression:
+            prompt = "| "
+        except (Return, Exit):
+            print("\nExiting...")
+            exit(0)
+        except EOFError:
+            print()
+            exit(0)
+        except KeyboardInterrupt:
+            print("<Cancel input>")
+            prompt = "> "
+            lines = ""
+        except Exception as e:
+            print(f"{RED}{traceback.format_exc()}{RESET}")
+            prompt = "> "
+            lines = ""
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', nargs='?', type=str,
+                        help='an optional filename to process', default=None)
+    parser.add_argument('-b', metavar='BACKEND', help=f"chooses an LLM backend from {backends}")
+    parser.add_argument('-u', metavar='URL', help=f"specifies the API's URL")
+    parser.add_argument('-m', metavar='MODEL', help=f"specifies the name of the model to use")
+    args = parser.parse_args()
+
+    if args.b is not None and args.b not in backends:
+        print(f"Unknown backend: {args.b}")
+        exit(2)
+
+    if args.b is None or args.b == "llamacpp":
+        args.b = "llamacpp"
+        backend = mindscript.backend.LlamaCPP(args.u)
+    elif args.b == "openai":
+        if args.m is None:
+            print(f"The OpenAI backend requires a model name.")
+            exit(2)
+        backend = mindscript.backend.OpenAI(args.u, args.m)
+    elif args.b == "ollama":
+        if args.m is None:
+            print(f"The Ollama backend requires a model name.")
+            exit(2)
+        backend = mindscript.backend.Ollama(args.u, args.m)
+    else:
+        backend = mindscript.backend.LlamaCPP()
+    welcome = WELCOME.format(backend=args.b)
+
+    # Check if filename is provided as command-line argument
+    if args.filename:
+        execute_file(args.filename, backend)
+    else:
+        repl(backend, welcome)
+

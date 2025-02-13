@@ -1,6 +1,6 @@
 import re
-import ms.ast as ast
-from ms.objects import MType
+import mindscript.ast as ast
+from mindscript.objects import MType
 from pydantic import BaseModel
 
 # GRAMMAR = r"""

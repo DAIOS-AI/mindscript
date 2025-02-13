@@ -1,8 +1,8 @@
 from typing import List, Any
 from copy import deepcopy
 import requests
-from ms.objects import MNativeFunction, MValue, MObject
-from ms.interpreter import Interpreter
+from mindscript.objects import MNativeFunction, MValue, MObject
+from mindscript.interpreter import Interpreter
 import datetime
 
 # Basic HTTP operations: http_get, http_post, http_put, http_delete

@@ -1,7 +1,7 @@
 import re
 from typing import List, Dict
-from ms.ast import TokenType, Expr, TypeArray
-from ms.objects import MObject, MValue, MType, MFunction
+from mindscript.ast import TokenType, Expr, TypeArray
+from mindscript.objects import MObject, MValue, MType, MFunction
 
 TABLEN = 4
 MAXDEPTH = 4

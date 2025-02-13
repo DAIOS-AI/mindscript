@@ -1,10 +1,10 @@
 from typing import Optional, Any, List, Callable
-import ms.ast as ast
-from ms.printer import Printer
-from ms.parser import Parser
-from ms.types import TypeChecker
-from ms.objects import MObject, MValue, MType, MFunction
-from ms.oracle import MOracleFunction
+import mindscript.ast as ast
+from mindscript.printer import Printer
+from mindscript.parser import Parser
+from mindscript.types import TypeChecker
+from mindscript.objects import MObject, MValue, MType, MFunction
+from mindscript.oracle import MOracleFunction
 
 
 # Environment.

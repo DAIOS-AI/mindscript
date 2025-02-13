@@ -1,16 +1,15 @@
-import requests
-import os
 import json
 from typing import List, Any
-from ms.schema import JSONSchema
-from ms.bnf import BNFFormatter
-from ms.objects import MType, MValue, MObject, MFunction
-import ms.ast as ast
+from mindscript.schema import JSONSchema
+from mindscript.bnf import BNFFormatter
+from mindscript.objects import MType, MValue, MObject, MFunction
+import mindscript.ast as ast
 
 
 HEADER = """
 You are a helpful assistant, and your task is to provide answers
-respecting the formatting instructions.
+respecting the formatting instructions. Only output a JSON, with
+no ``` delimiters!
 
 INPUT JSON SCHEMA:
 
@@ -69,7 +68,8 @@ class MOracleFunction(MFunction):
         # Build output schema and BNF grammar.
         try:
             out_type = self.outtype.definition
-            self.output_schema = jsonschema.print_schema(MType(ip, out_type))
+            self.output_schema_dict = jsonschema.dict_schema(MType(ip, out_type))
+            self.output_schema = json.dumps(self.output_schema_dict)
             self.output_grammar = bnf.format(MType(ip, out_type))
         except Exception as e:
             print("Exception:" + str(e))
@@ -77,7 +77,8 @@ class MOracleFunction(MFunction):
 
         # Add null return.
         if type(self.outtype.definition) != ast.TypeUnary:
-            self._outtype._definition = ast.TypeUnary(expr=self.outtype.definition)
+            self._outtype._definition = ast.TypeUnary(
+                expr=self.outtype.definition)
 
     def prepare_input(self, args: List[MObject]):
         data = {}
@@ -96,7 +97,8 @@ class MOracleFunction(MFunction):
         for example in self.examples.value:
             input_example = self.prepare_input(example.value[:-1])
             output_example = self.interpreter.print(example.value[-1])
-            body += EXAMPLE.format(task=task, input=input_example, output=output_example)
+            body += EXAMPLE.format(task=task,
+                                   input=input_example, output=output_example)
         return body
 
     def validate_examples(self, examples: MValue):
@@ -113,12 +115,14 @@ class MOracleFunction(MFunction):
                 typestr = self.interpreter.print(self.intypes[n])
                 valuestr = self.interpreter.print(example.value[n])
                 if not self.interpreter.checktype(example.value[n], self.intypes[n]):
-                    self.error(f"Expected value of type '{typestr}' but found: {valuestr}.")
+                    self.error(
+                        f"Expected value of type '{typestr}' but found: {valuestr}.")
 
             if not self.interpreter.checktype(example.value[-1], self.outtype):
                 typestr = self.interpreter.print(self.outtype)
                 valuestr = self.interpreter.print(example.value[-1])
-                self.error(f"Expected output value of type '{typestr}' but found: {valuestr}.")
+                self.error(
+                    f"Expected output value of type '{typestr}' but found: {valuestr}.")
         return examples
 
     def func(self, args: List[MObject]):
@@ -127,12 +131,14 @@ class MOracleFunction(MFunction):
         output_schema = self.output_schema
         input_example = self.prepare_input(args)
 
-        prompt = HEADER.format(input_schema=input_schema, output_schema=output_schema)
+        prompt = HEADER.format(input_schema=input_schema,
+                               output_schema=output_schema)
         prompt += self.prepare_examples()
         prompt += QUERY.format(task=task, input=input_example)
 
         try:
-            code = self.interpreter.backend.consult(prompt, self.output_grammar)
+            code = self.interpreter.backend.consult(
+                prompt, self.output_grammar, self.output_schema_dict)
             output = self.interpreter.eval(code)
         except ValueError as e:
             return MValue(None, str(e))

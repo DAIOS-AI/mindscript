@@ -1,5 +1,5 @@
-import ms.ast as ast
-from ms.objects import MType
+import mindscript.ast as ast
+from mindscript.objects import MType
 import json
 import re
 
@@ -105,9 +105,15 @@ class JSONSchema():
             obj["properties"][key] = expr.accept(self, env=env, visited=visited)
         return obj
 
-    def print_schema(self, value):
+    def dict_schema(self, value):
         if type(value) != MType:
             return None
         visited = [id(value.definition)]
         schema = value.definition.accept(self, env=value.environment, visited=visited)
+        return schema
+    
+    def print_schema(self, value):
+        schema = self.dict_schema(value)
+        if schema is None:
+            return None
         return json.dumps(schema, indent=4)
