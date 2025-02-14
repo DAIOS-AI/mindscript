@@ -1,4 +1,4 @@
-<img src="media/mindscript-logo-lambda-psi.svg" width="500px">
+<img src="https://raw.githubusercontent.com/DAIOS-AI/mindscript/75e878fe319ada80fef43673b6b0fa73b334e18d/media/mindscript-logo-lambda-psi.svg" width="500px">
 
 # MindScript
 
@@ -6,7 +6,7 @@ An experimental programming language combining formal and informal computation.
 
 &copy; 2024, 2025 DAIOS Technologies Limited
 
-![preview](media/mindscript-demo.gif)
+![preview](https://raw.githubusercontent.com/DAIOS-AI/mindscript/refs/heads/main/media/mindscript-demo.gif)
 
 ## Table of Contents
 <ul>
@@ -21,7 +21,7 @@ An experimental programming language combining formal and informal computation.
 <li><a href="#formal-types">Formal types</a></li>
 <li><a href="#informal-types">Informal types</a></li>
 <li><a href="#oracles">Oracles</a></li>
-<li><a href="#standard-library">Standard Library</li>
+<li><a href="#standard-library">Standard Library</a></li>
 </ul>
 
 ## Description
