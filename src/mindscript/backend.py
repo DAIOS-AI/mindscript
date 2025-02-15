@@ -22,7 +22,7 @@ class Backend:
 
     def consult(self, prompt: str, output_grammar: str|None, output_schema: dict|None):
         # print(f"Backend.consult: prompt = {prompt}")
-        url = self.url
+        url = self.completionUrl
         data = self.preprocess(prompt, output_grammar, output_schema)
         try:
             with requests.post(url, timeout=TIMEOUT, **data) as response:
@@ -52,7 +52,9 @@ class OpenAI(Backend):
         if url is not None:
             self.url = url
         else:
-            self.url = "https://api.openai.com/v1/chat/completions" 
+            self.url = "https://api.openai.com"
+
+        self.completionUrl = self.url + "/v1/chat/completions"
 
         if model is None:
             raise ValueError("The OpenAI backend requires a model name.")
@@ -82,9 +84,11 @@ class OpenAI(Backend):
 class Ollama(Backend):
     def __init__(self, url=None, model=None):
         if url is None:
-            self.url = "http://localhost:11434/api/generate"
+            self.url = "http://localhost:11434"
         else:
             self.url = url
+
+        self.completionUrl = self.url + "/api/generate"
 
         if model is None:
             raise ValueError("The Ollama backend requires a model name.")
@@ -92,6 +96,20 @@ class Ollama(Backend):
             self.model = model
 
         self.headers = {"Content-Type": "application/json"}
+        self.check_health()
+
+
+    def check_health(self):
+        url = self.url + "/"
+        error_msg = f"Ollama backend error ({url}). Is the server online?"
+        try:
+            with requests.get(url, timeout=TIMEOUT) as response:
+                if response.status_code != 200:
+                    raise Exception(error_msg)
+        except Exception:
+            raise Exception(error_msg)
+        return True
+
 
     def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
         return {
@@ -111,13 +129,29 @@ class Ollama(Backend):
 class LlamaCPP(Backend):
     def __init__(self, url=None):
         if url is None:
-            self.url = "http://localhost:8080/completion"
+            self.url = "http://localhost:8080"
         else:
             self.url = url
+
+        self.completionUrl = self.url + "/completion"
 
         self.headers = {"Content-Type": "application/json"}
         self.max_tokens = 1000
         self.repeat_penalty = 1.5
+        self.check_health()
+
+
+    def check_health(self):
+        url = self.url + "/health"
+        error_msg = f"Llamacpp backend error ({self.url}). Is the server online?"
+        try:
+            with requests.get(url, timeout=TIMEOUT) as response:
+                if response.status_code != 200:
+                    raise Exception(error_msg)
+        except Exception:
+            raise Exception(error_msg)
+        return True
+
 
     def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
         return {

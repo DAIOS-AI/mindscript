@@ -90,21 +90,26 @@ def main():
         print(f"Unknown backend: {args.b}")
         exit(2)
 
-    if args.b is None or args.b == "llamacpp":
-        args.b = "llamacpp"
-        backend = mindscript.backend.LlamaCPP(args.u)
-    elif args.b == "openai":
-        if args.m is None:
-            print(f"The OpenAI backend requires a model name.")
-            exit(2)
-        backend = mindscript.backend.OpenAI(args.u, args.m)
-    elif args.b == "ollama":
-        if args.m is None:
-            print(f"The Ollama backend requires a model name.")
-            exit(2)
-        backend = mindscript.backend.Ollama(args.u, args.m)
-    else:
-        backend = mindscript.backend.LlamaCPP()
+    backend = None
+    try:
+        if args.b is None or args.b == "llamacpp":
+            args.b = "llamacpp"
+            backend = mindscript.backend.LlamaCPP(args.u)
+        elif args.b == "openai":
+            if args.m is None:
+                print(f"The OpenAI backend requires a model name.")
+                exit(2)
+            backend = mindscript.backend.OpenAI(args.u, args.m)
+        elif args.b == "ollama":
+            if args.m is None:
+                print(f"The Ollama backend requires a model name.")
+                exit(2)
+            backend = mindscript.backend.Ollama(args.u, args.m)
+        else:
+            backend = mindscript.backend.LlamaCPP()
+    except Exception as e:
+        print(e)
+        exit(2)
     welcome = WELCOME.format(version=mindscript.__version__, backend=args.b)
 
     # Check if filename is provided as command-line argument
