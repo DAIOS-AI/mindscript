@@ -5,6 +5,7 @@ import argparse
 from mindscript.ast import IncompleteExpression, Return, Exit
 import mindscript.backend
 import traceback
+import readline
 
 GREEN = "\033[32m"
 BLUE = "\033[94m"
@@ -12,7 +13,7 @@ RED = "\x1B[31m"
 RESET = "\033[0m"
 
 WELCOME = """
-MindScript Version 0.2 ({backend})
+MindScript Version {version} ({backend})
 (C) 2024, 2025 DAIOS Technologies Limited
 Use Control-D to exit.
 """
@@ -104,7 +105,7 @@ def main():
         backend = mindscript.backend.Ollama(args.u, args.m)
     else:
         backend = mindscript.backend.LlamaCPP()
-    welcome = WELCOME.format(backend=args.b)
+    welcome = WELCOME.format(version=mindscript.__version__, backend=args.b)
 
     # Check if filename is provided as command-line argument
     if args.filename:
