@@ -8,6 +8,10 @@ An experimental programming language combining formal and informal computation.
 
 ![preview](https://raw.githubusercontent.com/DAIOS-AI/mindscript/refs/heads/main/media/mindscript-demo.gif)
 
+**Documentation:** ![https://mindscript.daios.ai](https://mindscript.daios.ai)
+**Source code:** ![https://github.com/DAIOS-AI/mindscript](https://github.com/DAIOS-AI/mindscript)
+
+
 ## Table of Contents
 <ul>
 <li><a href="#description">Description</a></li>
@@ -26,34 +30,28 @@ An experimental programming language combining formal and informal computation.
 
 ## Description
 
-MindScript is a programming language that gives both formal and 
-informal computation first-class status, seamlessly integrating 
-them. This approach allows developers to tailor the precision level 
-of their coding based on the clarity about the solution.
+MindScript is a programming language that seamlessly integrates
+both formal and informal computation.
 
 MindScript lets programmers code directly when the method for 
 accomplishing a task is clear. Conversely, when they know what 
 they want but not how to achieve it, developers can simply 
-describe their intent. For example, initially, one might outline the 
-steps of a program, allowing MindScript simulate a preliminary, 
-though possibly imperfect, implementation. As solutions become clearer,
-this can later be refined with precise code. Additionally, 
-for certain functions, such as analyzing the sentiment of a sentence, 
-there might not exist a concrete implementation at all. 
-The syntax is designed to make such specifications straightforward, 
-providing simple yet powerful tools to express such concepts.
+describe their intent. Indeed, for certain functions, such as 
+analyzing the sentiment of a sentence, there might not exist 
+a concrete implementation at all. The syntax is designed to 
+make such specifications straightforward.
 
 A distinctive feature of MindScript is its dual support for both 
-formal and informal types. While formal types set hard constraints 
-that can be algorithmically verified, informal types offer flexible 
+formal and informal types. The formal types are as in other programming
+languages, which allow expressing hard constraints. The informal types
+(unique to MindScript) on the other hand offer flexible
 inductive constraints, similar to how our observations guide our own thought 
 processes.
 
 In practice, formal computation within MindScript is realized through 
-a Turing-complete language (&lambda;), ensuring rigorous programmability. 
-Meanwhile, informal computations are handled by an oracle, realized through 
-a language model (&Psi;) which interprets and processes less structured inputs. 
-This dual approach allows MindScript to blend precision and flexibility.
+a Turing-complete language (&lambda;), while informal computations are 
+handled by an oracle, realized through a language model (&Psi;) which 
+interprets and processes less structured inputs.
 
 **Features:**
 
@@ -77,7 +75,7 @@ This dual approach allows MindScript to blend precision and flexibility.
 
 **Requirements:**
 
-- Tested with Python 3.9
+- Tested with Python 3.9, 3.10, 3.11
 
 One of the following:
 - [llama.cpp](https://github.com/ggerganov/llama.cpp/),
