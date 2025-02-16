@@ -8,8 +8,9 @@ An experimental programming language combining formal and informal computation.
 
 ![preview](https://raw.githubusercontent.com/DAIOS-AI/mindscript/refs/heads/main/media/mindscript-demo.gif)
 
-**Documentation:** ![https://mindscript.daios.ai](https://mindscript.daios.ai)
-**Source code:** ![https://github.com/DAIOS-AI/mindscript](https://github.com/DAIOS-AI/mindscript)
+**Documentation:** [https://mindscript.daios.ai](https://mindscript.daios.ai)
+
+**Source code:** [https://github.com/DAIOS-AI/mindscript](https://github.com/DAIOS-AI/mindscript)
 
 
 ## Table of Contents
