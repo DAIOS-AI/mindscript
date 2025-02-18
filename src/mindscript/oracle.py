@@ -9,7 +9,7 @@ import mindscript.ast as ast
 HEADER = """
 You are a helpful assistant, and your task is to provide answers
 respecting the formatting instructions. Only output a JSON, with
-no ``` delimiters!
+no code fences (like ```)!
 
 INPUT JSON SCHEMA:
 
@@ -47,6 +47,10 @@ OUTPUT:
 
 """
 
+# Main change to original implementation: Some backends only allow for
+# structured outputs that are objects (i.e. no strings, numbers, nor arrays),
+# hence we wrap the output spec into an object and unwrap the value from the response.
+
 
 class MOracleFunction(MFunction):
 
@@ -56,6 +60,9 @@ class MOracleFunction(MFunction):
         jsonschema = JSONSchema(ip)
         bnf = BNFFormatter(ip)
 
+        # Build a name (some backends need a unique id for an output schema).
+        self.output_name = hex(id(self.outtype.definition))
+
         # Build input schemas.
         in_annotation = self.definition.types.annotation
         in_type_map = {param.literal: value.definition for param,
@@ -63,14 +70,20 @@ class MOracleFunction(MFunction):
         in_required = {param.literal: True for param in self.params}
         in_types = ast.TypeMap(annotation=in_annotation,
                                map=in_type_map, required=in_required)
-        self.input_schema = jsonschema.print_schema(MType(ip, in_types))
+        self.input_schema_str = jsonschema.print_schema(MType(ip, in_types))
 
         # Build output schema and BNF grammar.
+        # We are also wrapping the schema into an object.
         try:
             out_type = self.outtype.definition
-            self.output_schema_dict = jsonschema.dict_schema(MType(ip, out_type))
-            self.output_schema = json.dumps(self.output_schema_dict)
-            self.output_grammar = bnf.format(MType(ip, out_type))
+            unwrapped_schema = jsonschema.dict_schema(MType(ip, out_type))
+            self.output_schema = {
+                "type": "object",
+                "properties": {"result": unwrapped_schema},
+                "required": ["result"]
+            }
+            self.output_schema_str = json.dumps(self.output_schema)
+            # self.output_grammar = bnf.format(MType(ip, out_type))
         except Exception as e:
             print("Exception:" + str(e))
         self.examples = self.validate_examples(examples)
@@ -79,6 +92,11 @@ class MOracleFunction(MFunction):
         if type(self.outtype.definition) != ast.TypeUnary:
             self._outtype._definition = ast.TypeUnary(
                 expr=self.outtype.definition)
+
+        # Prepare prompt prefix.
+        self.prompt_prefix = HEADER.format(input_schema=self.input_schema_str,
+                                           output_schema=self.output_schema_str)
+        self.prompt_prefix += self.prepare_examples()
 
     def prepare_input(self, args: List[MObject]):
         data = {}
@@ -89,7 +107,7 @@ class MOracleFunction(MFunction):
     def prepare_task(self):
         if self.definition.types.annotation:
             return self.definition.types.annotation
-        return "Determine the output from the input."
+        return "Given the input, determine the output."
 
     def prepare_examples(self):
         task = self.prepare_task()
@@ -127,19 +145,15 @@ class MOracleFunction(MFunction):
 
     def func(self, args: List[MObject]):
         task = self.prepare_task()
-        input_schema = self.input_schema
-        output_schema = self.output_schema
         input_example = self.prepare_input(args)
 
-        prompt = HEADER.format(input_schema=input_schema,
-                               output_schema=output_schema)
-        prompt += self.prepare_examples()
+        prompt = self.prompt_prefix
         prompt += QUERY.format(task=task, input=input_example)
 
         try:
-            code = self.interpreter.backend.consult(
-                prompt, self.output_grammar, self.output_schema_dict)
-            output = self.interpreter.eval(code)
+            code = self.interpreter.backend.consult(self, prompt)
+            wrapped = self.interpreter.eval(code)
+            output = wrapped.value["result"]
         except ValueError as e:
             return MValue(None, str(e))
         return output

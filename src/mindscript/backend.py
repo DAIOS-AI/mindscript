@@ -2,7 +2,9 @@ import os
 import requests
 import json
 from abc import abstractmethod
+from mindscript.ast import Function
 from mindscript.objects import MValue
+from mindscript.oracle import MOracleFunction
 
 
 TIMEOUT = 20
@@ -12,7 +14,7 @@ class Backend:
     # Must return a dict {"headers": dict, "json": dict}
     # to be submitted as an HTTP request.
     @abstractmethod
-    def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
+    def preprocess(self, oracle: MOracleFunction, prompt: str) -> dict:
         pass
 
     # Must return a string ready to be parsed by the interpreter.
@@ -20,14 +22,13 @@ class Backend:
     def postprocess(self, jsonobj: dict) -> str:
         pass
 
-    def consult(self, prompt: str, output_grammar: str|None, output_schema: dict|None):
+    def consult(self, oracle: MOracleFunction, prompt: str):
         # print(f"Backend.consult: prompt = {prompt}")
         url = self.completionUrl
-        data = self.preprocess(prompt, output_grammar, output_schema)
+        data = self.preprocess(oracle, prompt)
         try:
             with requests.post(url, timeout=TIMEOUT, **data) as response:
                 res = response.json()
-                # print(f"Backend.consult: res = {res}")
                 code = self.postprocess(res)
         except json.JSONDecodeError as e:
             raise ValueError(f"Error: JSON decode failure of {response.text}")
@@ -47,7 +48,8 @@ class Backend:
 class OpenAI(Backend):
     def __init__(self, url=None, model=None):
         if "OPENAI_API_KEY" not in os.environ:
-            raise ValueError("The environment variable 'OPENAI_API_KEY' is not set.")
+            raise ValueError(
+                "The environment variable 'OPENAI_API_KEY' is not set.")
 
         if url is not None:
             self.url = url
@@ -65,15 +67,20 @@ class OpenAI(Backend):
             "Content-Type": "application/json",
             "Authorization": "Bearer " + os.environ["OPENAI_API_KEY"]
         }
-        self.temperature = 0.7
 
-    def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
+    def preprocess(self, oracle: MOracleFunction, prompt: str) -> dict:
         return {
             "headers": self.headers,
             "json": {
                 "model": self.model,
                 "messages": [{"role": "user", "content": prompt}],
-                "temperature": self.temperature
+                "response_format": {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": oracle.output_name,
+                        "schema": oracle.output_schema
+                    },
+                },
             }
         }
 
@@ -98,7 +105,6 @@ class Ollama(Backend):
         self.headers = {"Content-Type": "application/json"}
         self.check_health()
 
-
     def check_health(self):
         url = self.url + "/"
         error_msg = f"Ollama backend error ({url}). Is the server online?"
@@ -110,15 +116,14 @@ class Ollama(Backend):
             raise Exception(error_msg)
         return True
 
-
-    def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
+    def preprocess(self, oracle: MOracleFunction, prompt: str) -> dict:
         return {
             "headers": self.headers,
             "json": {
                 "model": self.model,
                 "prompt": prompt,
                 "stream": False,
-                "format": output_schema,
+                "format": oracle.output_schema,
             }
         }
 
@@ -136,10 +141,7 @@ class LlamaCPP(Backend):
         self.completionUrl = self.url + "/completion"
 
         self.headers = {"Content-Type": "application/json"}
-        self.max_tokens = 1000
-        self.repeat_penalty = 1.5
         self.check_health()
-
 
     def check_health(self):
         url = self.url + "/health"
@@ -152,15 +154,12 @@ class LlamaCPP(Backend):
             raise Exception(error_msg)
         return True
 
-
-    def preprocess(self, prompt: str, output_grammar: str|None, output_schema: dict|None) -> dict:
+    def preprocess(self, oracle: MOracleFunction, prompt: str) -> dict:
         return {
             "headers": self.headers,
             "json": {
                 "prompt": prompt,
-                "grammar": output_grammar,
-                "n_predit": self.max_tokens,
-                "repeat_penalty": self.repeat_penalty
+                "json_schema": oracle.output_schema,
             }
         }
 

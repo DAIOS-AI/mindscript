@@ -459,7 +459,7 @@ class Parser:
         if self.match([TokenType.FUNCTION, TokenType.ORACLE]):
             operator = self.previous()
             self.consume(TokenType.CLROUND,
-                         "Expected '(' after 'fun' keyword.")
+                         f"Expected '(' after '{operator.literal}' keyword.")
             params = []
             ptypes = []
             if not self.check(TokenType.RROUND):
