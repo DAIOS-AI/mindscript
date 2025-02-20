@@ -8,8 +8,7 @@ import mindscript.ast as ast
 
 HEADER = """
 You are a helpful assistant, and your task is to provide answers
-respecting the formatting instructions. Only output a JSON, with
-no code fences (like ```)!
+respecting the format of the OUTPUT JSON SCHEMA.
 
 INPUT JSON SCHEMA:
 
