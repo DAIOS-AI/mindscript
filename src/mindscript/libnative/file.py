@@ -5,6 +5,6 @@ from mindscript.interpreter import Interpreter, Environment
 from mindscript.types import TypeChecker
 from mindscript.schema import JSONSchema
 from mindscript.bnf import BNFFormatter
-import mindscript.startup
+import mindscript.builtins
 from mindscript.libnative.auxiliary import import_code, flattened_env
 

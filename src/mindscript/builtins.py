@@ -13,7 +13,7 @@ def read_lib_script(filename: str):
     return files('mindscript.lib').joinpath(filename).read_text()
 
 
-def interpreter(interactive=False, backend: str = None):
+def interpreter(interactive=False, backend = None):
     ip = Interpreter(interactive=interactive, backend=backend)
 
     ip.set_buffer("<preamble>")

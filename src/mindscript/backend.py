@@ -46,10 +46,12 @@ class Backend:
 
 
 class OpenAI(Backend):
-    def __init__(self, url=None, model=None):
-        if "OPENAI_API_KEY" not in os.environ:
+    def __init__(self, url=None, model=None, apikey=None):
+        if apikey is None and "OPENAI_API_KEY" not in os.environ:
             raise ValueError(
                 "The environment variable 'OPENAI_API_KEY' is not set.")
+        elif apikey is None and "OPENAI_API_KEY" in os.environ:
+            apikey = os.environ["OPENAI_API_KEY"]
 
         if url is not None:
             self.url = url

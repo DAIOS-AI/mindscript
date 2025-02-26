@@ -1,6 +1,6 @@
 import mindscript.backend
 from mindscript.interpreter import Environment
-import mindscript.startup
+import mindscript.builtins
 
 def flattened_env(env: Environment):
     fenv = dict()
@@ -12,7 +12,7 @@ def flattened_env(env: Environment):
     return fenv
 
 def import_code(code: str, backend: mindscript.backend.Backend, buffer: str = None):
-    ip = mindscript.startup.interpreter(backend=backend)
+    ip = mindscript.builtins.interpreter(backend=backend)
     startup_env = ip.env
     module_env = Environment(enclosing=startup_env)
 
