@@ -211,8 +211,8 @@ class Lexer:
     #     return lexeme
 
     def linecol(self, buffer: str, index: int):
-        lines = self.stream[buffer].splitlines()
-        lines.append("")
+        padded = self.stream[buffer].replace("\n", " \n") + "\n"
+        lines = padded.splitlines()
 
         # Determine line, col.
         line, col = 0, 0
@@ -227,8 +227,8 @@ class Lexer:
 
     def report_error(self, buffer: str, index: int, errtype: str, msg: str):
         line, col = self.linecol(buffer, index)
-        lines = self.stream[buffer].splitlines()
-        lines.append("")
+        padded = self.stream[buffer].replace("\n", " \n") + "\n"
+        lines = padded.splitlines()
 
         print(f"\033[31m{errtype}: In {buffer}, line {line+1}, near")
         if line > 0:

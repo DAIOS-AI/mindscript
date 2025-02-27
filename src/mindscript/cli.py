@@ -2,7 +2,7 @@
 
 import mindscript
 import argparse
-from mindscript.ast import IncompleteExpression, Return, Exit
+from mindscript.ast import IncompleteExpression, Return, Exit, SyntaxError, LexicalError
 import mindscript.backend
 import traceback
 import readline
@@ -33,6 +33,11 @@ def execute_file(filename: str, backend: mindscript.backend.Backend):
         with open(filename, "r") as fh:
             code = fh.read()
         ip.eval(code, filename)
+    except (Return, Exit):
+        exit(0)
+    except (SyntaxError, LexicalError, IncompleteExpression, EOFError):
+        print("Reached end of file.")
+        exit(1)
     except Exception as e:
         print(f"{RED}{traceback.format_exc()}{RESET}")
 
