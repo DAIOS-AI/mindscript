@@ -17,7 +17,8 @@ class CodeImport(MNativeFunction):
     def func(self, args: List[MObject]):
         code, name = args
         try:
-            module = import_code(code.value, self.interpreter.backend, name.value)
+            module = import_code(
+                code.value, self.interpreter.backend, name.value)
         except Exception as e:
             self.error(str(e))
         return MValue(module, None)
@@ -105,6 +106,22 @@ class Print(MNativeFunction):
         definition = "fun(value: Any) -> Any"
         super().__init__(ip, definition)
         self.annotation = "Prints a value."
+
+    def func(self, args: List[MObject]):
+        arg = args[0]
+        if type(arg) == MValue and type(arg.value) == str:
+            print(arg.value, end="")
+        else:
+            repr = self.interpreter.print(arg)
+            print(repr, end="")
+        return arg
+
+
+class Println(MNativeFunction):
+    def __init__(self, ip: Interpreter):
+        definition = "fun(value: Any) -> Any"
+        super().__init__(ip, definition)
+        self.annotation = "Prints a value followed by a newline."
 
     def func(self, args: List[MObject]):
         arg = args[0]

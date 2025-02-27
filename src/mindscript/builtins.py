@@ -26,6 +26,7 @@ def interpreter(interactive=False, backend = None):
     ip.define("int", std.Int(ip=ip))
     ip.define("num", std.Num(ip=ip))
     ip.define("print", std.Print(ip=ip))
+    ip.define("println", std.Println(ip=ip))
     ip.define("dump", std.Dump(ip=ip))
     ip.define("getEnv", std.GetEnv(ip=ip))
     ip.define("typeOf", std.TypeOf(ip=ip))
