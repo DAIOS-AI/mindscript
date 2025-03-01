@@ -230,12 +230,12 @@ class Lexer:
         padded = self.stream[buffer].replace("\n", " \n") + "\n"
         lines = padded.splitlines()
 
-        print(f"\033[31m{errtype}: In {buffer}, line {line+1}, near")
+        print(f"{errtype}: In {buffer}, line {line+1}, near")
         if line > 0:
             print(lines[line-1])
         print(lines[line])
         print(" " * col + "^")
-        print(msg + "\033[0m")
+        print(msg)
 
     def error(self, msg: str):
         self.report_error(self.stream_id, self.start, "LEXICAL ERROR", msg)
