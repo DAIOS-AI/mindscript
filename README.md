@@ -5,7 +5,7 @@ An experimental programming language combining formal and informal computation.
 
 &copy; 2024, 2025 [Daios Technologies Limited](https://www.daios.ai)
 
-![preview](/assets/mindscript-demo.png)
+![preview](https://mindscript.daios.ai/assets/mindscript-demo.png)
 
 
 **Documentation:** [https://mindscript.daios.ai](https://mindscript.daios.ai) <br>
