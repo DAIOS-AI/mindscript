@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
+import readline # Necessary for a decent experience in the command line.
+import io
+import sys
+import contextlib
 import mindscript
 import argparse
 from mindscript.ast import IncompleteExpression, Return, Exit, SyntaxError, LexicalError
 import mindscript.backend
 import traceback
-import readline
+
 
 GREEN = "\033[32m"
 BLUE = "\033[94m"
@@ -51,13 +55,24 @@ def repl(backend: mindscript.backend.Backend, welcome):
 
     prompt = "> "
     lines = ""
+    stderr_buffer = io.StringIO()
     while True:
         try:
             line = input(prompt)
-            lines += "\n" + line
-            res = ip.eval(lines, "<repl>")
+            lines += line + "\n"
+            errmsg = ""
+            with contextlib.redirect_stderr(stderr_buffer):
+                res = ip.eval(lines, "<repl>")
+                errmsg = stderr_buffer.getvalue()
+            
+            if errmsg != "":
+                print(f"{RED}{errmsg}{RESET}", file=sys.stderr)
+                stderr_buffer.truncate(0)
+                stderr_buffer.seek(0)
+
             if res is None:
                 continue
+
             repr = ip.printer.print(res)
             if res.annotation is not None:
                 print(f"{GREEN}{res.annotation}")

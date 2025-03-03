@@ -1,3 +1,5 @@
+
+import sys
 from typing import Any
 from mindscript.ast import TokenType, Token, LexicalError, IncompleteExpression
 
@@ -117,24 +119,39 @@ class Lexer:
         lexeme = ""
         delimiter = self.advance()
 
+        control = {
+            "\"": "\"", 
+            "\\": "\\", 
+            "b": "\b",
+            "f": "\f",
+            "n": "\n",
+            "r": "\r",
+            "t": "\t",
+        }
+
         while not self.is_at_end() and self.peek() != delimiter:
             c = self.advance()
-            lexeme += c
             if c == "\\": # Control characters.
                 if self.peek() in [delimiter, "\\", "/", "b", "f", "n", "r", "t"]:
-                    lexeme += self.advance()
+                    cc = self.advance()
+                    lexeme += control[cc]
                 elif self.peek() == "u":
-                    lexeme += self.advance()
+                    lexeme = c + self.advance()
                     for n in range(4):
-                        if not self.is_hex_digit(self.peek()):
+                        if self.is_at_end() or not self.is_hex_digit(self.peek()):
+                            self.error("Unicode was not terminated.")
+                            self.advance()
                             return None
                         lexeme += self.advance()
+                    lexeme = lexeme.encode().decode("unicode_escape")
                 else:
                     return None
+            else:
+                lexeme += c
         if self.is_at_end():
             self.error("String was not terminated.")
         self.advance()
-        return bytes(lexeme, "utf-8").decode("unicode_escape", errors="ignore")
+        return lexeme
 
     def scan_integer(self):
         lexeme = ""
@@ -211,31 +228,32 @@ class Lexer:
     #     return lexeme
 
     def linecol(self, buffer: str, index: int):
-        padded = self.stream[buffer].replace("\n", " \n") + "\n"
-        lines = padded.splitlines()
+        padded = self.stream[buffer] + "\n"
+        lines = padded.splitlines(True)
 
         # Determine line, col.
-        line, col = 0, 0
+        line, col, idx = 0, 0, index
         for l in lines:
-            if index + 1 > len(l):
-                index -= len(l) + 1
+            if idx >= len(l):
+                idx -= len(l)
                 line += 1
             else:
-                col = index
+                col = idx
                 break
         return line, col
 
     def report_error(self, buffer: str, index: int, errtype: str, msg: str):
         line, col = self.linecol(buffer, index)
-        padded = self.stream[buffer].replace("\n", " \n") + "\n"
-        lines = padded.splitlines()
+        padded = self.stream[buffer] + "\n"
+        lines = padded.splitlines(True)
 
-        print(f"{errtype}: In {buffer}, line {line+1}, near")
+        error_msg = f"{errtype}: In {buffer}, line {line+1}, near\n"
         if line > 0:
-            print(lines[line-1])
-        print(lines[line])
-        print(" " * col + "^")
-        print(msg)
+            error_msg += lines[line-1]
+        error_msg += lines[line]
+        error_msg += " " * col + "^\n"
+        error_msg += msg
+        print(error_msg, file=sys.stderr, flush=True)
 
     def error(self, msg: str):
         self.report_error(self.stream_id, self.start, "LEXICAL ERROR", msg)
