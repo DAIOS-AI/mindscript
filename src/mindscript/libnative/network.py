@@ -1,6 +1,7 @@
 from typing import List, Any
 from copy import deepcopy
 import requests
+import mindscript 
 from mindscript.objects import MNativeFunction, MValue, MObject
 from mindscript.interpreter import Interpreter
 import datetime
@@ -42,7 +43,7 @@ class HTTP(MNativeFunction):
     def func(self, args: List[MObject]):
         wparams, method, url = args
 
-        params = MValue.unwrap(wparams)
+        params = mindscript.unwrap(wparams)
         if params is None:
             params = {}
         if method.value is None:
@@ -63,7 +64,7 @@ class HTTP(MNativeFunction):
                 }
                 if "Content-Type" in response.headers and response.headers["Content-Type"] == "application/json":
                     result["json"] = response.json()
-                return MValue.wrap(result)
+                return mindscript.wrap(result)
         except requests.JSONDecodeError as e:
             result = {
                 "error": "JSON decode error",
@@ -74,24 +75,24 @@ class HTTP(MNativeFunction):
                 "error": "Connection error",
                 "detail": str(e)
             }
-            return MValue.wrap(result)
+            return mindscript.wrap(result)
         except requests.Timeout as e:
             result = {
                 "error": "Timeout error",
                 "detail": str(e)
             }
-            return MValue.wrap(result)
+            return mindscript.wrap(result)
         except requests.HTTPError as e:
             result = {
                 "error": "HTTP error",
                 "detail": str(e)
             }
-            return MValue.wrap(result)
+            return mindscript.wrap(result)
         except requests.exceptions.RequestException as e:
             result = {
                 "error": "Unknown request error",
                 "detail": str(e)
             }
-            return MValue.wrap(result)
+            return mindscript.wrap(result)
 
 

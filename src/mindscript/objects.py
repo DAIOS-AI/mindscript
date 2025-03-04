@@ -16,44 +16,11 @@ class MObject():
         pass
 
 
-
 class MValue(MObject):
     def __init__(self, value, annotation=None):
         self._value = value
         self._annotation = annotation
 
-    def wrap(val: Any):
-        if type(val) in [type(None), bool, int, float, str]:
-            return MValue(val, None)
-        elif type(val) == list:
-            mval = []
-            for subval in val:
-                mval.append(MValue.wrap(subval))
-            return MValue(mval)
-        elif type(val) == dict:
-            mval = {}
-            for key, subval in val.items():
-                mval[key] = MValue.wrap(subval)
-            return MValue(mval)
-        raise ValueError(f"Cannot pack a value of type {type(val)}.")
-    
-    def unwrap(mval: 'MValue'):
-        if type(mval) != MValue:
-            raise ValueError(f"Cannot unpack a value of type {type(mval)}")
-        elif type(mval.value) in [type(None), bool, int, float, str]:
-            return mval.value
-        elif type(mval.value) == list:
-            val = []
-            for subval in mval.value:
-                val.append(MValue.unwrap(subval))
-            return val
-        elif type(mval.value) == dict:
-            val = {}
-            for key, subval in mval.value.items():
-                val[key] = MValue.unwrap(subval)
-            return val
-        raise ValueError(f"Cannot unpack a value of type {type(mval.value)}")
-    
     @property
     def value(self):
         return self._value
@@ -70,6 +37,41 @@ class MValue(MObject):
     def annotation(self, val):
         self._annotation = val
 
+
+def wrap(val: Any):
+    if type(val) in [type(None), bool, int, float, str]:
+        return MValue(val, None)
+    elif type(val) == list:
+        mval = []
+        for subval in val:
+            mval.append(wrap(subval))
+        return MValue(mval)
+    elif type(val) == dict:
+        mval = {}
+        for key, subval in val.items():
+            mval[key] = wrap(subval)
+        return MValue(mval)
+    raise ValueError(f"Cannot wrap a value of type {type(val)}.")
+
+
+def unwrap(mval: MValue, ignore: bool = True):
+    if type(mval) != MValue:
+        raise ValueError(f"Cannot unwrap a value of type {type(mval)}")
+    elif type(mval.value) in [type(None), bool, int, float, str]:
+        return mval.value
+    elif type(mval.value) == list:
+        val = []
+        for subval in mval.value:
+            val.append(unwrap(subval))
+        return val
+    elif type(mval.value) == dict:
+        val = {}
+        for key, subval in mval.value.items():
+            val[key] = unwrap(subval)
+        return val
+    elif ignore:
+        return None
+    raise ValueError(f"Cannot unwrap a value of type {type(mval.value)}")
 
 
 # Types.
@@ -166,7 +168,8 @@ class MFunction(MObject):
             if not self.interpreter.checktype(arg, typeobj):
                 reqtype_str = self.interpreter.printer.print(typeobj)
                 val_str = self.interpreter.printer.print(arg)
-                valtype_str = self.interpreter.printer.print(self.interpreter.typeof(arg))
+                valtype_str = self.interpreter.printer.print(
+                    self.interpreter.typeof(arg))
                 self.error(f"Wrong type of function argument: "
                            f"Expected {reqtype_str} but got value {val_str} of {valtype_str}.")
 
@@ -175,7 +178,8 @@ class MFunction(MObject):
         if not self.interpreter.checktype(value, self.outtype):
             reqtype_str = self.interpreter.printer.print(typeobj)
             val_str = self.interpreter.printer.print(arg)
-            valtype_str = self.interpreter.printer.print(self.interpreter.typeof(arg))
+            valtype_str = self.interpreter.printer.print(
+                self.interpreter.typeof(arg))
             self.error(f"Wrong type of function output: "
                        f"Expected {reqtype_str} but got value {val_str} of {valtype_str}.")
 
@@ -211,7 +215,8 @@ class MFunction(MObject):
 
 class MPartialFunction(MFunction):
 
-    def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
+    # type: ignore
+    def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]):
         if type(definition) == str:
             buffer = ip.get_buffer()
             definition = ip.parser.parse(
@@ -226,7 +231,8 @@ class MPartialFunction(MFunction):
 
 class MNativeFunction(MFunction):
 
-    def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]): # type: ignore
+    # type: ignore
+    def __init__(self, ip: 'Interpreter', definition: Union[ast.Function, str]):
         if type(definition) == str:
             buffer = ip.buffer
             definition = ip.parser.parse(

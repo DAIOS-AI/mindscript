@@ -10,6 +10,7 @@ import mindscript.builtins
 import time
 import datetime
 import random
+import mindscript
 
 class TsNow(MNativeFunction):
     def __init__(self, ip: Interpreter):
@@ -18,7 +19,7 @@ class TsNow(MNativeFunction):
 
     def func(self, args: List[MObject]):
         now = round(time.time_ns() / 1000000)
-        return MValue.wrap(now)
+        return mindscript.wrap(now)
 
 class DateNow(MNativeFunction):
     def __init__(self, ip: Interpreter):
@@ -35,7 +36,7 @@ class DateNow(MNativeFunction):
             "second": now.second,
             "millisecond": now.microsecond
         }
-        return MValue.wrap(date)
+        return mindscript.wrap(date)
 
 class Random(MNativeFunction):
     def __init__(self, ip: Interpreter):
@@ -44,4 +45,4 @@ class Random(MNativeFunction):
 
     def func(self, args: List[MObject]):
         rand = random.random()
-        return MValue.wrap(rand)
+        return mindscript.wrap(rand)
