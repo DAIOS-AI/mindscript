@@ -1,5 +1,5 @@
 import mindscript.ast as ast
-from mindscript.objects import MType
+from mindscript.objects import MType, unwrap
 import json
 import re
 
@@ -79,7 +79,7 @@ class JSONSchema():
 
     def type_enum(self, node, env=None, visited=None):
         obj = node.type_expr.accept(self, env=env, visited=visited)
-        obj["enum"] = node.values.unwrap()
+        obj["enum"] = unwrap(node.values)
         if node.annotation is not None:
             obj["description"] = node.annotation
         return obj
