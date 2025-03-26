@@ -176,10 +176,10 @@ class MFunction(MObject):
         value = self.func(args)
 
         if not self.interpreter.checktype(value, self.outtype):
-            reqtype_str = self.interpreter.printer.print(typeobj)
-            val_str = self.interpreter.printer.print(arg)
+            reqtype_str = self.interpreter.printer.print(self.outtype)
+            val_str = self.interpreter.printer.print(value)
             valtype_str = self.interpreter.printer.print(
-                self.interpreter.typeof(arg))
+                self.interpreter.typeof(value))
             self.error(f"Wrong type of function output: "
                        f"Expected {reqtype_str} but got value {val_str} of {valtype_str}.")
 

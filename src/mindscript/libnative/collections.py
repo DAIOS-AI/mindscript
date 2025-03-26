@@ -32,7 +32,6 @@ class Iter(MNativeFunction):
             self.annotation = "An object iterator."
             self.array = []
             for key, value in obj.items():
-                print(key, value, type(key), type(value))
                 keyval = MValue(key, None)
                 pair = [keyval, value]
                 self.array.append(pair)
@@ -90,6 +89,8 @@ class Pop(MNativeFunction):
 
     def func(self, args: List[MObject]):
         arr = args[0]
+        if len(arr.value) < 1:
+            return MValue(None, "Can't pop value from empty array.")
         return arr.value.pop(-1)
 
 
@@ -111,6 +112,8 @@ class Unshift(MNativeFunction):
 
     def func(self, args: List[MObject]):
         arr = args[0]
+        if len(arr.value) < 1:
+            return MValue(None, "Can't unshift value from an empty array.")
         return arr.value.pop(0)
 
 
