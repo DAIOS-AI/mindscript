@@ -8,7 +8,8 @@ import mindscript.ast as ast
 
 HEADER = """
 You are a helpful assistant, and your task is to provide answers
-respecting the format of the OUTPUT JSON SCHEMA.
+respecting the format of the OUTPUT JSON SCHEMA. Do not put code
+fences around the output (like ```json), only generate valid JSON.
 
 INPUT JSON SCHEMA:
 
@@ -151,6 +152,7 @@ class MOracleFunction(MFunction):
 
         try:
             code = self.interpreter.backend.consult(self, prompt)
+            json.loads(code) # Assert output is valid JSON.
             wrapped = self.interpreter.eval(code)
             output = wrapped.value["result"]
         except Exception as e:

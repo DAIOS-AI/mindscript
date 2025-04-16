@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mindscript"
-version = "0.2.18" # Duplicate in "__init__.py"!
+version = "0.2.19" # Duplicate in "__init__.py"!
 description = "An experimental programming language combining formal and informal computation."
 license = { file = "LICENSE" }
 authors = [
