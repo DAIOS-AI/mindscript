@@ -1,6 +1,6 @@
 from typing import List
 from mindscript.objects import MNativeFunction, MValue, MObject
-from mindscript.interpreter import Interpreter
+from mindscript.runtime import Interpreter
 import re
 
 # String Manipulation:

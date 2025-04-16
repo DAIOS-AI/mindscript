@@ -6,7 +6,7 @@ import mindscript.libnative.math as math
 import mindscript.libnative.string as string
 import mindscript.libnative.network as network
 import mindscript.libnative.system as system
-from mindscript.interpreter import Interpreter
+from mindscript.runtime import Interpreter
 
 
 def read_lib_script(filename: str):

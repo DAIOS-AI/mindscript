@@ -3,7 +3,7 @@ from copy import deepcopy
 import requests
 import mindscript 
 from mindscript.objects import MNativeFunction, MValue, MObject
-from mindscript.interpreter import Interpreter
+from mindscript.runtime import Interpreter
 import datetime
 
 # Basic HTTP operations: http_get, http_post, http_put, http_delete

@@ -153,7 +153,7 @@ class MOracleFunction(MFunction):
             code = self.interpreter.backend.consult(self, prompt)
             wrapped = self.interpreter.eval(code)
             output = wrapped.value["result"]
-        except ValueError as e:
+        except Exception as e:
             return MValue(None, str(e))
         return output
 

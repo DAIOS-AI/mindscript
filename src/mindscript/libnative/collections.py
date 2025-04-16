@@ -1,6 +1,6 @@
 from typing import List
 from mindscript.objects import MNativeFunction, MValue, MObject
-from mindscript.interpreter import Interpreter
+from mindscript.runtime import Interpreter
 import re
 import math
 
@@ -84,7 +84,7 @@ class Push(MNativeFunction):
 
 class Pop(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(array: [Any]) -> Any")
+        super().__init__(ip, "fun(array: [Any]) -> Any?")
         self.annotation = "Pops the last value from the array."
 
     def func(self, args: List[MObject]):
@@ -107,7 +107,7 @@ class Shift(MNativeFunction):
 
 class Unshift(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(array: [Any]) -> Any")
+        super().__init__(ip, "fun(array: [Any]) -> Any?")
         self.annotation = "Pops the first value from the array."
 
     def func(self, args: List[MObject]):
@@ -119,11 +119,13 @@ class Unshift(MNativeFunction):
 
 class Delete(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(obj: {}, prop: Str) -> {}")
+        super().__init__(ip, "fun(obj: {}, prop: Str) -> {}?")
         self.annotation = "Deletes a property from an object."
 
     def func(self, args: List[MObject]):
         obj, prop = args
+        if prop.value not in obj.value:
+            return MValue(None, f"The property '{prop.value}' does not exist.")
         del obj.value[prop.value]
         return obj
 
@@ -191,11 +193,13 @@ class Exists(MNativeFunction):
     
 class Get(MNativeFunction):
     def __init__(self, ip: Interpreter):
-        super().__init__(ip, "fun(obj: {}, key: Str) -> Any")
+        super().__init__(ip, "fun(obj: {}, key: Str) -> Any?")
         self.annotation = "Returns a property."
 
     def func(self, args: List[MObject]):
         obj, key = args
+        if key not in obj:
+            return MValue(None, f"The property '{key}' does not exist.")
         return obj.value[key.value]
 
 class Set(MNativeFunction):

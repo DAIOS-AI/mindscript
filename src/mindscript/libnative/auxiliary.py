@@ -1,5 +1,5 @@
 import mindscript.backend
-from mindscript.interpreter import Environment
+from mindscript.runtime import Environment
 import mindscript.builtins
 
 def flattened_env(env: Environment):

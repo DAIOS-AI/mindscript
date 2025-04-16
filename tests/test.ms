@@ -5,7 +5,7 @@
 #
 ###############################################################################
 
-print("Equality.\n")
+println("Equality.\n")
 assert(true == true)
 assert(true != false)
 assert(1 == 1)
@@ -25,38 +25,38 @@ assert(f == f)
 assert(f == h)
 assert(f != g)
 
-print("Assignments.\n")
+println("Assignments.\n")
 [let x, let y] = [0, 1]
 assert(x == 0 and y == 1)
 
-print("Distinguish parenthesized expressions from calls.\n")
+println("Distinguish parenthesized expressions from calls.\n")
 let x = false
 (let x = true)
 assert(x == true)
 
-print("Testing closures 1.\n")
+println("Testing closures 1.\n")
 let x = "global"
 let outer = fun() do
   let x = "outer"
   let inner = fun() do
-    print(x)
+    println(x)
   end
   inner()
 end
 
 assert(outer() == "outer")
 
-print("Testing closures 2.\n")
+println("Testing closures 2.\n")
 let makeClosure = fun() do
     let local = "local"
-    let closure = fun() do print(local) end
+    let closure = fun() do println(local) end
     return(closure)
 end
 
 let closure = makeClosure()
 assert(closure() == "local")
 
-print("Testing closures 3.\n")
+println("Testing closures 3.\n")
 let createAdder = fun(n: Int) -> Int -> Int do
     fun(m: Int) -> Int do (n + m) end
 end
@@ -64,9 +64,9 @@ end
 let adder = createAdder(5)
 assert(adder(3) == 8)
 
-print("Point objects and point adding functions.\n")
+println("Point objects and point adding functions.\n")
 let Point = type {"x": Num, "y": Num}
-print(Point)
+println(Point)
 
 let point = fun(x: Num, y: Num) -> Point do
   {"x": x, "y": y}
@@ -83,10 +83,10 @@ assert(q == {x: -1., y: 1.})
 let r = point_add(p, q)
 assert(r == {x: 0., y: 0.})
 
-print("Annotations.\n")
+println("Annotations.\n")
 # "The speed of light in m/s"
 let speed = 300000000
-print(speed)
+println(speed)
 
 
 # "computes the factorial of a given integer."
@@ -95,9 +95,9 @@ let factorial = fun(n: Int) -> Int do
   else n*factorial(n-1)
   end
 end
-print(factorial)
+println(factorial)
 
-print("\n# Testing for loops.")
+println("\n# Testing for loops.")
 let range = fun(start: Int, stop: Int) -> (Null -> Int?) do
   fun() -> Int? do
     if start<stop do
@@ -110,45 +110,45 @@ let range = fun(start: Int, stop: Int) -> (Null -> Int?) do
   end
 end
 
-print("\nLoops over arrays.")
-for let x in iter(["1", "2", "3"]) do print(x) end
+println("\nLoops over arrays.")
+for let x in iter(["1", "2", "3"]) do println(x) end
 
-print("\nLoops over objects.")
-for let x in iter({"x": 1, "y": 2, "z": 3}) do print(x) end
+println("\nLoops over objects.")
+for let x in iter({"x": 1, "y": 2, "z": 3}) do println(x) end
 
-print("\nLoops over iterators.")
-for let x in range(1, 4) do print(x) end
+println("\nLoops over iterators.")
+for let x in range(1, 4) do println(x) end
 
-print("\n# Type checking.")
+println("\n# Type checking.")
 let obj = {
   "name": "Pedro", 
   "sayname": fun() do
-      print(this.name)
+      println(this.name)
   end
 }
 
-print("Should print the object.")
-print(obj)
+println("Should println the object.")
+println(obj)
 
-print("Should print the type of the object.")
+println("Should println the type of the object.")
 let ObjType = typeOf(obj)
-print(ObjType)
+println(ObjType)
 
 let show_age = fun(arg: {"name": Str, "age": Int}) -> Int do
   {"age": let age} = arg
   return(age)
 end
 let age = show_age({"age": 45, "name": "something"})
-print("Should print '45': " + str(age))
+println("Should println '45': " + str(age))
 
-print("# Trying oracle functions.")
+println("# Trying oracle functions.")
 # "Determine the distance of the planet to the sun in astronomical units."
 let au = oracle(planet: Str) -> Num
 
-print("AU Earth        : " + str(au("Earth")))
-print("AU Jupiter      : " + str(au("Jupiter")))
+println("AU Earth        : " + str(au("Earth")))
+println("AU Jupiter      : " + str(au("Jupiter")))
 
-print("# Testing for subtypes.")
+println("# Testing for subtypes.")
 assert(isSubtype(type [Int], type [Any]))
 assert(isSubtype(type [Any], type [Any]))
 
