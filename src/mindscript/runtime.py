@@ -578,6 +578,10 @@ class Interpreter:
 
     def type_unary(self, node: ast.Expr):
         expr = node.expr.accept(self)
+        if (isinstance(expr, ast.TypeTerminal) 
+            and expr.token.ttype == ast.TokenType.TYPE 
+            and expr.token.literal == "Any"):
+            return expr
         operator = node.operator
         return ast.TypeUnary(operator=operator, expr=expr)
 

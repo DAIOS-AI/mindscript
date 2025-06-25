@@ -1,5 +1,3 @@
-from typing import Optional, Any, List
-import copy
 import mindscript.ast as ast
 from mindscript.objects import MObject, MValue, MFunction, MType
 
@@ -179,7 +177,7 @@ class TypeChecker():
                 valtype = ast.TypeTerminal(token=ast.Token(
                     ttype=ast.TokenType.TYPE, literal="Num"))
             elif type(v) == list:
-                # We need to find a representative type for the list. The correct way of doing this
+                # TODO: We need to find a representative type for the list. The correct way of doing this
                 # is using Unification. But here we follow a simple approach.
                 # 1) If the list is empty, then type is Array.
                 # 2) Pick the first item's type and set is as the most general type (m.g.t).
