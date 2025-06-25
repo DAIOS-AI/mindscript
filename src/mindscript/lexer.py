@@ -18,6 +18,7 @@ Keywords = {
     "break": TokenType.BREAK,
     "continue": TokenType.CONTINUE,
     "if": TokenType.IF,
+    "then": TokenType.THEN,
     "elif": TokenType.ELIF,
     "else": TokenType.ELSE,
     "fun": TokenType.FUNCTION,
@@ -193,6 +194,12 @@ class Lexer:
                 lexeme += self.advance()
         return lexeme
 
+    def ignore_until_newline(self):
+        while not self.is_at_end():
+            c = self.advance()
+            if c == "\n":
+                return
+
     def scan_annotation(self):
         lexeme = ""
         line = ""
@@ -220,12 +227,6 @@ class Lexer:
         while not self.is_at_end() and self.is_id(self.peek()):
             lexeme += self.advance()
         return lexeme
-
-    # def scan_address(self):
-    #     lexeme = self.advance()
-    #     while not self.is_at_end() and self.is_address(self.peek()):
-    #         lexeme += self.advance()
-    #     return lexeme
 
     def linecol(self, buffer: str, index: int):
         padded = self.stream[buffer] + "\n"
@@ -349,6 +350,10 @@ class Lexer:
         # Multi-characters.
 
         if c == "#":
+            if not self.is_at_end() and self.peek() == "#":
+                self.ignore_until_newline()
+                self.add_token(TokenType.HASH, "")
+                return self.tokens.pop()
             lexeme = self.scan_annotation()
             if lexeme is None:
                 return self.add_token(TokenType.NULL, None)
@@ -395,13 +400,6 @@ class Lexer:
                     return self.add_token(ttype, True)
                 return self.add_token(ttype, lexeme)
             return self.add_token(TokenType.ID, lexeme)
-
-        # if c == "@":
-        #     self.rewind()
-        #     lexeme = self.scan_address()
-        #     if lexeme:
-        #         return self.add_token(TokenType.ADDRESS, str(lexeme))
-        #     self.rewind()
 
         self.error("Unexpected character.")
 

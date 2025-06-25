@@ -146,7 +146,7 @@ let languages = ["English", "Mandarin", "Spanish", "Hindi", "German", "Arabic", 
 
 # Returns a language detector for the given languages.
 let makeLanguageDetector = fun(langs: [Str]?) -> Str -> Str do
-    if langs == null do
+    if langs == null then
         langs = languages
     end
     # Detect the language the text is written in.

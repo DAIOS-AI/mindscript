@@ -88,7 +88,13 @@ class Interpreter:
         try:
             val = tree.accept(self)
         except (ast.Break, ast.Continue) as e:
-            self.error(e.operator, f"Unexpected control flow expression '{e.operator.literal}'.")
+            self.error
+            self.parser.lexer.report_error(
+                e.operator.buffer, 
+                e.operator.index,
+                "RUNTIME ERROR",
+                f"Unexpected control flow expression '{e.operator.literal}'"
+            )
         except ast.RuntimeError as e:
             pass
             
@@ -587,18 +593,10 @@ class Interpreter:
         return node
 
     def type_enum(self, node: ast.Expr):
-        operator = node.operator
-        type_expr = node.type_expr.accept(self)
-        values_expr = node.values_expr
-        values = node.values_expr.accept(self)
-        if type(values) != MValue and type(values.value) != list and len(values.value) > 0:
-            self.error(operator, "Expected a non-empty array of possible values.")
-        typeobj = MType(ip=self, definition=type_expr)
-        for v in values.value:
-            if not self.checktype(v, typeobj):
-                vrepr = self.printer.print(v)
-                self.error(operator, f"Found a value ({vrepr}) that is inconsistent with the enum type.")
-        return ast.TypeEnum(operator=operator, type_expr=type_expr, values_expr=values_expr, values=values)
+        values = node.expr.accept(self)
+        if type(values) != MValue or type(values.value) != list or len(values.value) == 0:
+            self.error(node.operator, "Expected a non-empty array of possible values.")
+        return ast.TypeEnum(operator=node.operator, expr=node.expr, values=values)
 
     def type_array(self, node: ast.Expr):
         expr = node.expr.accept(self)

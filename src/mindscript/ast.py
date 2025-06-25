@@ -58,6 +58,7 @@ TokenType = Enum(
         "DO",
         "END",
         "IF",
+        "THEN",
         "ELIF",
         "ELSE",
         "FOR",
@@ -311,8 +312,7 @@ class TypeBinary(TypeExpr):
 
 class TypeEnum(TypeExpr):
     operator: Optional[Token]
-    type_expr: TypeExpr
-    values_expr: Expr
+    expr: Array
     values: Optional[Any] = None
 
     def accept(self, visitor, **kwargs):

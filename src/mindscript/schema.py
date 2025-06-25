@@ -78,7 +78,7 @@ class JSONSchema():
         raise NotImplementedError("JSON Schemas for function types are not implemented yet.")
 
     def type_enum(self, node, env=None, visited=None):
-        obj = node.type_expr.accept(self, env=env, visited=visited)
+        obj = {}
         obj["enum"] = unwrap(node.values)
         if node.annotation is not None:
             obj["description"] = node.annotation

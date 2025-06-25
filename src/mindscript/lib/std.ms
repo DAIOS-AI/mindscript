@@ -18,7 +18,7 @@ end
 let map = fun(f: Any -> Any, iterator: Null -> Any) -> (Null -> Any) do
     fun() -> Any do
         let value = iterator()
-        if value == null do null 
+        if value == null then null 
         else f(value)
         end        
     end
@@ -28,7 +28,7 @@ end
 let filter = fun(cond: Any -> Bool, iterator: Null -> Any) -> (Null -> Any) do
     fun() -> Any do
         for value in iterator do
-            if cond(value) do
+            if cond(value) then
                 break(value)
             end
         end
@@ -42,7 +42,7 @@ end
 # reduce(sum, range(1, 101))
 let reduce = fun(f: Any -> Any -> Any, iterator: Null -> Any) -> Any do
     let accum = iterator()
-    if accum == null do [] end
+    if accum == null then [] end
     for value in iterator do
         accum = f(accum, value)
     end
@@ -52,7 +52,7 @@ end
 let range = fun(start: Int, stop: Int?) -> (Null -> Int?) do
     fun(_: Null) -> Int? do
         let n = start
-        if stop == null or start < stop do
+        if stop == null or start < stop then
             start = start + 1
             return(n)
         else
@@ -74,7 +74,7 @@ end
 # Retrieve a web page.
 let www = fun(url: Str) -> Str? do
     let page = http(null, "GET", url)
-    if not exists(page, "error") do
+    if not exists(page, "error") then
         return(page.text)
     else
         return(null)
@@ -84,7 +84,7 @@ end
 # Import a remote module.
 let netImport = fun(url: Str) -> {} do
     let code = www(url)
-    if code != null do
+    if code != null then
         return(codeImport(code, url))
     else
         return(null)
@@ -103,7 +103,7 @@ let mute = fun(_: Any) -> Null do null end
 let dirFun = fun(obj: {}) -> [Str] do
     let m = []
     for key in keys(obj) do
-        if isType(get(obj, key), type Any -> Any) do
+        if isType(get(obj, key), type Any -> Any) then
             push(m, key)
         end
     end

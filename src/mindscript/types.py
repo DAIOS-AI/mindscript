@@ -128,10 +128,11 @@ class TypeChecker():
             return True
         
         elif type1 == ast.TypeEnum and type2 != ast.TypeEnum:
-            return self._subtype_recursion(t1.type_expr, t2, env1, env2)
+            for val in t1.values.value:
+                if not self._checktype_recursion(val, t2, env2):
+                    return False
+            return True
         elif type1 == ast.TypeEnum and type2 == ast.TypeEnum:
-            if not self._subtype_recursion(t1.type_expr, t2.type_expr, env1, env2):
-                return False
             # TODO: Proper comparison of Enums requires comparing their contents,
             # which in the ideal, efficient case would require additional machinery
             # (e.g. recurisve value hashing). We'll brute-force here.

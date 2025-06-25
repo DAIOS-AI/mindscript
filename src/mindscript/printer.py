@@ -236,9 +236,8 @@ class Printer():
     def type_enum(self, node):
         if self.is_max_depth():
             return "Enum(...)"
-        typetxt = node.type_expr.accept(self)
         valuestxt = self.print_value(node.values)
-        return f"Enum({typetxt}, {valuestxt})"
+        return f"Enum {valuestxt}"
 
     def type_array(self, node):
         if self.is_max_depth():

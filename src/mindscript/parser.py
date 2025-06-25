@@ -8,12 +8,11 @@ from mindscript.lexer import Lexer
 # BNF of grammar:
 # ```
 #     program     ::= chunk EOF
-#     chunk       ::= control*
-#     control     ::= "return" "~(" expression ")" |
-#                     "break" "~(" expression ")" |
-#                     "continue" "~(" expression ")" |
-#                     expression
-#     expression  ::= ANNOTATION expression | assignment
+#     chunk       ::= expression*
+#     expression  ::= ANNOTATION? "return" "~(" expression ")"
+#                     | ANNOTATION? "break" "~(" expression ")"
+#                     | ANNOTATION? "continue" "~(" expression ")"
+#                     | ANNOTATION? assignment
 #     assignment  ::= disjunction "=" expression | disjunction
 #     disjunction ::= conjunction ("or" conjunction)*
 #     conjunction ::= equality ("and" equality)*
@@ -51,7 +50,7 @@ from mindscript.lexer import Lexer
 #     type_binary ::= type_unary "->" type_expr | type_unary
 #     type_unary  ::= type_prim "?" | type_prim
 #     type_prim   ::= ID | TYPE | type_enum | type_arr | type_map | "(" type_expr ")"
-#     type_enum   ::= "Enum" "(" type_expr "," expression ")"
+#     type_enum   ::= "Enum" array
 #     type_arr    ::= "[" type_expr "]"
 #     type_map    ::= "{" (type_item ("," type_item)*)? "}"
 #     type_item   ::= ANNOTATION? key "!"? ":" type_expr
@@ -153,8 +152,7 @@ class Parser:
         contains_error = False
         while not self.is_at_end():
             try:
-                expression = self.parse_control()
-                # self.consume(TokenType.SEMICOLON, "Expected ';' after expression.")
+                expression = self.parse_expression()
                 program.append(expression)
             except ast.SyntaxError as e:
                 self.synchronize()
@@ -164,7 +162,7 @@ class Parser:
             raise ast.SyntaxError("The code contains errors.")
         return ast.Program(program=program)
 
-    def parse_control(self):
+    def parse_expression(self):
         if self.match([TokenType.RETURN, TokenType.BREAK, TokenType.CONTINUE]):
             operator = self.previous()
             self.consume(TokenType.CLROUND,
@@ -176,6 +174,7 @@ class Parser:
         return self.parse_expression()
 
     def parse_expression(self):
+        annotation = None
         if self.match([TokenType.HASH]):
             operator = self.previous()
             annotation = Token(
@@ -184,9 +183,21 @@ class Parser:
                 index=operator.index, 
                 literal=operator.literal
             )
+
+        if self.match([TokenType.RETURN, TokenType.BREAK, TokenType.CONTINUE]):
+            operator = self.previous()
+            self.consume(TokenType.CLROUND,
+                         f"Expected '(' after '{operator.literal}'.")
             expr = self.parse_expression()
+            self.consume(TokenType.RROUND,
+                         f"Expected closing ')' after expression.")
+            expr = ast.Unary(operator=operator, expr=expr)
+        else:
+            expr = self.parse_assignment()
+
+        if annotation:
             return ast.Annotation(operator=operator, annotation=annotation, expr=expr)
-        return self.parse_assignment()
+        return expr
 
     def parse_assignment(self):
         mapping = self.parse_disjunction()
@@ -355,6 +366,7 @@ class Parser:
             self.consume(TokenType.RSQUARE,
                          "Expected closing ']' after list of expressions.")
             return ast.Array(array=array)
+        self.error(self.peek(), "Expected an array expression.")
 
     def parse_map(self):
         dictionary = {}
@@ -408,7 +420,7 @@ class Parser:
     def parse_chunk_until(self, ends: List[Token]):
         exprs = []
         while self.peek().ttype not in ends:
-            expr = self.parse_control()
+            expr = self.parse_expression()
             exprs.append(expr)
         return ast.Block(exprs=exprs)
 
@@ -427,7 +439,7 @@ class Parser:
             operators.append(self.previous())
             cond = self.parse_expression()
             conds.append(cond)
-            self.consume(TokenType.DO, "Expected 'do' after condition.")
+            self.consume(TokenType.THEN, "Expected 'then' after condition.")
             chunk = self.parse_chunk_until(
                 [TokenType.END, TokenType.ELIF, TokenType.ELSE])
             exprs.append(chunk)
@@ -435,8 +447,8 @@ class Parser:
                 operators.append(self.previous())
                 cond = self.parse_expression()
                 conds.append(cond)
-                self.consume(TokenType.DO,
-                             "Expected 'do' after condition.")
+                self.consume(TokenType.THEN,
+                             "Expected 'then' after condition.")
                 chunk = self.parse_chunk_until(
                     [TokenType.END, TokenType.ELIF, TokenType.ELSE])
                 exprs.append(chunk)
@@ -601,13 +613,13 @@ class Parser:
     def parse_type_enum(self):
         if self.match([TokenType.ENUM]):
             operator = self.previous()
-            if not self.match([TokenType.LROUND, TokenType.CLROUND]):
-                self.error(self.peek(), "Expected an opening '('.")
-            type_expr = self.parse_type_expr()
-            self.consume(TokenType.COMMA, "Expected a comma.")
-            values_expr = self.parse_expression()
-            self.consume(TokenType.RROUND, "Expected a closing ')'.")
-            return ast.TypeEnum(operator=operator, type_expr=type_expr, values_expr=values_expr)
+            if self.check(TokenType.EOF) and self.interactive:
+                raise ast.IncompleteExpression()
+            if self.check(TokenType.LSQUARE) or self.check(TokenType.CLSQUARE):
+                expr = self.parse_array()
+            else:
+                self.error(self.peek(), "Expected an array after Enum.")
+            return ast.TypeEnum(operator=operator, expr=expr)
         self.error(self.peek(), "Expected an Enum expression.")
 
     def parse_type_arr(self):
