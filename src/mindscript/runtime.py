@@ -127,11 +127,6 @@ class Interpreter:
         return self.printer.print(value)
 
     def error(self, token: ast.Token, msg):
-        print(f"RUNTIME.ERROR")
-        print(f"- token:   {token}")
-        print(f"- msg:     {msg}")
-        print(f"- streams: {[key for key in self.parser.lexer.stream.keys()]}")
-
         self.parser.lexer.report_error(
             token.buffer, token.index, "RUNTIME ERROR", msg)
         raise ast.RuntimeError(msg)
