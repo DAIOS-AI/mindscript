@@ -16,7 +16,7 @@ def read_lib_script(filename: str):
 def interpreter(interactive=False, backend = None):
     ip = Interpreter(interactive=interactive, backend=backend)
 
-    ip.set_buffer("<preamble>")
+    ip.set_buffer("<core>")
 
     # Register built-in native symbols.
     ip.define("codeImport", std.CodeImport(ip=ip))
@@ -87,9 +87,12 @@ def interpreter(interactive=False, backend = None):
 
     # Register built-in symbols.
     code = read_lib_script("std.ms")
-    ip.eval(code, "lib/std.ms")
+    ip.eval(code, "<prelude>")
 
     # Clean the lexer's code buffer (disabled now).
     # ip.parser.lexer.reset()
+
+    # Now mark the current environment as part of the startup.
+    ip.mark_startup_environment()
 
     return ip

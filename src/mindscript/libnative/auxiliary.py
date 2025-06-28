@@ -4,24 +4,28 @@ import mindscript.builtins
 
 def flattened_env(env: Environment):
     fenv = dict()
-    while env is not None:
+    while not env.startup:
         for key, val in env.vars.items():
             if key not in fenv:
                 fenv[key] = val
         env = env.enclosing
     return fenv
 
-def import_code(code: str, backend: mindscript.backend.Backend, buffer: str = None):
-    ip = mindscript.builtins.interpreter(backend=backend)
+def import_code(
+        ip: 'Interpreter', code: str, # type: ignore
+        backend: mindscript.backend.Backend, buffer: str = None):
+    
     startup_env = ip.env
+    while not startup_env.startup:
+        startup_env = startup_env.enclosing
     module_env = Environment(enclosing=startup_env)
 
+    cur_env = ip.env               # Save environment.
+    cur_buffer = ip.buffer         # Save buffer.
     ip.env = module_env
-    buffer = ip.buffer
     ip.eval(code, buffer)
-    ip.set_buffer(buffer)
+    ip.set_buffer(cur_buffer)      # Restore buffer.
 
-    module_env.enclosing = None
     module = flattened_env(ip.env)
-    module_env.enclosing = startup_env
+    ip.env = cur_env # Restore environment.
     return module

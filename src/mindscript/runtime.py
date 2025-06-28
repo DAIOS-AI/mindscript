@@ -14,6 +14,7 @@ class Environment():
     def __init__(self, enclosing=None):
         self.enclosing: Optional['Environment'] = enclosing
         self.vars = {}
+        self.startup = False # Is environment part of startup?
 
     def define(self, key: str, value: MValue = None) -> bool:
         if value is None:
@@ -72,10 +73,18 @@ class Interpreter:
     def reset(self):
         self.parser.reset()
         self.env = Environment()
+        self.mark_startup_environment()
 
     def set_buffer(self, buffer: str):
         self.parser.lexer.set_stream(buffer)
         self.buffer = buffer
+
+    # Mark current environment as part of startup.
+    def mark_startup_environment(self):
+        env = self.env
+        while env:
+            env.startup = True
+            env = env.enclosing
 
     def eval(self, instr: str, buffer: str = None):
         if buffer is None:
@@ -118,6 +127,11 @@ class Interpreter:
         return self.printer.print(value)
 
     def error(self, token: ast.Token, msg):
+        print(f"RUNTIME.ERROR")
+        print(f"- token:   {token}")
+        print(f"- msg:     {msg}")
+        print(f"- streams: {[key for key in self.parser.lexer.stream.keys()]}")
+
         self.parser.lexer.report_error(
             token.buffer, token.index, "RUNTIME ERROR", msg)
         raise ast.RuntimeError(msg)

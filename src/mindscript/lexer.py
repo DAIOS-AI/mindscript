@@ -41,7 +41,7 @@ Keywords = {
 class Lexer:
 
     def __init__(self):
-        self.stream_id = "std"
+        self.stream_id = "<core>"
         self.stream = {self.stream_id: ""}
         self.set_stream(self.stream_id)
         self.tokens = []

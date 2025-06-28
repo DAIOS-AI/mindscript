@@ -17,8 +17,8 @@ class CodeImport(MNativeFunction):
     def func(self, args: List[MObject]):
         code, name = args
         try:
-            module = import_code(
-                code.value, self.interpreter.backend, name.value)
+            module = import_code(self.ip, code.value, 
+                                 self.interpreter.backend, name.value)
         except Exception as e:
             self.error(str(e))
         return MValue(module, None)
@@ -28,18 +28,20 @@ class Import(MNativeFunction):
     def __init__(self, ip: Interpreter):
         super().__init__(ip, "fun(filename: Str) -> {}")
         self.annotation = "Imports a file at a given path as a module."
+        self.ip = ip
 
     def func(self, args: List[MObject]):
         filename = args[0].value
         try:
             with open(filename, "r") as fh:
                 code = fh.read()
-            module = import_code(code, self.interpreter.backend, filename)
+            module = import_code(self.ip, code, 
+                                 self.interpreter.backend, filename)
         except FileNotFoundError as e:
             self.error(f"File not found: {filename}")
         except Exception as e:
             self.error(str(e))
-        return MValue(module, None)
+        return MValue(module, f'Module "{filename}"')
 
 
 class Str(MNativeFunction):

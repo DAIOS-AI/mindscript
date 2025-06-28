@@ -136,6 +136,10 @@ class MFunction(MObject):
         return self._env
 
     @property
+    def operator(self) -> ast.Token:
+        return self._operator
+
+    @property
     def params(self) -> List[str]:
         return self._definition.parameters
 
@@ -219,7 +223,7 @@ class MPartialFunction(MFunction):
         if type(definition) == str:
             buffer = ip.get_buffer()
             definition = ip.parser.parse(
-                definition + " do null end\n", "<native def>").program[0]
+                definition + " do null end\n", "<native>").program[0]
             ip.set_buffer(buffer)
         super().__init__(ip, definition)
 
@@ -234,7 +238,7 @@ class MNativeFunction(MFunction):
         if type(definition) == str:
             buffer = ip.buffer
             definition = ip.parser.parse(
-                definition + " do null end\n", "<native def>").program[0]
+                definition + " do null end\n", "<native>").program[0]
             ip.set_buffer(buffer)
         super().__init__(ip, definition)
 
